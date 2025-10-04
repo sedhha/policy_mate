@@ -1,7 +1,7 @@
-from typing import Any, Dict
+from typing import Any, Dict, Union
 import json
 
-def bedrock_response(event: Dict[str, Any], status_code: int, body: Dict[str, Any]) -> Dict[str, Any]:
+def bedrock_response(event: Dict[str, Any], status_code: int, body: Union[Dict[str, Any], str]) -> Dict[str, Any]:
     return {
         'messageVersion': '1.0',
         'response': {
@@ -9,7 +9,7 @@ def bedrock_response(event: Dict[str, Any], status_code: int, body: Dict[str, An
             'apiPath': event['apiPath'],
             'httpMethod': event['httpMethod'],
             'httpStatusCode': status_code,
-            'responseBody': {'application/json': {'body': json.dumps(body)}}
+            'responseBody': {'application/json': {'body': json.dumps(body) if isinstance(body, dict) else body}}
         }
     }
 

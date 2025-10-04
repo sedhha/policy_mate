@@ -21,8 +21,12 @@ def get_jwks():
     return jwks_cache
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
-    if is_bedrock_agent(event):
-        return handle_bedrock_agent(event)
+    try:
+        if is_bedrock_agent(event):
+            return handle_bedrock_agent(event)
+    except Exception:
+        if is_bedrock_agent(event):
+            return bedrock_response(event, 500, {'error': 'Internal error'})
     
     try:
         body_str = event.get('body', '{}')
@@ -49,7 +53,6 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
 def handle_bedrock_agent(event: Dict[str, Any]) -> Dict[str, Any]:
     try:
-        # Token comes in requestBody for POST requests
         request_body = event.get('requestBody', {}).get('content', {}).get('application/json', [])
         token = next((p['value'] for p in request_body if p['name'] == 'token'), None)
         
@@ -66,7 +69,7 @@ def handle_bedrock_agent(event: Dict[str, Any]) -> Dict[str, Any]:
         claims = jwt.decode(token, key, algorithms=['RS256'], options={'verify_aud': False})
         return bedrock_response(event, 200, claims)
     
-    except JWTError as e:
-        return bedrock_response(event, 401, {'error': f'Invalid token: {str(e)}'})
-    except Exception as e:
-        return bedrock_response(event, 500, {'error': str(e)})
+    except JWTError:
+        return bedrock_response(event, 401, {'error': 'Invalid token'})
+    except Exception:
+        return bedrock_response(event, 500, {'error': 'Authentication failed'})

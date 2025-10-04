@@ -10,3 +10,4 @@ lambdas/.deploy_cache/
 __pycache__/
 *.py[cod]
 *$py.class
+lambdas/test_bedrock_format.py
