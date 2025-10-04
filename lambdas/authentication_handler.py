@@ -5,7 +5,7 @@ import requests
 from jose import jwt, JWTError
 from dotenv import load_dotenv
 
-from utils.response import response
+from src.utils.response import response
 
 load_dotenv(override=True)
 

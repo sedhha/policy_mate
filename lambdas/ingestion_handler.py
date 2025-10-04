@@ -4,7 +4,7 @@ import os
 import boto3
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, Union
-from utils.response import response
+from src.utils.response import response
 
 if TYPE_CHECKING:
     from mypy_boto3_s3 import S3Client

@@ -61,6 +61,7 @@ mkdir -p $BUILD_DIR
 
 pip install -r requirements.txt -t $BUILD_DIR --quiet
 cp *_handler.py $BUILD_DIR/
+cp -r src $BUILD_DIR/
 
 cd $BUILD_DIR && zip -r ../lambda.zip . -q && cd ..
 
