@@ -82,3 +82,7 @@ compliance jobs - dynamoDB
 compliance reports - dynamoDB
 compliance templates - dynamoDB
 org config - dynamoDB
+
+### Tasks
+
+1. Setup S3 buckets for standard docs and compliance docs.
