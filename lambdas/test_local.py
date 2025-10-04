@@ -102,7 +102,7 @@ def _test_global_lambda():
             'Authorization': f'Bearer {token}'
         },
         'body': json.dumps({
-            'filename': 'test_file.txt',
+            'filename': 'test_file_2.txt',
             'file': file_content,
             'type': 'custom'
         })
