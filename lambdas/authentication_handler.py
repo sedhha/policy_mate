@@ -5,6 +5,10 @@ import requests
 from jose import jwt, JWTError
 from dotenv import load_dotenv
 from src.utils.bedrock_response import bedrock_response, is_bedrock_agent, get_bedrock_parameters
+import logging
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 load_dotenv(override=True)
 
@@ -17,7 +21,13 @@ jwks_cache = None
 def get_jwks():
     global jwks_cache
     if not jwks_cache:
-        jwks_cache = requests.get(JWKS_URL).json()
+        try:
+            response = requests.get(JWKS_URL, timeout=5)
+            response.raise_for_status()
+            jwks_cache = response.json()
+        except Exception as e:
+            logger.error(f'Failed to fetch JWKS: {str(e)}')
+            raise
     return jwks_cache
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
@@ -53,10 +63,11 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
 def handle_bedrock_agent(event: Dict[str, Any]) -> Dict[str, Any]:
     try:
-        request_body = event.get('requestBody', {}).get('content', {}).get('application/json', [])
-        token = next((p['value'] for p in request_body if p['name'] == 'token'), None)
+        properties = event.get('requestBody', {}).get('content', {}).get('application/json', {}).get('properties', [])
+        token = next((p['value'] for p in properties if p['name'] == 'token'), None)
         
         if not token:
+            logger.error('Token not found in request body')
             return bedrock_response(event, 400, {'error': 'Token required'})
         
         header = jwt.get_unverified_header(token)
@@ -64,12 +75,15 @@ def handle_bedrock_agent(event: Dict[str, Any]) -> Dict[str, Any]:
         key = next((k for k in jwks['keys'] if k['kid'] == header['kid']), None)
         
         if not key:
+            logger.error(f'Key not found for kid: {header.get("kid")}')
             return bedrock_response(event, 401, {'error': 'Invalid token'})
         
         claims = jwt.decode(token, key, algorithms=['RS256'], options={'verify_aud': False})
         return bedrock_response(event, 200, claims)
     
-    except JWTError:
+    except JWTError as e:
+        logger.error(f'JWT validation error: {str(e)}')
         return bedrock_response(event, 401, {'error': 'Invalid token'})
-    except Exception:
+    except Exception as e:
+        logger.error(f'Authentication failed: {str(e)}', exc_info=True)
         return bedrock_response(event, 500, {'error': 'Authentication failed'})

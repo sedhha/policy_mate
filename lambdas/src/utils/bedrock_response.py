@@ -9,7 +9,11 @@ def bedrock_response(event: Dict[str, Any], status_code: int, body: Union[Dict[s
             'apiPath': event['apiPath'],
             'httpMethod': event['httpMethod'],
             'httpStatusCode': status_code,
-            'responseBody': {'application/json': {'body': json.dumps(body) if isinstance(body, dict) else body}}
+            'responseBody': {
+                'application/json': {
+                    'body': json.dumps(body) if isinstance(body, dict) else body
+                }
+            }
         }
     }
 

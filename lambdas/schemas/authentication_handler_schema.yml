@@ -32,14 +32,36 @@ paths:
                   sub:
                     type: string
                     description: User ID
-                  custom:org_id:
-                    type: string
-                    description: Organization ID
-                  custom:user_role:
-                    type: string
-                    description: User role (admin or user)
                   email:
                     type: string
                     description: User email
+                  cognito:username:
+                    type: string
+                    description: Username
+        '400':
+          description: Bad request - token missing or invalid format
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '401':
           description: Unauthorized - invalid or expired token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string

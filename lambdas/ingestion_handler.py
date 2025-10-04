@@ -104,9 +104,9 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
 def handle_bedrock_agent(event: Dict[str, Any]) -> Dict[str, Any]:
     try:
-        # Parameters come in requestBody for POST requests
-        request_body = event.get('requestBody', {}).get('content', {}).get('application/json', [])
-        body_params = {p['name']: p['value'] for p in request_body}
+        # Extract parameters from properties
+        properties = event.get('requestBody', {}).get('content', {}).get('application/json', {}).get('properties', [])
+        body_params = {p['name']: p['value'] for p in properties}
         
         claims = json.loads(body_params.get('claims', '{}'))
         user_id = claims.get('sub')
@@ -115,8 +115,16 @@ def handle_bedrock_agent(event: Dict[str, Any]) -> Dict[str, Any]:
         if not user_id or not org_id:
             return bedrock_response(event, 401, {'error': 'Invalid claims'})
         
-        filename = body_params.get('filename')
-        file_content = body_params.get('file')
+        # Check for file attachments first
+        files = event.get('inputFiles', [])
+        if files:
+            file_obj = files[0]
+            filename = body_params.get('filename', file_obj.get('name'))
+            file_content = file_obj.get('bytes')
+        else:
+            filename = body_params.get('filename')
+            file_content = body_params.get('file')
+        
         doc_type = body_params.get('type', 'custom')
         
         if doc_type not in {'custom', 'standard'}:
@@ -132,11 +140,15 @@ def handle_bedrock_agent(event: Dict[str, Any]) -> Dict[str, Any]:
         if file_ext not in ALLOWED_EXTENSIONS:
             return bedrock_response(event, 400, {'error': f'File type not allowed'})
         
-        estimated_size = (len(file_content) * 3) // 4
-        if estimated_size > MAX_FILE_SIZE:
-            return bedrock_response(event, 400, {'error': 'File too large'})
+        # Handle both base64 string and raw bytes
+        if isinstance(file_content, str):
+            estimated_size = (len(file_content) * 3) // 4
+            if estimated_size > MAX_FILE_SIZE:
+                return bedrock_response(event, 400, {'error': 'File too large'})
+            file_data = base64.b64decode(file_content)
+        else:
+            file_data = file_content
         
-        file_data = base64.b64decode(file_content)
         file_size = len(file_data)
         
         if file_size > MAX_FILE_SIZE:

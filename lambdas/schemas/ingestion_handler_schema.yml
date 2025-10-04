@@ -16,17 +16,15 @@ paths:
             schema:
               type: object
               required:
-                - filename
-                - file
                 - type
                 - claims
               properties:
                 filename:
                   type: string
-                  description: Name of the file to upload (e.g., policy.pdf)
+                  description: Name of the file to upload (optional if file is attached)
                 file:
                   type: string
-                  description: Base64 encoded file content
+                  description: Base64 encoded file content (optional if file is attached)
                 type:
                   type: string
                   enum:
