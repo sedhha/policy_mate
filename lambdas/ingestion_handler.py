@@ -4,7 +4,7 @@ import os
 import boto3
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, Union
-from jose import jwt
+from utils.response import response
 
 if TYPE_CHECKING:
     from mypy_boto3_s3 import S3Client
@@ -28,15 +28,7 @@ ALLOWED_EXTENSIONS = {'.csv', '.xls', '.xlsx', '.pdf', '.docx', '.pptx', '.txt',
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     try:
-        # Extract JWT token
-        headers = event.get('headers', {})
-        auth_header = headers.get('Authorization', '') or headers.get('authorization', '')
-        token = auth_header.replace('Bearer ', '').replace('bearer ', '')
-        if not token:
-            return response(401, {'error': 'Missing authorization token'})
-        
-        # Decode JWT and extract claims
-        claims = jwt.get_unverified_claims(token)
+        claims = event.get('claims', {})
         user_id = claims.get('sub')
         org_id = claims.get('custom:org_id')
                 
@@ -105,11 +97,4 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     
     except Exception as e:
         return response(500, {'error': str(e)})
-
-def response(status_code: int, body: Dict[str, Any]) -> Dict[str, Any]:
-    return {
-        'statusCode': status_code,
-        'headers': {'Content-Type': 'application/json'},
-        'body': json.dumps(body)
-    }
 
