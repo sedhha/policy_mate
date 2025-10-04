@@ -5,7 +5,7 @@ import boto3
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, Union
 from src.utils.response import response
-from src.utils.bedrock_response import bedrock_response, is_bedrock_agent, get_bedrock_parameters
+from src.utils.bedrock_response import bedrock_response, is_bedrock_agent
 
 if TYPE_CHECKING:
     from mypy_boto3_s3 import S3Client
@@ -138,7 +138,7 @@ def handle_bedrock_agent(event: Dict[str, Any]) -> Dict[str, Any]:
         
         file_ext = os.path.splitext(filename)[1].lower()
         if file_ext not in ALLOWED_EXTENSIONS:
-            return bedrock_response(event, 400, {'error': f'File type not allowed'})
+            return bedrock_response(event, 400, {'error': 'File type not allowed'})
         
         # Handle both base64 string and raw bytes
         if isinstance(file_content, str):

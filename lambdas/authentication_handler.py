@@ -4,7 +4,7 @@ import os
 import requests
 from jose import jwt, JWTError
 from dotenv import load_dotenv
-from src.utils.bedrock_response import bedrock_response, is_bedrock_agent, get_bedrock_parameters
+from src.utils.bedrock_response import bedrock_response, is_bedrock_agent
 import logging
 
 logger = logging.getLogger()
