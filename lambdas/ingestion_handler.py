@@ -112,3 +112,4 @@ def response(status_code: int, body: Dict[str, Any]) -> Dict[str, Any]:
         'headers': {'Content-Type': 'application/json'},
         'body': json.dumps(body)
     }
+
