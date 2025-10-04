@@ -1,1 +1,4 @@
-# Add your Python dependencies here
+boto3
+boto3-stubs[s3,dynamodb]
+python-jose[cryptography]
+python-dotenv
