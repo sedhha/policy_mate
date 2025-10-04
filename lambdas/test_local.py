@@ -112,7 +112,7 @@ def test_ingestion_local():
 
 if __name__ == "__main__":
     # Regenerate secrets (uncomment if tokens expired)
-    # regenerate_secrets()
+    regenerate_secrets()
     
     # Local tests
     # test_authentication_local()

@@ -19,6 +19,7 @@ paths:
                 - filename
                 - file
                 - type
+                - claims
               properties:
                 filename:
                   type: string
@@ -32,6 +33,22 @@ paths:
                     - custom
                     - standard
                   description: Document type - custom for user documents, standard for admin-only documents
+                claims:
+                  type: object
+                  description: User claims from authentication (must be obtained from authenticateUser first)
+                  required:
+                    - sub
+                    - custom:org_id
+                  properties:
+                    sub:
+                      type: string
+                      description: User ID
+                    custom:org_id:
+                      type: string
+                      description: Organization ID
+                    custom:user_role:
+                      type: string
+                      description: User role
       responses:
         '200':
           description: File uploaded successfully

@@ -1,0 +1,45 @@
+openapi: 3.0.0
+info:
+  title: Policy Mate Authentication API
+  version: 1.0.0
+  description: API for authenticating users and retrieving claims
+paths:
+  /authenticate:
+    post:
+      summary: Authenticate user with bearer token
+      description: Validates bearer token and returns user claims. This must be called first before any other operations.
+      operationId: authenticateUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+              properties:
+                token:
+                  type: string
+                  description: Bearer token from user authentication
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sub:
+                    type: string
+                    description: User ID
+                  custom:org_id:
+                    type: string
+                    description: Organization ID
+                  custom:user_role:
+                    type: string
+                    description: User role (admin or user)
+                  email:
+                    type: string
+                    description: User email
+        '401':
+          description: Unauthorized - invalid or expired token
