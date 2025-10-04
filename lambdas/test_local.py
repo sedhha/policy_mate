@@ -50,7 +50,7 @@ def get_cognito_token() -> str:
 
 def test_authentication():
     token = get_cognito_token()
-    lambda_client = boto3.client('lambda', region_name=os.environ.get('COGNITO_REGION', 'us-east-1')) # pyright: ignore[reportUnknownMemberType]
+    lambda_client = boto3.client('lambda', region_name=os.environ.get('COGNITO_REGION', 'us-east-1')) # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
     
     response = lambda_client.invoke( # type: ignore
         FunctionName='policy-mate-authentication',
@@ -68,7 +68,7 @@ def test_ingestion():
     with open('test_file.txt', 'rb') as f:
         file_content = base64.b64encode(f.read()).decode('utf-8')
     
-    lambda_client = boto3.client('lambda', region_name=os.environ.get('COGNITO_REGION', 'us-east-1')) # pyright: ignore[reportUnknownMemberType]
+    lambda_client = boto3.client('lambda', region_name=os.environ.get('COGNITO_REGION', 'us-east-1')) # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
     
     response = lambda_client.invoke( # type: ignore
         FunctionName='policy-mate-ingestion',
@@ -115,11 +115,11 @@ if __name__ == "__main__":
     # regenerate_secrets()
     
     # Local tests
-    test_authentication_local()
+    # test_authentication_local()
     # print("\n" + "="*50 + "\n")
     # test_ingestion_local()
     
     # Global tests (uncomment to test deployed Lambdas)
-    # test_authentication()
+    test_authentication()
     # print("\n" + "="*50 + "\n")
     # test_ingestion()
