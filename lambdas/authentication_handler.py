@@ -3,7 +3,11 @@ import json
 import os
 import requests
 from jose import jwt, JWTError
+from dotenv import load_dotenv
+
 from utils.response import response
+
+load_dotenv(override=True)
 
 REGION = os.environ.get('AWS_REGION', 'us-east-1')
 USER_POOL_ID = os.environ['COGNITO_USER_POOL_ID']
@@ -33,7 +37,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         if not key:
             return response(401, {'error': 'Invalid token key'})
         
-        claims = jwt.decode(jwt_token, key, algorithms=['RS256'], audience=None)
+        claims = jwt.decode(jwt_token, key, algorithms=['RS256'], options={'verify_aud': False})
         return response(200, claims)
     
     except JWTError as e:
