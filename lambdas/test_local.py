@@ -93,11 +93,36 @@ def _test_lambda():
     }
     result = lambda_handler(event, None)
     print(json.dumps(result, indent=2))
+
+def _test_global_lambda():
+    lambda_client = boto3.client('lambda', region_name=os.environ.get('COGNITO_REGION', 'us-east-1')) # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
     
-operation = '_test_lambda' 
+    payload = { # pyright: ignore[reportUnknownVariableType]
+        'headers': {
+            'Authorization': f'Bearer {token}'
+        },
+        'body': json.dumps({
+            'filename': 'test_file.txt',
+            'file': file_content,
+            'type': 'custom'
+        })
+    }
+    
+    response = lambda_client.invoke( # type: ignore
+        FunctionName='policy-mate-ingestion',
+        InvocationType='RequestResponse',
+        Payload=json.dumps(payload)
+    )
+    
+    result = json.loads(response['Payload'].read()) # type: ignore
+    print(json.dumps(result, indent=2))
+    
+operation = '_test_global_lambda' 
 
 if __name__ == "__main__":
     if operation == '_update_user_claims': # pyright: ignore[reportUnnecessaryComparison]
         _update_user_claims()
-    elif operation == '_test_lambda':
+    elif operation == '_test_lambda': # pyright: ignore[reportUnnecessaryComparison]
         _test_lambda()
+    elif operation == '_test_global_lambda':
+        _test_global_lambda()

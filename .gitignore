@@ -3,3 +3,10 @@ lambdas/secrets.json
 lambdas/build/*
 lambdas/*.zip
 lambdas/.deploy_cache/
+
+# Python
+*.pyc
+*.pyo
+__pycache__/
+*.py[cod]
+*$py.class
