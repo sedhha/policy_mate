@@ -1,2 +1,5 @@
 .env
 lambdas/secrets.json
+lambdas/build/*
+lambdas/*.zip
+lambdas/.deploy_cache/

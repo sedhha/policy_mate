@@ -73,6 +73,7 @@ Queries:
 - Go to compliance dashboard (Just a response to open compliance dashboard link)
 - Go to configuration dashboard (Just a response to open configuration dashboard link)
 - Go to admin dashboard (Just a response to open admin dashboard link)
+- Early request - analyse doc for compliance (doc id, template id)
 
 For user tables -
 cognito
@@ -86,3 +87,16 @@ org config - dynamoDB
 ### Tasks
 
 1. Setup S3 buckets for standard docs and compliance docs.
+
+This is what we're imagining:
+
+1. User comes to chat bot with following intent:
+
+- Upload a document for compliance check
+- Check compliance status of a document
+- List all documents he can see
+- Request active action items on each document he can see
+- Re request indexing of his documents or his organisation documents in Knowledge base
+- Request dashboard link for compliance dashboard
+- Request configuration dashboard link for configuration dashboard
+- Request manual review link of a document for compliance issues

@@ -1,6 +1,0 @@
-*.tfstate
-*.tfstate.*
-.terraform/
-.terraform.lock.hcl
-lambda.zip
-lambda_package/
