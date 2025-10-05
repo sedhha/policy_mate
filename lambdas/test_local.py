@@ -63,7 +63,7 @@ def add_entry_to_dynamo_db():
 
 if __name__ == "__main__":
     # Regenerate secrets (uncomment if tokens expired)
-    # regenerate_secrets()
+    regenerate_secrets()
     
     # Local tests
     # test_authentication_local()
@@ -73,4 +73,4 @@ if __name__ == "__main__":
     # Global tests (uncomment to test deployed Lambdas)    
     
     # Add dynamo DB
-    add_entry_to_dynamo_db()
+    # add_entry_to_dynamo_db()

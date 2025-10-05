@@ -1,5 +1,15 @@
 from typing import Any, Dict, Union
 import json
+from decimal import Decimal
+
+def convert_decimals(obj: Any) -> Any:
+    if isinstance(obj, list):
+        return [convert_decimals(i) for i in obj]  # type: ignore[misc]
+    elif isinstance(obj, dict):
+        return {str(k): convert_decimals(v) for k, v in obj.items()}  # type: ignore[misc]
+    elif isinstance(obj, Decimal):
+        return int(obj) if obj % 1 == 0 else float(obj)
+    return obj
 
 def bedrock_response(event: Dict[str, Any], status_code: int, body: Union[Dict[str, Any], str]) -> Dict[str, Any]:
     return {
@@ -11,7 +21,7 @@ def bedrock_response(event: Dict[str, Any], status_code: int, body: Union[Dict[s
             'httpStatusCode': status_code,
             'responseBody': {
                 'application/json': {
-                    'body': json.dumps(body) if isinstance(body, dict) else body
+                    'body': json.dumps(convert_decimals(body)) if isinstance(body, dict) else body
                 }
             }
         }

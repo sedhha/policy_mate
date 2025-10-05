@@ -1,0 +1,53 @@
+openapi: 3.0.0
+info:
+  title: Policy Mate Show Documents API
+  version: 1.0.0
+  description: API for retrieving all documents for a user
+paths:
+  /documents:
+    get:
+      summary: Get all user documents
+      description: Retrieve all documents accessible by the authenticated user
+      operationId: showUserDocuments
+      parameters:
+        - name: bearer_token
+          in: query
+          required: true
+          schema:
+            type: string
+          description: JWT bearer token for authentication
+      responses:
+        '200':
+          description: Documents retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  documents:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        file_name:
+                          type: string
+                          description: Name of the file
+                        file_type:
+                          type: string
+                          description: MIME type of the document
+                        document_size:
+                          type: number
+                          description: Size of the document in bytes
+                        compliance_status:
+                          type: string
+                          enum:
+                            - initialized
+                            - in_progress
+                            - completed
+                            - failed
+                          description: Current compliance analysis status
+                        timestamp:
+                          type: number
+                          description: Document upload timestamp in milliseconds
+        '401':
+          description: Unauthorized - invalid or expired token
