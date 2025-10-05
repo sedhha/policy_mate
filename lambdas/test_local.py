@@ -60,7 +60,7 @@ def test_authentication():
     
     result = json.loads(response['Payload'].read()) # type: ignore
     print("Authentication Result:")
-    print(json.dumps(result, indent=2))
+    print(result)
 
 def test_ingestion():
     token = get_cognito_token()

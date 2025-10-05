@@ -115,15 +115,14 @@ def handle_bedrock_agent(event: Dict[str, Any]) -> Dict[str, Any]:
         if not user_id or not org_id:
             return bedrock_response(event, 401, {'error': 'Invalid claims'})
         
-        # Check for file attachments first
+        # Check for file attachments
         files = event.get('inputFiles', [])
-        if files:
-            file_obj = files[0]
-            filename = body_params.get('filename', file_obj.get('name'))
-            file_content = file_obj.get('bytes')
-        else:
-            filename = body_params.get('filename')
-            file_content = body_params.get('file')
+        if not files:
+            return bedrock_response(event, 400, {'error': 'No file attached. Please attach a file using the document attachment feature.'})
+        
+        file_obj = files[0]
+        filename = body_params.get('filename', file_obj.get('name'))
+        file_content = base64.b64decode(file_obj.get('bytes', ''))
         
         doc_type = body_params.get('type', 'custom')
         
@@ -140,23 +139,14 @@ def handle_bedrock_agent(event: Dict[str, Any]) -> Dict[str, Any]:
         if file_ext not in ALLOWED_EXTENSIONS:
             return bedrock_response(event, 400, {'error': 'File type not allowed'})
         
-        # Handle both base64 string and raw bytes
-        if isinstance(file_content, str):
-            estimated_size = (len(file_content) * 3) // 4
-            if estimated_size > MAX_FILE_SIZE:
-                return bedrock_response(event, 400, {'error': 'File too large'})
-            file_data = base64.b64decode(file_content)
-        else:
-            file_data = file_content
-        
-        file_size = len(file_data)
+        file_size = len(file_content)
         
         if file_size > MAX_FILE_SIZE:
             return bedrock_response(event, 400, {'error': 'File too large'})
         
         prefix = 'standard-docs' if doc_type == 'standard' else 'custom-docs'
         s3_key = f"{prefix}/{org_id}/{user_id}/{filename}"
-        s3.put_object(Bucket=BUCKET_NAME, Key=s3_key, Body=file_data)
+        s3.put_object(Bucket=BUCKET_NAME, Key=s3_key, Body=file_content)
         
         table = dynamodb.Table(TABLE_NAME)
         upload_date = datetime.now(timezone.utc).isoformat()

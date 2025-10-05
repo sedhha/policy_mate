@@ -7,12 +7,13 @@ paths:
   /ingest:
     post:
       summary: Upload a policy document
-      description: Upload and store a policy document file. Accepts base64 encoded file content.
+      description: Upload and store a policy document file from attachment
       operationId: ingestPolicy
+      x-amazon-apigateway-request-validator: all
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
               required:
@@ -21,10 +22,7 @@ paths:
               properties:
                 filename:
                   type: string
-                  description: Name of the file to upload (optional if file is attached)
-                file:
-                  type: string
-                  description: Base64 encoded file content (optional if file is attached)
+                  description: Name of the file (optional, will use attachment name if not provided)
                 type:
                   type: string
                   enum:
