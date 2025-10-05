@@ -54,7 +54,7 @@ def add_entry_to_dynamo_db():
         'org_id': '0199ae2a-eff6-773b-8a46-c05bc01735f7',
         'mime_type': 'application/pdf',
         'document_size': 200000,
-        'compliance_status': 'initialized',
+        'compliance_status': 'in-progress',
         'compliance_issues': [],
         'timestamp': 1759663547474,
         's3_url': 's3://policy-mate/custom-docs/0199ae2a-eff6-773b-8a46-c05bc01735f7/34083418-e001-7023-e5cf-fd0488408b82/id_card.pdf',

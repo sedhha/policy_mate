@@ -90,6 +90,8 @@ if [ -n "$ENV_VARS" ]; then
     for handler_file in *_handler.py; do
         HANDLER=$(basename $handler_file _handler.py)
         FUNCTION_NAME="policy-mate-${HANDLER}"
+        echo "[$HANDLER] Waiting for function to be ready..."
+        aws lambda wait function-updated --function-name $FUNCTION_NAME
         echo "[$HANDLER] Setting environment variables"
         aws lambda update-function-configuration \
             --function-name $FUNCTION_NAME \
