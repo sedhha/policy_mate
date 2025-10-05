@@ -104,11 +104,13 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
 def handle_bedrock_agent(event: Dict[str, Any]) -> Dict[str, Any]:
     try:
-        # Extract parameters from properties
-        properties = event.get('requestBody', {}).get('content', {}).get('application/json', {}).get('properties', [])
+        # Extract parameters from multipart/form-data
+        content = event.get('requestBody', {}).get('content', {})
+        properties = content.get('multipart/form-data', content.get('application/json', {}).get('properties', []))
         body_params = {p['name']: p['value'] for p in properties}
         
-        claims = json.loads(body_params.get('claims', '{}'))
+        claims_str = body_params.get('claims', '{}')
+        claims = json.loads(claims_str) if isinstance(claims_str, str) else claims_str
         user_id = claims.get('sub')
         org_id = claims.get('custom:org_id')
         
