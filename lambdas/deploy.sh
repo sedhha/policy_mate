@@ -1,6 +1,13 @@
 #!/bin/bash
 set -e
 
+# Check if uv is installed
+if ! command -v uv &> /dev/null; then
+    echo "uv not found. Installing..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    export PATH="$HOME/.cargo/bin:$PATH"
+fi
+
 export AWS_PROFILE=policy-mate
 ROLE_ARN="arn:aws:iam::354468042457:role/lambda-execution-role"
 BUILD_DIR="build"
@@ -59,7 +66,7 @@ echo "Building package..."
 rm -rf $BUILD_DIR
 mkdir -p $BUILD_DIR
 
-pip install -r requirements.txt -t $BUILD_DIR --quiet
+uv pip install --python 3.12 --target $BUILD_DIR .
 cp *_handler.py $BUILD_DIR/
 cp -r src $BUILD_DIR/
 
@@ -77,16 +84,21 @@ for handler_file in *_handler.py; do
     deploy_handler $HANDLER
 done
 
-# Update env vars for all functions
+# Update env vars for all functions (always)
 if [ -n "$ENV_VARS" ]; then
     echo "\nUpdating environment variables..."
     for handler_file in *_handler.py; do
         HANDLER=$(basename $handler_file _handler.py)
         FUNCTION_NAME="policy-mate-${HANDLER}"
+        echo "[$HANDLER] Waiting for function to be ready..."
+        aws lambda wait function-updated --function-name $FUNCTION_NAME
+        echo "[$HANDLER] Setting environment variables"
         aws lambda update-function-configuration \
             --function-name $FUNCTION_NAME \
-            --environment "Variables={$ENV_VARS}" &>/dev/null
+            --environment "Variables={$ENV_VARS}" >/dev/null
     done
+else
+    echo "\nWarning: No environment variables found in .env file"
 fi
 
 rm -rf $BUILD_DIR lambda.zip

@@ -1,11 +1,9 @@
 import json
-import base64
 import os
 import boto3
 from typing import Any, Dict
 from dotenv import load_dotenv
-from authentication_handler import lambda_handler as auth_handler
-from ingestion_handler import lambda_handler as ingestion_handler
+from src.utils.services.dynamoDB import get_table, DynamoDBTable
 
 load_dotenv(override=True)
 
@@ -47,79 +45,32 @@ def get_cognito_token() -> str:
     
     regenerate_secrets()
     return str(secrets['id_token'])
-
-def test_authentication():
-    token = get_cognito_token()
-    lambda_client = boto3.client('lambda', region_name=os.environ.get('COGNITO_REGION', 'us-east-1')) # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
     
-    response = lambda_client.invoke( # type: ignore
-        FunctionName='policy-mate-authentication',
-        InvocationType='RequestResponse',
-        Payload=json.dumps({'body': json.dumps({'token': token})})
+def add_entry_to_dynamo_db():
+    table = get_table(DynamoDBTable.DOCUMENTS)
+    table.put_item(Item={
+        'document_id': '0199b414-f3a9-79d8-9c43-99a7730ae8b0',
+        'user_id': '34083418-e001-7023-e5cf-fd0488408b82',
+        'org_id': '0199ae2a-eff6-773b-8a46-c05bc01735f7',
+        'mime_type': 'application/pdf',
+        'document_size': 200000,
+        'compliance_status': 'in-progress',
+        'compliance_issues': [],
+        'timestamp': 1759663547474,
+        's3_url': 's3://policy-mate/custom-docs/0199ae2a-eff6-773b-8a46-c05bc01735f7/34083418-e001-7023-e5cf-fd0488408b82/id_card.pdf',
+    }
     )
-    
-    result = json.loads(response['Payload'].read()) # type: ignore
-    print("Authentication Result:")
-    print(json.dumps(result, indent=2))
-
-def test_ingestion():
-    token = get_cognito_token()
-    
-    with open('test_file.txt', 'rb') as f:
-        file_content = base64.b64encode(f.read()).decode('utf-8')
-    
-    lambda_client = boto3.client('lambda', region_name=os.environ.get('COGNITO_REGION', 'us-east-1')) # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
-    
-    response = lambda_client.invoke( # type: ignore
-        FunctionName='policy-mate-ingestion',
-        InvocationType='RequestResponse',
-        Payload=json.dumps({
-            'headers': {'Authorization': f'Bearer {token}'},
-            'body': json.dumps({
-                'filename': 'test_file.txt',
-                'file': file_content,
-                'type': 'custom'
-            })
-        })
-    )
-    
-    result = json.loads(response['Payload'].read()) # type: ignore
-    print("Ingestion Result:")
-    print(json.dumps(result, indent=2))
-
-def test_authentication_local():
-    token = get_cognito_token()
-    result = auth_handler({'body': json.dumps({'token': token})}, None)
-    print("Authentication Result (Local):")
-    print(json.dumps(result, indent=2))
-
-def test_ingestion_local():
-    token = get_cognito_token()
-    
-    with open('test_file.txt', 'rb') as f:
-        file_content = base64.b64encode(f.read()).decode('utf-8')
-    
-    result = ingestion_handler({
-        'headers': {'Authorization': f'Bearer {token}'},
-        'body': json.dumps({
-            'filename': 'test_file.txt',
-            'file': file_content,
-            'type': 'custom'
-        })
-    }, None)
-    print("Ingestion Result (Local):")
-    print(json.dumps(result, indent=2))
 
 if __name__ == "__main__":
     # Regenerate secrets (uncomment if tokens expired)
-    regenerate_secrets()
+    # regenerate_secrets()
     
     # Local tests
     # test_authentication_local()
     # print("\n" + "="*50 + "\n")
     # test_ingestion_local()
     
-    # Global tests (uncomment to test deployed Lambdas)
-    test_authentication()
-    # print("\n" + "="*50 + "\n")
-    # test_ingestion()
+    # Global tests (uncomment to test deployed Lambdas)    
+    
+    # Add dynamo DB
+    add_entry_to_dynamo_db()

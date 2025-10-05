@@ -1,0 +1,50 @@
+openapi: 3.0.0
+info:
+  title: Policy Mate Document Retrieval API
+  version: 1.0.0
+  description: API for retrieving document compliance status
+paths:
+  /document:
+    get:
+      summary: Get document compliance status
+      description: Retrieve the compliance status and details of a specific document
+      operationId: getDocumentStatus
+      parameters:
+        - name: file_id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The unique identifier of the document
+        - name: bearer_token
+          in: query
+          required: true
+          schema:
+            type: string
+          description: JWT bearer token for authentication
+      responses:
+        '200':
+          description: Document found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  document_id:
+                    type: string
+                    description: Document identifier
+                  compliance_status:
+                    type: string
+                    enum:
+                      - initialized
+                      - in_progress
+                      - completed
+                      - failed
+                      - unknown
+                    description: Current compliance analysis status
+        '400':
+          description: Bad request - missing file_id
+        '404':
+          description: Document not found
+        '401':
+          description: Unauthorized - invalid or expired token
