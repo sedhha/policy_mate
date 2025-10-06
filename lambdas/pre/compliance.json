@@ -1,0 +1,1720 @@
+[
+  {
+    "framework_id": "gdpr_2025",
+    "framework_name": "GDPR (General Data Protection Regulation)",
+    "version": "EU 2016/679 - Current as of 2025",
+    "effective_date": "2018-05-25",
+    "last_updated": "2025-05-01",
+    "jurisdiction": "European Union",
+    "controls": [
+      {
+        "control_id": "GDPR-5.1",
+        "article": "Article 5(1)(a)",
+        "category": "Principles",
+        "requirement": "Lawfulness, fairness and transparency - Personal data must be processed lawfully, fairly and in a transparent manner",
+        "keywords": [
+          "lawful basis",
+          "transparency",
+          "fair processing",
+          "data subject rights"
+        ],
+        "severity": "critical",
+        "verification_points": [
+          "Legal basis documented for each processing activity",
+          "Privacy notices provided to data subjects",
+          "Processing activities are fair and non-deceptive"
+        ]
+      },
+      {
+        "control_id": "GDPR-5.2",
+        "article": "Article 5(1)(b)",
+        "category": "Principles",
+        "requirement": "Purpose limitation - Data collected for specified, explicit and legitimate purposes only",
+        "keywords": [
+          "purpose limitation",
+          "data collection",
+          "legitimate purposes"
+        ],
+        "severity": "critical",
+        "verification_points": [
+          "Specific purposes documented before collection",
+          "No further processing incompatible with original purpose",
+          "Purpose stated in privacy notices"
+        ]
+      },
+      {
+        "control_id": "GDPR-5.3",
+        "article": "Article 5(1)(c)",
+        "category": "Principles",
+        "requirement": "Data minimization - Personal data must be adequate, relevant and limited to what is necessary",
+        "keywords": ["data minimization", "necessity", "proportionality"],
+        "severity": "high",
+        "verification_points": [
+          "Only necessary data fields collected",
+          "Regular review of data collection practices",
+          "Justification documented for each data element"
+        ]
+      },
+      {
+        "control_id": "GDPR-5.4",
+        "article": "Article 5(1)(d)",
+        "category": "Principles",
+        "requirement": "Accuracy - Personal data must be accurate and kept up to date",
+        "keywords": ["accuracy", "data quality", "correction"],
+        "severity": "medium",
+        "verification_points": [
+          "Processes to ensure data accuracy",
+          "Mechanism for data subjects to correct data",
+          "Regular data quality checks"
+        ]
+      },
+      {
+        "control_id": "GDPR-5.5",
+        "article": "Article 5(1)(e)",
+        "category": "Principles",
+        "requirement": "Storage limitation - Data retained only as long as necessary for stated purposes",
+        "keywords": ["retention", "deletion", "storage limitation"],
+        "severity": "high",
+        "verification_points": [
+          "Retention periods defined and documented",
+          "Automated deletion processes in place",
+          "Regular reviews of stored data"
+        ]
+      },
+      {
+        "control_id": "GDPR-5.6",
+        "article": "Article 5(1)(f)",
+        "category": "Principles",
+        "requirement": "Integrity and confidentiality - Appropriate security measures to protect personal data",
+        "keywords": ["security", "confidentiality", "integrity", "encryption"],
+        "severity": "critical",
+        "verification_points": [
+          "Technical security measures implemented",
+          "Organizational security measures documented",
+          "Regular security assessments"
+        ]
+      },
+      {
+        "control_id": "GDPR-6.1",
+        "article": "Article 6",
+        "category": "Lawful Basis",
+        "requirement": "Valid legal basis established for processing (consent, contract, legal obligation, vital interests, public task, or legitimate interests)",
+        "keywords": [
+          "legal basis",
+          "consent",
+          "legitimate interest",
+          "contract"
+        ],
+        "severity": "critical",
+        "verification_points": [
+          "Legal basis identified for each processing activity",
+          "Consent mechanisms where applicable",
+          "Legitimate interest assessments documented"
+        ]
+      },
+      {
+        "control_id": "GDPR-7.1",
+        "article": "Article 7",
+        "category": "Consent",
+        "requirement": "Valid consent must be freely given, specific, informed and unambiguous",
+        "keywords": ["consent", "opt-in", "withdrawal", "granular consent"],
+        "severity": "critical",
+        "verification_points": [
+          "Clear affirmative action required",
+          "Easy withdrawal mechanism",
+          "Consent records maintained",
+          "Separate consent for different purposes"
+        ]
+      },
+      {
+        "control_id": "GDPR-9.1",
+        "article": "Article 9",
+        "category": "Special Categories",
+        "requirement": "Processing of special category data prohibited unless specific condition met",
+        "keywords": [
+          "sensitive data",
+          "special categories",
+          "health data",
+          "biometric",
+          "racial",
+          "religious"
+        ],
+        "severity": "critical",
+        "verification_points": [
+          "Special category data identified",
+          "Additional safeguards implemented",
+          "Explicit consent or other valid condition documented"
+        ]
+      },
+      {
+        "control_id": "GDPR-12.1",
+        "article": "Article 12",
+        "category": "Transparency",
+        "requirement": "Provide transparent information and communication to data subjects",
+        "keywords": [
+          "transparency",
+          "communication",
+          "privacy notice",
+          "clear language"
+        ],
+        "severity": "high",
+        "verification_points": [
+          "Privacy notices in clear, plain language",
+          "Information provided in concise, accessible format",
+          "Response to data subject requests within timeframe"
+        ]
+      },
+      {
+        "control_id": "GDPR-13.1",
+        "article": "Article 13",
+        "category": "Transparency",
+        "requirement": "Information provided when personal data collected from data subject",
+        "keywords": ["privacy notice", "collection notice", "transparency"],
+        "severity": "high",
+        "verification_points": [
+          "Identity and contact details of controller",
+          "Purposes and legal basis disclosed",
+          "Retention periods specified",
+          "Data subject rights explained"
+        ]
+      },
+      {
+        "control_id": "GDPR-15.1",
+        "article": "Article 15",
+        "category": "Data Subject Rights",
+        "requirement": "Right of access - Data subjects can obtain confirmation and copy of their personal data",
+        "keywords": [
+          "access right",
+          "data portability",
+          "SAR",
+          "subject access request"
+        ],
+        "severity": "high",
+        "verification_points": [
+          "Process to verify identity of requestor",
+          "Ability to provide copy of data within 1 month",
+          "Information about processing activities provided"
+        ]
+      },
+      {
+        "control_id": "GDPR-16.1",
+        "article": "Article 16",
+        "category": "Data Subject Rights",
+        "requirement": "Right to rectification - Data subjects can request correction of inaccurate data",
+        "keywords": ["rectification", "correction", "accuracy"],
+        "severity": "medium",
+        "verification_points": [
+          "Process to receive and action rectification requests",
+          "Updates completed without delay",
+          "Third parties notified of corrections where applicable"
+        ]
+      },
+      {
+        "control_id": "GDPR-17.1",
+        "article": "Article 17",
+        "category": "Data Subject Rights",
+        "requirement": "Right to erasure (right to be forgotten) - Data subjects can request deletion under certain conditions",
+        "keywords": [
+          "erasure",
+          "deletion",
+          "right to be forgotten",
+          "data removal"
+        ],
+        "severity": "high",
+        "verification_points": [
+          "Process to evaluate and action deletion requests",
+          "Exceptions documented (legal obligations, etc.)",
+          "Complete removal from all systems verified"
+        ]
+      },
+      {
+        "control_id": "GDPR-18.1",
+        "article": "Article 18",
+        "category": "Data Subject Rights",
+        "requirement": "Right to restriction of processing",
+        "keywords": ["restriction", "processing limitation"],
+        "severity": "medium",
+        "verification_points": [
+          "Mechanism to restrict processing upon request",
+          "Data marked or segregated when restricted",
+          "Notification before lifting restriction"
+        ]
+      },
+      {
+        "control_id": "GDPR-20.1",
+        "article": "Article 20",
+        "category": "Data Subject Rights",
+        "requirement": "Right to data portability - Receive personal data in structured, commonly used format",
+        "keywords": ["portability", "data export", "machine readable"],
+        "severity": "medium",
+        "verification_points": [
+          "Ability to export data in structured format (JSON, CSV, XML)",
+          "Automated processing data included",
+          "Direct transfer to another controller where feasible"
+        ]
+      },
+      {
+        "control_id": "GDPR-21.1",
+        "article": "Article 21",
+        "category": "Data Subject Rights",
+        "requirement": "Right to object to processing including direct marketing",
+        "keywords": ["objection", "opt-out", "direct marketing", "profiling"],
+        "severity": "high",
+        "verification_points": [
+          "Clear opt-out mechanism for direct marketing",
+          "Processing stops upon objection",
+          "Right to object explicitly brought to attention"
+        ]
+      },
+      {
+        "control_id": "GDPR-22.1",
+        "article": "Article 22",
+        "category": "Automated Decision Making",
+        "requirement": "Right not to be subject to solely automated decision-making including profiling",
+        "keywords": ["automated decisions", "profiling", "AI", "algorithmic"],
+        "severity": "high",
+        "verification_points": [
+          "Automated decision-making identified",
+          "Human intervention available",
+          "Logic and significance explained to data subjects"
+        ]
+      },
+      {
+        "control_id": "GDPR-24.1",
+        "article": "Article 24",
+        "category": "Controller Obligations",
+        "requirement": "Controller responsibility - Implement appropriate technical and organizational measures",
+        "keywords": ["accountability", "data protection by design", "measures"],
+        "severity": "critical",
+        "verification_points": [
+          "Risk-based approach to security",
+          "Regular review of measures",
+          "Ability to demonstrate compliance"
+        ]
+      },
+      {
+        "control_id": "GDPR-25.1",
+        "article": "Article 25",
+        "category": "Privacy by Design",
+        "requirement": "Data protection by design and by default",
+        "keywords": [
+          "privacy by design",
+          "privacy by default",
+          "built-in privacy"
+        ],
+        "severity": "critical",
+        "verification_points": [
+          "Privacy considerations in system design",
+          "Default settings protect privacy",
+          "Pseudonymization and encryption where appropriate"
+        ]
+      },
+      {
+        "control_id": "GDPR-28.1",
+        "article": "Article 28",
+        "category": "Processors",
+        "requirement": "Written data processing agreements with processors",
+        "keywords": ["DPA", "processor agreement", "subprocessors"],
+        "severity": "critical",
+        "verification_points": [
+          "Written contracts with all processors",
+          "Processing instructions documented",
+          "Processor security obligations specified",
+          "Subprocessor authorization process"
+        ]
+      },
+      {
+        "control_id": "GDPR-30.1",
+        "article": "Article 30",
+        "category": "Documentation",
+        "requirement": "Records of processing activities maintained",
+        "keywords": [
+          "ROPA",
+          "processing records",
+          "documentation",
+          "inventory"
+        ],
+        "severity": "high",
+        "verification_points": [
+          "Complete inventory of processing activities",
+          "Purposes, categories, and recipients documented",
+          "Retention periods specified",
+          "Regular updates to records"
+        ]
+      },
+      {
+        "control_id": "GDPR-32.1",
+        "article": "Article 32",
+        "category": "Security",
+        "requirement": "Implement appropriate technical and organizational security measures",
+        "keywords": [
+          "security measures",
+          "encryption",
+          "pseudonymization",
+          "resilience"
+        ],
+        "severity": "critical",
+        "verification_points": [
+          "Encryption of personal data at rest and in transit",
+          "Ongoing confidentiality, integrity, availability",
+          "Regular security testing and evaluation",
+          "Incident response procedures"
+        ]
+      },
+      {
+        "control_id": "GDPR-33.1",
+        "article": "Article 33",
+        "category": "Breach Notification",
+        "requirement": "Notify supervisory authority of data breach within 72 hours",
+        "keywords": [
+          "breach notification",
+          "incident response",
+          "72 hours",
+          "DPA notification"
+        ],
+        "severity": "critical",
+        "verification_points": [
+          "Breach detection mechanisms",
+          "Notification process documented",
+          "Breach log maintained",
+          "72-hour notification timeline met"
+        ]
+      },
+      {
+        "control_id": "GDPR-34.1",
+        "article": "Article 34",
+        "category": "Breach Notification",
+        "requirement": "Notify data subjects of high-risk breaches without undue delay",
+        "keywords": ["data subject notification", "breach communication"],
+        "severity": "critical",
+        "verification_points": [
+          "Risk assessment for breach impact",
+          "Communication plan for affected individuals",
+          "Clear, plain language notifications"
+        ]
+      },
+      {
+        "control_id": "GDPR-35.1",
+        "article": "Article 35",
+        "category": "Impact Assessment",
+        "requirement": "Conduct Data Protection Impact Assessment (DPIA) for high-risk processing",
+        "keywords": [
+          "DPIA",
+          "impact assessment",
+          "privacy impact",
+          "high risk"
+        ],
+        "severity": "high",
+        "verification_points": [
+          "DPIA conducted for high-risk processing",
+          "Necessity and proportionality assessed",
+          "Risks to rights and freedoms evaluated",
+          "Mitigation measures documented"
+        ]
+      },
+      {
+        "control_id": "GDPR-37.1",
+        "article": "Article 37",
+        "category": "DPO",
+        "requirement": "Designate Data Protection Officer when required",
+        "keywords": ["DPO", "data protection officer", "privacy officer"],
+        "severity": "high",
+        "verification_points": [
+          "DPO appointed if criteria met",
+          "DPO contact details published",
+          "DPO involved in data protection matters",
+          "DPO reports to highest management level"
+        ]
+      },
+      {
+        "control_id": "GDPR-44.1",
+        "article": "Article 44-50",
+        "category": "International Transfers",
+        "requirement": "Lawful basis for transfers of personal data to third countries",
+        "keywords": [
+          "international transfers",
+          "third countries",
+          "adequacy",
+          "SCCs",
+          "standard contractual clauses"
+        ],
+        "severity": "critical",
+        "verification_points": [
+          "Adequacy decision or appropriate safeguards in place",
+          "Standard Contractual Clauses signed where applicable",
+          "Transfer Impact Assessments conducted",
+          "Onward transfer restrictions enforced"
+        ]
+      }
+    ]
+  },
+  {
+    "framework_id": "soc2_2025",
+    "framework_name": "SOC 2 Trust Services Criteria",
+    "version": "2017 TSC with 2022 Revised Points of Focus",
+    "effective_date": "2017-01-01",
+    "last_updated": "2022-01-01",
+    "jurisdiction": "United States (AICPA)",
+    "controls": [
+      {
+        "control_id": "SOC2-CC1.1",
+        "category": "Common Criteria - Control Environment",
+        "requirement": "Organization demonstrates commitment to integrity and ethical values",
+        "keywords": ["integrity", "ethics", "tone at top", "code of conduct"],
+        "severity": "critical",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Code of conduct established and communicated",
+          "Expectations for integrity and ethics set by board and management",
+          "Deviations from code of conduct evaluated and addressed"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC1.2",
+        "category": "Common Criteria - Control Environment",
+        "requirement": "Board demonstrates independence and exercises oversight",
+        "keywords": ["board oversight", "governance", "independence"],
+        "severity": "high",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Board or equivalent oversight structure exists",
+          "Independence from management maintained",
+          "Oversight of system design and operations"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC1.3",
+        "category": "Common Criteria - Control Environment",
+        "requirement": "Management establishes structure, authority, and responsibilities",
+        "keywords": [
+          "organizational structure",
+          "authority",
+          "responsibility",
+          "accountability"
+        ],
+        "severity": "high",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Organizational structure defined",
+          "Reporting lines established",
+          "Roles and responsibilities documented"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC1.4",
+        "category": "Common Criteria - Control Environment",
+        "requirement": "Organization demonstrates commitment to competence",
+        "keywords": ["competence", "skills", "training", "knowledge"],
+        "severity": "medium",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Competencies required for roles defined",
+          "Training programs in place",
+          "Performance evaluations conducted"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC1.5",
+        "category": "Common Criteria - Control Environment",
+        "requirement": "Organization holds individuals accountable for responsibilities",
+        "keywords": ["accountability", "performance measures", "enforcement"],
+        "severity": "high",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Performance measures established",
+          "Deviations identified and acted upon",
+          "Incentives and disciplinary actions in place"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC2.1",
+        "category": "Common Criteria - Communication",
+        "requirement": "Organization obtains or generates relevant quality information",
+        "keywords": ["information quality", "data accuracy", "relevance"],
+        "severity": "medium",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Information needs identified",
+          "Relevant data sources identified and accessed",
+          "Information quality assessed"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC2.2",
+        "category": "Common Criteria - Communication",
+        "requirement": "Organization internally communicates information necessary to support functioning of internal control",
+        "keywords": ["internal communication", "information sharing"],
+        "severity": "medium",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Communication methods established",
+          "Internal control information communicated",
+          "Separate communication lines available"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC2.3",
+        "category": "Common Criteria - Communication",
+        "requirement": "Organization communicates with external parties regarding matters affecting internal control",
+        "keywords": ["external communication", "stakeholder communication"],
+        "severity": "medium",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "External communication channels established",
+          "Service commitments communicated",
+          "System changes communicated to users"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC3.1",
+        "category": "Common Criteria - Risk Assessment",
+        "requirement": "Organization specifies objectives with sufficient clarity",
+        "keywords": ["objectives", "service commitments", "clarity"],
+        "severity": "high",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Service commitments and system requirements defined",
+          "Objectives clearly articulated",
+          "Objectives aligned with commitments"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC3.2",
+        "category": "Common Criteria - Risk Assessment",
+        "requirement": "Organization identifies and analyzes risk",
+        "keywords": [
+          "risk identification",
+          "risk analysis",
+          "threat assessment"
+        ],
+        "severity": "critical",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Risk identification process in place",
+          "Risks analyzed for likelihood and impact",
+          "Internal and external threats considered"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC3.3",
+        "category": "Common Criteria - Risk Assessment",
+        "requirement": "Organization considers potential for fraud in risk assessment",
+        "keywords": ["fraud risk", "fraud prevention", "controls"],
+        "severity": "high",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Fraud risk scenarios identified",
+          "Fraud risk assessment incorporated",
+          "Anti-fraud controls implemented"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC3.4",
+        "category": "Common Criteria - Risk Assessment",
+        "requirement": "Organization identifies and assesses changes that could significantly impact the system",
+        "keywords": [
+          "change management",
+          "impact assessment",
+          "risk of change"
+        ],
+        "severity": "high",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Change identification process",
+          "Impact assessment before implementation",
+          "Significant changes escalated"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC4.1",
+        "category": "Common Criteria - Monitoring",
+        "requirement": "Organization selects, develops, and performs ongoing or separate evaluations",
+        "keywords": ["monitoring", "evaluation", "assessment"],
+        "severity": "high",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Ongoing monitoring activities established",
+          "Periodic separate evaluations conducted",
+          "Evaluation scope and frequency determined"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC4.2",
+        "category": "Common Criteria - Monitoring",
+        "requirement": "Organization evaluates and communicates deficiencies",
+        "keywords": ["deficiency", "remediation", "communication"],
+        "severity": "high",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Control deficiencies identified and assessed",
+          "Deficiencies communicated to responsible parties",
+          "Corrective actions tracked"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC5.1",
+        "category": "Common Criteria - Control Activities",
+        "requirement": "Organization selects and develops control activities",
+        "keywords": [
+          "control activities",
+          "control design",
+          "preventive controls"
+        ],
+        "severity": "critical",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Control activities contribute to risk mitigation",
+          "Controls appropriate to organization's needs",
+          "Mix of preventive and detective controls"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC5.2",
+        "category": "Common Criteria - Control Activities",
+        "requirement": "Organization selects and develops general controls over technology",
+        "keywords": ["IT general controls", "technology controls", "ITGC"],
+        "severity": "critical",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Technology infrastructure controls designed",
+          "Security management process in place",
+          "Technology acquisition and maintenance controls"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC5.3",
+        "category": "Common Criteria - Control Activities",
+        "requirement": "Organization deploys control activities through policies and procedures",
+        "keywords": ["policies", "procedures", "deployment"],
+        "severity": "high",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Policies and procedures documented",
+          "Appropriate personnel assigned",
+          "Controls performed in timely manner"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC6.1",
+        "category": "Common Criteria - Logical Access",
+        "requirement": "Organization implements logical access security to protect information assets",
+        "keywords": [
+          "logical access",
+          "access controls",
+          "authentication",
+          "authorization"
+        ],
+        "severity": "critical",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "User identification and authentication",
+          "Authorization to access resources",
+          "Access rights reviewed periodically",
+          "Least privilege principle applied"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC6.2",
+        "category": "Common Criteria - Logical Access",
+        "requirement": "Organization implements controls to prevent or detect and act upon introduction of unauthorized or malicious software",
+        "keywords": [
+          "malware",
+          "antivirus",
+          "malicious software",
+          "security software"
+        ],
+        "severity": "critical",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Anti-malware software deployed",
+          "Software updates and patches applied",
+          "Malicious activity detected and remediated"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC6.3",
+        "category": "Common Criteria - Logical Access",
+        "requirement": "Organization authorizes, modifies, or removes access to data, software, and other protected information assets",
+        "keywords": ["access provisioning", "user lifecycle", "deprovisioning"],
+        "severity": "critical",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Access request and approval process",
+          "Timely provisioning and deprovisioning",
+          "Access modifications documented",
+          "Terminated user access revoked promptly"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC6.4",
+        "category": "Common Criteria - Logical Access",
+        "requirement": "Organization restricts physical access to facilities and protected information assets",
+        "keywords": [
+          "physical security",
+          "facility access",
+          "data center security"
+        ],
+        "severity": "high",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Physical access controls implemented",
+          "Visitor access monitored and logged",
+          "Sensitive areas restricted"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC6.5",
+        "category": "Common Criteria - Logical Access",
+        "requirement": "Organization discontinues logical and physical protections when access to protected information is no longer required",
+        "keywords": ["access removal", "asset disposal", "data destruction"],
+        "severity": "high",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Access rights removed when no longer needed",
+          "Assets disposed of securely",
+          "Data sanitization procedures"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC6.6",
+        "category": "Common Criteria - Logical Access",
+        "requirement": "Organization implements logical access security measures to protect against threats from sources outside boundaries",
+        "keywords": [
+          "perimeter security",
+          "firewall",
+          "network security",
+          "boundary protection"
+        ],
+        "severity": "critical",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Network security controls (firewalls, IDS/IPS)",
+          "Perimeter defenses in place",
+          "External connections controlled"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC6.7",
+        "category": "Common Criteria - Logical Access",
+        "requirement": "Organization restricts transmission, movement, and removal of information",
+        "keywords": [
+          "data transfer",
+          "data loss prevention",
+          "DLP",
+          "encryption"
+        ],
+        "severity": "high",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Data classification scheme",
+          "Controls for data transfer",
+          "Encryption for data in transit",
+          "Removable media controls"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC6.8",
+        "category": "Common Criteria - Logical Access",
+        "requirement": "Organization implements controls to prevent or detect and act upon unauthorized access",
+        "keywords": [
+          "intrusion detection",
+          "monitoring",
+          "unauthorized access"
+        ],
+        "severity": "critical",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Security monitoring in place",
+          "Log review and analysis",
+          "Alerting for suspicious activities",
+          "Incident response procedures"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC7.1",
+        "category": "Common Criteria - System Operations",
+        "requirement": "Organization ensures changes to system components are authorized, designed, tested, and deployed",
+        "keywords": ["change management", "SDLC", "testing", "deployment"],
+        "severity": "critical",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Change authorization process",
+          "Testing before deployment",
+          "Segregation of duties in change process",
+          "Emergency change procedures"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC7.2",
+        "category": "Common Criteria - System Operations",
+        "requirement": "Organization monitors system and takes action to maintain alignment with objectives",
+        "keywords": ["system monitoring", "performance", "capacity"],
+        "severity": "high",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "System performance monitored",
+          "Capacity planning in place",
+          "Environmental protections monitored",
+          "Issues identified and resolved"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC7.3",
+        "category": "Common Criteria - System Operations",
+        "requirement": "Organization evaluates security events to determine if they could impact the system",
+        "keywords": [
+          "security events",
+          "incident management",
+          "threat intelligence"
+        ],
+        "severity": "critical",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Security event logging",
+          "Event analysis and correlation",
+          "Incident classification",
+          "Response to significant events"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC7.4",
+        "category": "Common Criteria - System Operations",
+        "requirement": "Organization responds to identified security incidents",
+        "keywords": [
+          "incident response",
+          "containment",
+          "remediation",
+          "lessons learned"
+        ],
+        "severity": "critical",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Incident response plan documented",
+          "Roles and responsibilities defined",
+          "Containment and eradication procedures",
+          "Post-incident review conducted"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC7.5",
+        "category": "Common Criteria - System Operations",
+        "requirement": "Organization identifies, develops, and implements activities to recover from disruptions",
+        "keywords": ["business continuity", "disaster recovery", "BCP", "DRP"],
+        "severity": "critical",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Business continuity plan documented",
+          "Disaster recovery procedures defined",
+          "Backup and recovery tested",
+          "Recovery time objectives (RTO) defined"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC8.1",
+        "category": "Common Criteria - Change Management",
+        "requirement": "Organization authorizes, designs, develops, configures, documents, tests, approves, and implements changes",
+        "keywords": ["change control", "SDLC", "version control", "testing"],
+        "severity": "critical",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Formal change management process",
+          "Change requests documented and approved",
+          "Testing completed before production",
+          "Rollback procedures available"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC9.1",
+        "category": "Common Criteria - Risk Mitigation",
+        "requirement": "Organization identifies, selects, and develops risk mitigation activities for identified risks",
+        "keywords": ["risk mitigation", "controls", "risk treatment"],
+        "severity": "high",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Risk mitigation strategies defined",
+          "Controls mapped to risks",
+          "Residual risk assessed",
+          "Risk mitigation effectiveness monitored"
+        ]
+      },
+      {
+        "control_id": "SOC2-CC9.2",
+        "category": "Common Criteria - Risk Mitigation",
+        "requirement": "Organization assesses and manages risks associated with vendors and business partners",
+        "keywords": [
+          "vendor risk",
+          "third party risk",
+          "supply chain",
+          "vendor management"
+        ],
+        "severity": "critical",
+        "trust_service": "Security (Required)",
+        "verification_points": [
+          "Vendor risk assessment process",
+          "Due diligence performed on vendors",
+          "Vendor contracts include security requirements",
+          "Ongoing vendor monitoring"
+        ]
+      },
+      {
+        "control_id": "SOC2-A1.1",
+        "category": "Availability",
+        "requirement": "Organization maintains, monitors, and evaluates current processing capacity",
+        "keywords": ["capacity", "performance", "scalability", "availability"],
+        "severity": "high",
+        "trust_service": "Availability (Optional)",
+        "verification_points": [
+          "Capacity monitoring in place",
+          "Performance metrics tracked",
+          "Capacity planning conducted",
+          "Scalability tested"
+        ]
+      },
+      {
+        "control_id": "SOC2-A1.2",
+        "category": "Availability",
+        "requirement": "Organization authorizes, designs, develops, implements, operates, approves, maintains, and monitors environmental protections",
+        "keywords": ["environmental controls", "power", "HVAC", "data center"],
+        "severity": "medium",
+        "trust_service": "Availability (Optional)",
+        "verification_points": [
+          "Environmental controls implemented",
+          "Redundant power and cooling",
+          "Environmental monitoring",
+          "Fire suppression systems"
+        ]
+      },
+      {
+        "control_id": "SOC2-A1.3",
+        "category": "Availability",
+        "requirement": "Organization authorizes, designs, develops, implements, operates, approves, maintains, and monitors for processing integrity",
+        "keywords": ["data integrity", "processing accuracy", "completeness"],
+        "severity": "high",
+        "trust_service": "Availability (Optional)",
+        "verification_points": [
+          "Data backup procedures",
+          "Recovery testing performed",
+          "Data integrity checks",
+          "Redundancy for critical systems"
+        ]
+      },
+      {
+        "control_id": "SOC2-PI1.1",
+        "category": "Processing Integrity",
+        "requirement": "Organization obtains or generates quality data and processes it to meet objectives",
+        "keywords": ["data quality", "processing accuracy", "validation"],
+        "severity": "high",
+        "trust_service": "Processing Integrity (Optional)",
+        "verification_points": [
+          "Input validation controls",
+          "Processing logic verified",
+          "Output accuracy checked",
+          "Error handling procedures"
+        ]
+      },
+      {
+        "control_id": "SOC2-PI1.2",
+        "category": "Processing Integrity",
+        "requirement": "Organization implements policies and procedures for complete, accurate, and timely processing",
+        "keywords": ["completeness", "accuracy", "timeliness", "processing"],
+        "severity": "high",
+        "trust_service": "Processing Integrity (Optional)",
+        "verification_points": [
+          "Processing completeness verified",
+          "Accuracy controls in place",
+          "Timeliness requirements met",
+          "Exception handling documented"
+        ]
+      },
+      {
+        "control_id": "SOC2-PI1.3",
+        "category": "Processing Integrity",
+        "requirement": "Organization creates and maintains records of system processing",
+        "keywords": ["audit trail", "logging", "processing records"],
+        "severity": "medium",
+        "trust_service": "Processing Integrity (Optional)",
+        "verification_points": [
+          "Transaction logs maintained",
+          "Audit trails available",
+          "Processing history retained",
+          "Log integrity protected"
+        ]
+      },
+      {
+        "control_id": "SOC2-C1.1",
+        "category": "Confidentiality",
+        "requirement": "Organization identifies and maintains confidential information",
+        "keywords": [
+          "confidentiality",
+          "data classification",
+          "sensitive data"
+        ],
+        "severity": "critical",
+        "trust_service": "Confidentiality (Optional)",
+        "verification_points": [
+          "Confidential data identified and classified",
+          "Access to confidential data restricted",
+          "Encryption for confidential data",
+          "Handling procedures documented"
+        ]
+      },
+      {
+        "control_id": "SOC2-C1.2",
+        "category": "Confidentiality",
+        "requirement": "Organization disposes of confidential information to meet objectives",
+        "keywords": [
+          "data disposal",
+          "secure deletion",
+          "confidential data destruction"
+        ],
+        "severity": "high",
+        "trust_service": "Confidentiality (Optional)",
+        "verification_points": [
+          "Secure disposal procedures",
+          "Media sanitization process",
+          "Disposal documented and verified",
+          "Third-party disposal agreements"
+        ]
+      },
+      {
+        "control_id": "SOC2-P1.1",
+        "category": "Privacy",
+        "requirement": "Organization provides notice to data subjects about privacy practices",
+        "keywords": ["privacy notice", "transparency", "disclosure"],
+        "severity": "high",
+        "trust_service": "Privacy (Optional)",
+        "verification_points": [
+          "Privacy notice provided at collection",
+          "Notice includes required elements",
+          "Changes to notice communicated",
+          "Notice easily accessible"
+        ]
+      },
+      {
+        "control_id": "SOC2-P2.1",
+        "category": "Privacy",
+        "requirement": "Organization communicates choices available regarding collection, use, retention, and disclosure",
+        "keywords": ["choice", "consent", "opt-out", "preferences"],
+        "severity": "high",
+        "trust_service": "Privacy (Optional)",
+        "verification_points": [
+          "Choice mechanisms implemented",
+          "Consent obtained where required",
+          "Opt-out options available",
+          "Preferences respected"
+        ]
+      },
+      {
+        "control_id": "SOC2-P3.1",
+        "category": "Privacy",
+        "requirement": "Organization collects personal information to meet objectives",
+        "keywords": [
+          "collection limitation",
+          "data minimization",
+          "purpose specification"
+        ],
+        "severity": "high",
+        "trust_service": "Privacy (Optional)",
+        "verification_points": [
+          "Collection limited to stated purposes",
+          "Fair and lawful collection methods",
+          "Data minimization applied",
+          "Collection documented"
+        ]
+      },
+      {
+        "control_id": "SOC2-P4.1",
+        "category": "Privacy",
+        "requirement": "Organization limits use, retention, and disposal of personal information",
+        "keywords": ["use limitation", "retention", "disposal"],
+        "severity": "high",
+        "trust_service": "Privacy (Optional)",
+        "verification_points": [
+          "Use limited to stated purposes",
+          "Retention periods defined",
+          "Secure disposal procedures",
+          "Data anonymization where applicable"
+        ]
+      },
+      {
+        "control_id": "SOC2-P5.1",
+        "category": "Privacy",
+        "requirement": "Organization grants data subjects access to their personal information",
+        "keywords": ["access rights", "data subject access", "portability"],
+        "severity": "medium",
+        "trust_service": "Privacy (Optional)",
+        "verification_points": [
+          "Access request process defined",
+          "Identity verification for requests",
+          "Timely response to requests",
+          "Data provided in usable format"
+        ]
+      },
+      {
+        "control_id": "SOC2-P6.1",
+        "category": "Privacy",
+        "requirement": "Organization discloses personal information to third parties with consent",
+        "keywords": ["disclosure", "third party sharing", "consent"],
+        "severity": "high",
+        "trust_service": "Privacy (Optional)",
+        "verification_points": [
+          "Disclosures documented",
+          "Consent obtained for disclosures",
+          "Third parties contractually bound",
+          "Disclosure tracking mechanisms"
+        ]
+      },
+      {
+        "control_id": "SOC2-P7.1",
+        "category": "Privacy",
+        "requirement": "Organization maintains accurate, complete, and relevant personal information",
+        "keywords": ["data quality", "accuracy", "correction"],
+        "severity": "medium",
+        "trust_service": "Privacy (Optional)",
+        "verification_points": [
+          "Data accuracy mechanisms",
+          "Correction process available",
+          "Regular data quality reviews",
+          "Inaccurate data corrected promptly"
+        ]
+      },
+      {
+        "control_id": "SOC2-P8.1",
+        "category": "Privacy",
+        "requirement": "Organization implements controls to meet privacy objectives",
+        "keywords": [
+          "privacy controls",
+          "privacy by design",
+          "privacy program"
+        ],
+        "severity": "critical",
+        "trust_service": "Privacy (Optional)",
+        "verification_points": [
+          "Privacy program established",
+          "Privacy impact assessments conducted",
+          "Privacy by design principles applied",
+          "Privacy training provided"
+        ]
+      }
+    ]
+  },
+  {
+    "framework_id": "hipaa_2025",
+    "framework_name": "HIPAA Security and Privacy Rules",
+    "version": "2025 Proposed Security Rule Updates",
+    "effective_date": "1996-08-21",
+    "last_updated": "2025-01-06",
+    "jurisdiction": "United States",
+    "controls": [
+      {
+        "control_id": "HIPAA-SEC-1.1",
+        "category": "Administrative Safeguards",
+        "requirement": "Security Management Process - Implement policies and procedures to prevent, detect, contain, and correct security violations",
+        "keywords": [
+          "security management",
+          "risk analysis",
+          "risk management",
+          "policies"
+        ],
+        "severity": "critical",
+        "rule_reference": "45 CFR § 164.308(a)(1)",
+        "implementation_spec": "Required",
+        "verification_points": [
+          "Risk analysis conducted and documented",
+          "Risk management process implemented",
+          "Sanction policy for violations",
+          "Information system activity review"
+        ]
+      },
+      {
+        "control_id": "HIPAA-SEC-1.2",
+        "category": "Administrative Safeguards",
+        "requirement": "Assigned Security Responsibility - Identify security official responsible for security policies",
+        "keywords": ["security officer", "responsibility", "accountability"],
+        "severity": "critical",
+        "rule_reference": "45 CFR § 164.308(a)(2)",
+        "implementation_spec": "Required",
+        "verification_points": [
+          "Security official designated",
+          "Responsibilities clearly defined",
+          "Authority to implement security measures"
+        ]
+      },
+      {
+        "control_id": "HIPAA-SEC-1.3",
+        "category": "Administrative Safeguards",
+        "requirement": "Workforce Security - Implement policies for workforce access authorization and supervision",
+        "keywords": [
+          "workforce",
+          "authorization",
+          "access control",
+          "termination"
+        ],
+        "severity": "critical",
+        "rule_reference": "45 CFR § 164.308(a)(3)",
+        "implementation_spec": "Required (2025: All specs required)",
+        "verification_points": [
+          "Access authorization procedures",
+          "Workforce clearance procedures",
+          "Termination procedures implemented",
+          "Access removed upon termination"
+        ]
+      },
+      {
+        "control_id": "HIPAA-SEC-1.4",
+        "category": "Administrative Safeguards",
+        "requirement": "Information Access Management - Implement policies for authorizing access to ePHI",
+        "keywords": [
+          "access management",
+          "authorization",
+          "minimum necessary",
+          "role-based access"
+        ],
+        "severity": "critical",
+        "rule_reference": "45 CFR § 164.308(a)(4)",
+        "implementation_spec": "Required (2025: All specs required)",
+        "verification_points": [
+          "Access authorization documented",
+          "Access establishment and modification procedures",
+          "Role-based access control implemented",
+          "Minimum necessary access enforced"
+        ]
+      },
+      {
+        "control_id": "HIPAA-SEC-1.5",
+        "category": "Administrative Safeguards",
+        "requirement": "Security Awareness and Training - Implement security awareness program for workforce",
+        "keywords": ["training", "awareness", "security education", "phishing"],
+        "severity": "high",
+        "rule_reference": "45 CFR § 164.308(a)(5)",
+        "implementation_spec": "Required (2025: All specs required)",
+        "verification_points": [
+          "Security reminders provided",
+          "Protection from malicious software training",
+          "Log-in monitoring procedures",
+          "Password management training"
+        ]
+      },
+      {
+        "control_id": "HIPAA-SEC-1.6",
+        "category": "Administrative Safeguards",
+        "requirement": "Security Incident Procedures - Implement procedures to respond to security incidents",
+        "keywords": [
+          "incident response",
+          "breach",
+          "security incidents",
+          "reporting"
+        ],
+        "severity": "critical",
+        "rule_reference": "45 CFR § 164.308(a)(6)",
+        "implementation_spec": "Required",
+        "verification_points": [
+          "Incident identification procedures",
+          "Response and reporting procedures",
+          "Incident documentation maintained",
+          "Post-incident analysis conducted"
+        ]
+      },
+      {
+        "control_id": "HIPAA-SEC-1.7",
+        "category": "Administrative Safeguards",
+        "requirement": "Contingency Plan - Establish procedures for responding to emergencies",
+        "keywords": [
+          "business continuity",
+          "disaster recovery",
+          "backup",
+          "emergency mode"
+        ],
+        "severity": "critical",
+        "rule_reference": "45 CFR § 164.308(a)(7)",
+        "implementation_spec": "Required (2025: All specs required)",
+        "verification_points": [
+          "Data backup plan implemented",
+          "Disaster recovery plan documented",
+          "Emergency mode operation plan",
+          "Testing and revision procedures",
+          "Applications and data criticality analysis"
+        ]
+      },
+      {
+        "control_id": "HIPAA-SEC-1.8",
+        "category": "Administrative Safeguards",
+        "requirement": "Evaluation - Perform periodic evaluation of security measures",
+        "keywords": [
+          "evaluation",
+          "assessment",
+          "compliance audit",
+          "annual review"
+        ],
+        "severity": "critical",
+        "rule_reference": "45 CFR § 164.308(a)(8)",
+        "implementation_spec": "Required (2025: Annual audit required)",
+        "verification_points": [
+          "Annual compliance audit conducted",
+          "Technical and non-technical evaluations",
+          "Security measures effectiveness assessed",
+          "Evaluation results documented"
+        ]
+      },
+      {
+        "control_id": "HIPAA-SEC-1.9",
+        "category": "Administrative Safeguards",
+        "requirement": "Business Associate Contracts - Obtain satisfactory assurances from business associates",
+        "keywords": [
+          "business associate",
+          "BAA",
+          "contracts",
+          "subcontractors"
+        ],
+        "severity": "critical",
+        "rule_reference": "45 CFR § 164.308(b)(1)",
+        "implementation_spec": "Required (2025: Enhanced requirements)",
+        "verification_points": [
+          "Written BAA with all business associates",
+          "BAA includes required provisions",
+          "Annual certification from BA on technical safeguards",
+          "24-hour notification of contingency plan activation",
+          "Subcontractor agreements in place"
+        ]
+      },
+      {
+        "control_id": "HIPAA-SEC-2.1",
+        "category": "Physical Safeguards",
+        "requirement": "Facility Access Controls - Limit physical access to electronic information systems",
+        "keywords": ["physical access", "facility security", "access logs"],
+        "severity": "high",
+        "rule_reference": "45 CFR § 164.310(a)(1)",
+        "implementation_spec": "Required (2025: All specs required)",
+        "verification_points": [
+          "Contingency operations for facility access",
+          "Facility security plan documented",
+          "Access control and validation procedures",
+          "Maintenance records for security systems"
+        ]
+      },
+      {
+        "control_id": "HIPAA-SEC-2.2",
+        "category": "Physical Safeguards",
+        "requirement": "Workstation Use - Implement policies for workstation functions and security",
+        "keywords": ["workstation", "endpoint security", "physical location"],
+        "severity": "medium",
+        "rule_reference": "45 CFR § 164.310(b)",
+        "implementation_spec": "Required",
+        "verification_points": [
+          "Workstation use policies defined",
+          "Proper functions and location specified",
+          "Physical safeguards for workstations",
+          "Screen privacy controls"
+        ]
+      },
+      {
+        "control_id": "HIPAA-SEC-2.3",
+        "category": "Physical Safeguards",
+        "requirement": "Workstation Security - Implement physical safeguards for workstations",
+        "keywords": [
+          "workstation security",
+          "physical controls",
+          "screen locks"
+        ],
+        "severity": "medium",
+        "rule_reference": "45 CFR § 164.310(c)",
+        "implementation_spec": "Required",
+        "verification_points": [
+          "Physical barriers or positioning",
+          "Screen locks and timeouts",
+          "Protection from unauthorized viewing",
+          "Secure areas for workstations with ePHI"
+        ]
+      },
+      {
+        "control_id": "HIPAA-SEC-2.4",
+        "category": "Physical Safeguards",
+        "requirement": "Device and Media Controls - Implement policies for disposal and reuse of hardware and media",
+        "keywords": [
+          "media disposal",
+          "sanitization",
+          "device disposal",
+          "data destruction"
+        ],
+        "severity": "high",
+        "rule_reference": "45 CFR § 164.310(d)(1)",
+        "implementation_spec": "Required (2025: All specs required)",
+        "verification_points": [
+          "Disposal procedures for ePHI",
+          "Media re-use procedures",
+          "Accountability for hardware and media",
+          "Data backup before movement",
+          "Sanitization methods documented"
+        ]
+      },
+      {
+        "control_id": "HIPAA-SEC-3.1",
+        "category": "Technical Safeguards",
+        "requirement": "Access Control - Implement technical policies limiting access to authorized persons",
+        "keywords": [
+          "access control",
+          "unique user ID",
+          "emergency access",
+          "encryption"
+        ],
+        "severity": "critical",
+        "rule_reference": "45 CFR § 164.312(a)(1)",
+        "implementation_spec": "Required (2025: All specs required)",
+        "verification_points": [
+          "Unique user identification assigned",
+          "Emergency access procedures",
+          "Automatic logoff implemented",
+          "Encryption and decryption mechanisms"
+        ]
+      },
+      {
+        "control_id": "HIPAA-SEC-3.2",
+        "category": "Technical Safeguards",
+        "requirement": "Audit Controls - Implement hardware, software, and procedures to record and examine activity",
+        "keywords": [
+          "audit logging",
+          "monitoring",
+          "log review",
+          "activity tracking"
+        ],
+        "severity": "critical",
+        "rule_reference": "45 CFR § 164.312(b)",
+        "implementation_spec": "Required",
+        "verification_points": [
+          "Audit logs capture ePHI access and changes",
+          "Log review performed regularly",
+          "Logs protected from alteration",
+          "Retention period defined for logs"
+        ]
+      },
+      {
+        "control_id": "HIPAA-SEC-3.3",
+        "category": "Technical Safeguards",
+        "requirement": "Integrity - Implement policies to ensure ePHI is not improperly altered or destroyed",
+        "keywords": ["data integrity", "authentication", "validation"],
+        "severity": "high",
+        "rule_reference": "45 CFR § 164.312(c)(1)",
+        "implementation_spec": "Required (2025: Mechanism required)",
+        "verification_points": [
+          "Electronic mechanisms to corroborate integrity",
+          "Hash functions or checksums used",
+          "Integrity verification procedures",
+          "Unauthorized changes detected"
+        ]
+      },
+      {
+        "control_id": "HIPAA-SEC-3.4",
+        "category": "Technical Safeguards",
+        "requirement": "Person or Entity Authentication - Verify identity before granting access",
+        "keywords": [
+          "authentication",
+          "MFA",
+          "multi-factor",
+          "identity verification"
+        ],
+        "severity": "critical",
+        "rule_reference": "45 CFR § 164.312(d)",
+        "implementation_spec": "Required (2025: MFA required)",
+        "verification_points": [
+          "Multi-factor authentication implemented",
+          "At least two authentication factors required",
+          "Strong authentication for remote access",
+          "Biometric or token-based options available"
+        ]
+      },
+      {
+        "control_id": "HIPAA-SEC-3.5",
+        "category": "Technical Safeguards",
+        "requirement": "Transmission Security - Implement technical security for ePHI transmitted over networks",
+        "keywords": [
+          "encryption in transit",
+          "transmission security",
+          "network security"
+        ],
+        "severity": "critical",
+        "rule_reference": "45 CFR § 164.312(e)(1)",
+        "implementation_spec": "Required (2025: All specs required)",
+        "verification_points": [
+          "Encryption for data in transit",
+          "Integrity controls for transmissions",
+          "TLS/SSL or equivalent encryption",
+          "Secure protocols for all ePHI transmission"
+        ]
+      },
+      {
+        "control_id": "HIPAA-SEC-4.1",
+        "category": "Documentation (2025 Updates)",
+        "requirement": "Written Documentation of All Security Policies and Procedures",
+        "keywords": [
+          "documentation",
+          "policies",
+          "procedures",
+          "written requirements"
+        ],
+        "severity": "critical",
+        "rule_reference": "2025 NPRM - New Requirement",
+        "implementation_spec": "Required",
+        "verification_points": [
+          "All security policies documented in writing",
+          "All procedures documented in writing",
+          "Security plans maintained",
+          "Documentation regularly updated"
+        ]
+      },
+      {
+        "control_id": "HIPAA-SEC-4.2",
+        "category": "Asset Management (2025 Updates)",
+        "requirement": "Technology Assets Inventory and Network Diagram",
+        "keywords": [
+          "asset inventory",
+          "network diagram",
+          "asset management",
+          "CMDB"
+        ],
+        "severity": "critical",
+        "rule_reference": "2025 NPRM - New Requirement",
+        "implementation_spec": "Required",
+        "verification_points": [
+          "Complete inventory of technology assets maintained",
+          "Hardware, software, and data documented",
+          "Network architecture diagram created and maintained",
+          "Asset inventory updated regularly"
+        ]
+      },
+      {
+        "control_id": "HIPAA-SEC-4.3",
+        "category": "Vulnerability Management (2025 Updates)",
+        "requirement": "Annual Penetration Testing",
+        "keywords": [
+          "penetration testing",
+          "pentest",
+          "security testing",
+          "vulnerability assessment"
+        ],
+        "severity": "critical",
+        "rule_reference": "2025 NPRM - New Requirement",
+        "implementation_spec": "Required",
+        "verification_points": [
+          "Penetration testing conducted annually",
+          "Testing performed by qualified personnel",
+          "Findings documented and remediated",
+          "Retesting of critical vulnerabilities"
+        ]
+      },
+      {
+        "control_id": "HIPAA-SEC-4.4",
+        "category": "Encryption (2025 Updates)",
+        "requirement": "Encryption of ePHI at Rest and in Transit",
+        "keywords": [
+          "encryption at rest",
+          "encryption in transit",
+          "data encryption"
+        ],
+        "severity": "critical",
+        "rule_reference": "2025 NPRM - Enhanced Requirement",
+        "implementation_spec": "Required",
+        "verification_points": [
+          "All ePHI encrypted at rest",
+          "All ePHI encrypted in transit",
+          "Strong encryption algorithms used (AES-256, etc.)",
+          "Encryption key management procedures"
+        ]
+      },
+      {
+        "control_id": "HIPAA-PRIV-1.1",
+        "category": "Privacy Rule",
+        "requirement": "Notice of Privacy Practices - Provide notice to individuals about privacy practices",
+        "keywords": ["privacy notice", "NPP", "transparency"],
+        "severity": "high",
+        "rule_reference": "45 CFR § 164.520",
+        "implementation_spec": "Required",
+        "verification_points": [
+          "Notice of Privacy Practices developed",
+          "Notice provided to patients",
+          "Notice updated when practices change",
+          "Acknowledgment of receipt obtained"
+        ]
+      },
+      {
+        "control_id": "HIPAA-PRIV-1.2",
+        "category": "Privacy Rule",
+        "requirement": "Individual Rights - Right to access PHI within 15-30 days",
+        "keywords": ["patient access", "right of access", "medical records"],
+        "severity": "high",
+        "rule_reference": "45 CFR § 164.524 (2025: 15 days)",
+        "implementation_spec": "Required",
+        "verification_points": [
+          "Access provided within 15 days (2025 update)",
+          "In-person inspection allowed",
+          "Photographs and notes permitted",
+          "Fee schedule provided",
+          "Denials documented with reason"
+        ]
+      },
+      {
+        "control_id": "HIPAA-PRIV-1.3",
+        "category": "Privacy Rule",
+        "requirement": "Minimum Necessary - Limit PHI use and disclosure to minimum necessary",
+        "keywords": [
+          "minimum necessary",
+          "data minimization",
+          "access limitation"
+        ],
+        "severity": "high",
+        "rule_reference": "45 CFR § 164.502(b)",
+        "implementation_spec": "Required",
+        "verification_points": [
+          "Minimum necessary policies established",
+          "Role-based access implements minimum necessary",
+          "Disclosures limited to minimum necessary",
+          "Regular review of access rights"
+        ]
+      },
+      {
+        "control_id": "HIPAA-PRIV-1.4",
+        "category": "Privacy Rule",
+        "requirement": "Uses and Disclosures - Obtain authorization for uses beyond treatment, payment, operations",
+        "keywords": ["authorization", "consent", "permitted uses"],
+        "severity": "high",
+        "rule_reference": "45 CFR § 164.508",
+        "implementation_spec": "Required",
+        "verification_points": [
+          "Authorization forms for non-TPO uses",
+          "Valid authorizations obtained and documented",
+          "Right to revoke authorization communicated",
+          "Authorizations contain all required elements"
+        ]
+      },
+      {
+        "control_id": "HIPAA-BREACH-1.1",
+        "category": "Breach Notification",
+        "requirement": "Breach Notification to Individuals - Notify affected individuals within 60 days",
+        "keywords": ["breach notification", "incident reporting", "60 days"],
+        "severity": "critical",
+        "rule_reference": "45 CFR § 164.404",
+        "implementation_spec": "Required",
+        "verification_points": [
+          "Breach notification within 60 days",
+          "Written notification to individuals",
+          "Required content included in notification",
+          "Substitute notice if contact info unavailable"
+        ]
+      },
+      {
+        "control_id": "HIPAA-BREACH-1.2",
+        "category": "Breach Notification",
+        "requirement": "Breach Notification to HHS - Report breaches affecting 500+ individuals immediately",
+        "keywords": ["HHS notification", "OCR reporting", "breach reporting"],
+        "severity": "critical",
+        "rule_reference": "45 CFR § 164.408",
+        "implementation_spec": "Required",
+        "verification_points": [
+          "Breaches of 500+ reported without unreasonable delay",
+          "Breaches under 500 reported annually",
+          "HHS breach portal submission",
+          "All required information provided"
+        ]
+      }
+    ]
+  }
+]
