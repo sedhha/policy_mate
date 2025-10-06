@@ -100,3 +100,145 @@ This is what we're imagining:
 - Request dashboard link for compliance dashboard
 - Request configuration dashboard link for configuration dashboard
 - Request manual review link of a document for compliance issues
+
+### Compliance Agent Step by Step process:
+
+Key Focus Areas for Compliance Review
+
+1. Gap Analysis (Primary Focus)
+
+- Missing required sections/controls
+- Incomplete policy statements
+- Outdated references or timeframes
+- Unclear ownership/responsibilities
+
+2. Clarity Assessment
+
+- Ambiguous language ("may", "should" vs "must", "will")
+- Vague metrics or thresholds
+- Undefined terms or acronyms
+- Contradictory statements
+
+3. Coverage Verification
+
+- Required controls present vs missing
+- Scope alignment with standard
+- Exception handling documented
+
+4. Recommended Approach (Resource-Efficient)
+   Instead of full side-by-side comparison, use a control-based checklist approach:
+
+- Standard Framework → Extract Control Requirements → Score Document Against Controls
+
+Unclear ownership/responsibilities
+
+2. Clarity Assessment
+
+Ambiguous language ("may", "should" vs "must", "will")
+
+Vague metrics or thresholds
+
+Undefined terms or acronyms
+
+Contradictory statements
+
+3. Coverage Verification
+
+Required controls present vs missing
+
+Scope alignment with standard
+
+Exception handling documented
+
+Recommended Approach (Resource-Efficient)
+Instead of full side-by-side comparison, use a control-based checklist approach:
+
+Standard Framework → Extract Control Requirements → Score Document Against Controls
+
+Architecture Strategy:
+
+1. Pre-process Standard Documents (One-time)
+
+Extract control requirements from GDPR/SOC2/HIPAA standards
+
+Store as structured checklist in DynamoDB
+
+Create embeddings for semantic search (not full document comparison)
+
+2. Document Analysis Flow
+
+User Doc → Bedrock Analysis → {
+
+- Control coverage score (0-100%)
+- Missing controls list
+- Ambiguous sections flagged
+- Recommendations
+  }
+
+3. Bedrock Prompt Strategy
+
+# Efficient approach - analyze against checklist, not full doc comparison
+
+prompt = f"""
+Analyze this compliance document section against these specific controls:
+{control_checklist}
+
+Document Section: {doc_section}
+
+Identify:
+
+1. CLEAR gaps (missing controls)
+2. UNCLEAR statements (ambiguous language)
+3. PARTIAL coverage (incomplete implementation)
+
+Format: JSON with severity levels
+"""
+
+Why This is More Efficient:
+✅ Lower token usage - Compare against structured checklist, not full standard docs
+✅ Faster processing - Parallel analysis of document sections
+✅ Consistent results - Standardized control framework
+✅ Scalable - Add new frameworks without reprocessing everything
+
+Implementation for Your System:
+Compliance Template Structure (Store in DynamoDB):
+
+{
+"template_id": "gdpr_v1",
+"controls": [
+{
+"control_id": "GDPR-7.1",
+"requirement": "Data processing must have lawful basis",
+"keywords": ["lawful basis", "consent", "legitimate interest"],
+"severity": "critical"
+}
+]
+}
+
+Copy
+
+Insert at cursor
+json
+Analysis Agent Workflow:
+
+Chunk user document (by section)
+
+For each chunk → Bedrock call with relevant controls
+
+Aggregate findings with confidence scores
+
+Flag ambiguous sections for human review
+
+Generate compliance report
+
+Resource Optimization:
+
+Use Claude Haiku for initial screening (cheaper)
+
+Use Claude Sonnet only for ambiguous sections
+
+Cache standard control embeddings
+
+Batch process multiple sections in single API call
+
+This approach gives you precise, actionable results without the overhead of full document comparison, which aligns perfectly with your "minimal code" requirement and AWS Bedrock infrastructure.
