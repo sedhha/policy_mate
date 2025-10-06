@@ -11,3 +11,4 @@ __pycache__/
 *.py[cod]
 *$py.class
 lambdas/test_bedrock_format.py
+lambdas/src/policy_mate_lambda.egg-info/*
