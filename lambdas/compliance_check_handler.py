@@ -102,12 +102,15 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
     log_with_context("INFO", "Compliance check handler invoked", request_id=context.aws_request_id)
     
     try:
-        body = json.loads(event.get('body', '{}'))
+        # Extract from Bedrock Agent format
+        request_body = event.get('requestBody', {}).get('content', {}).get('application/json', {})
+        properties = request_body.get('properties', [])
+        params = {p['name']: p['value'] for p in properties}
         
-        user_text = body.get('text', '').strip()
-        question = body.get('question', '').strip()
-        framework_id = body.get('framework_id', '').upper()
-        control_id = body.get('control_id')
+        user_text = params.get('text', '').strip()
+        question = params.get('question', '').strip()
+        framework_id = params.get('framework_id', '').upper()
+        control_id = params.get('control_id')
         
         # Validation
         if not user_text:
