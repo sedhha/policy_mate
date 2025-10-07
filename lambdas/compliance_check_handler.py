@@ -39,33 +39,32 @@ def analyze_compliance(user_text: str, question: str, controls: list[dict[str, A
     ])
     
     prompt = f"""You are a compliance expert. Analyze the user's policy text against the relevant compliance requirements.
+                User's Policy Text:
+                {user_text}
 
-User's Policy Text:
-{user_text}
+                User's Question:
+                {question}
 
-User's Question:
-{question}
+                Relevant Compliance Requirements:
+                {controls_text}
 
-Relevant Compliance Requirements:
-{controls_text}
+                Provide a detailed analysis in the following JSON format:
+                {{
+                "verdict": "COMPLIANT" | "NON_COMPLIANT" | "UNCLEAR" | "PARTIAL",
+                "summary": "Brief 2-3 sentence summary of compliance status",
+                "detailed_analysis": "Detailed explanation of how the text aligns or doesn't align with requirements",
+                "matched_controls": [
+                    {{
+                    "control_id": "control identifier",
+                    "status": "COMPLIANT" | "NON_COMPLIANT" | "UNCLEAR",
+                    "reasoning": "specific reasoning for this control"
+                    }}
+                ],
+                "gaps": ["list of missing elements if any"],
+                "recommendations": ["actionable suggestions for improvement if needed"]
+                }}
 
-Provide a detailed analysis in the following JSON format:
-{{
-  "verdict": "COMPLIANT" | "NON_COMPLIANT" | "UNCLEAR" | "PARTIAL",
-  "summary": "Brief 2-3 sentence summary of compliance status",
-  "detailed_analysis": "Detailed explanation of how the text aligns or doesn't align with requirements",
-  "matched_controls": [
-    {{
-      "control_id": "control identifier",
-      "status": "COMPLIANT" | "NON_COMPLIANT" | "UNCLEAR",
-      "reasoning": "specific reasoning for this control"
-    }}
-  ],
-  "gaps": ["list of missing elements if any"],
-  "recommendations": ["actionable suggestions for improvement if needed"]
-}}
-
-Return ONLY valid JSON, no additional text."""
+                Return ONLY valid JSON, no additional text."""
 
     response = bedrock.invoke_model(  # type: ignore
         modelId='anthropic.claude-3-haiku-20240307-v1:0',
