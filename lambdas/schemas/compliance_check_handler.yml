@@ -1,0 +1,103 @@
+openapi: 3.0.0
+info:
+  title: Policy Mate Compliance Check API
+  version: 1.0.0
+  description: API for checking policy text compliance against regulatory frameworks
+paths:
+  /compliance/check:
+    post:
+      summary: Check compliance of policy text
+      description: Analyze policy text against compliance framework requirements
+      operationId: checkCompliance
+      parameters:
+        - name: bearer_token
+          in: query
+          required: true
+          schema:
+            type: string
+          description: JWT bearer token for authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+                - question
+                - framework_id
+              properties:
+                text:
+                  type: string
+                  description: The policy text to analyze
+                question:
+                  type: string
+                  description: Specific compliance question to answer
+                framework_id:
+                  type: string
+                  enum:
+                    - GDPR
+                    - SOC2
+                    - HIPAA
+                  description: Compliance framework to check against
+                control_id:
+                  type: string
+                  description: Optional specific control ID to check
+      responses:
+        '200':
+          description: Compliance analysis completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  analysis:
+                    type: object
+                    properties:
+                      verdict:
+                        type: string
+                        enum:
+                          - COMPLIANT
+                          - NON_COMPLIANT
+                          - UNCLEAR
+                          - PARTIAL
+                      summary:
+                        type: string
+                      detailed_analysis:
+                        type: string
+                      matched_controls:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            control_id:
+                              type: string
+                            status:
+                              type: string
+                            reasoning:
+                              type: string
+                      gaps:
+                        type: array
+                        items:
+                          type: string
+                      recommendations:
+                        type: array
+                        items:
+                          type: string
+                  controls_analyzed:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        control_id:
+                          type: string
+                        requirement:
+                          type: string
+                        category:
+                          type: string
+        '400':
+          description: Bad request - missing or invalid parameters
+        '401':
+          description: Unauthorized - invalid or expired token
+        '404':
+          description: No relevant controls found

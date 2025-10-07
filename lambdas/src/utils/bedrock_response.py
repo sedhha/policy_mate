@@ -32,9 +32,18 @@ def is_bedrock_agent(event: Dict[str, Any]) -> bool:
 
 def get_bedrock_parameters(event: Dict[str, Any]) -> Dict[str, str]:
     # Check requestBody first (for POST/PUT)
-    request_body = event.get('requestBody', {}).get('content', {}).get('application/json', [])
+    request_body = event.get('requestBody', {}).get('content', {}).get('application/json', {})
+    print(f"DEBUG: request_body type={type(request_body)}, value={request_body}")
     if request_body:
-        return {p['name']: p['value'] for p in request_body}
+        properties = request_body.get('properties', [])
+        print(f"DEBUG: properties type={type(properties)}, value={properties}")
+        if properties:
+            result = {p['name']: p['value'] for p in properties}
+            print(f"DEBUG: Returning from requestBody: {result}")
+            return result
     # Fallback to parameters (for GET)
     parameters = event.get('parameters', [])
-    return {p['name']: p['value'] for p in parameters}
+    print(f"DEBUG: parameters type={type(parameters)}, value={parameters}")
+    result = {p['name']: p['value'] for p in parameters}
+    print(f"DEBUG: Returning from parameters: {result}")
+    return result
