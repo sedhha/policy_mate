@@ -1,26 +1,12 @@
 import json
 import boto3
-from opensearchpy import OpenSearch, RequestsHttpConnection
-from requests_aws4auth import AWS4Auth  # type: ignore
 from src.utils.services.dynamoDB import DynamoDBTable, get_table
-from src.utils.settings import OPEN_SEARCH_HOST, OPEN_SEARCH_REGION
+from src.utils.settings import OPEN_SEARCH_REGION
 
-# OpenSearch setup
-service = 'aoss'
-credentials = boto3.Session().get_credentials()
-assert credentials is not None, "AWS credentials not found"
-awsauth = AWS4Auth(credentials.access_key, credentials.secret_key,
-                   OPEN_SEARCH_REGION, service, session_token=credentials.token)
+# Use the centralized OpenSearch client
+from src.utils.services.opensearch import get_opensearch_client
+opensearch = get_opensearch_client()
 
-opensearch = OpenSearch(
-    hosts=[{'host': f'{OPEN_SEARCH_HOST}.{OPEN_SEARCH_REGION}.aoss.amazonaws.com', 'port': 443}],
-    http_auth=awsauth,
-    use_ssl=True,
-    verify_certs=True,
-    connection_class=RequestsHttpConnection
-)
-
-# Bedrock client for embeddings
 bedrock = boto3.client('bedrock-runtime', region_name=OPEN_SEARCH_REGION)
 
 def generate_embedding(text: str) -> list[float]:

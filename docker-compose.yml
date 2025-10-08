@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  opensearch:
+    image: opensearchproject/opensearch:3.1.0
+    container_name: policy-mate-opensearch
+    environment:
+      - discovery.type=single-node
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=MySecure@Pass123!
+      - plugins.security.disabled=true
+    ports:
+      - "9200:9200"
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+
+volumes:
+  opensearch-data:
