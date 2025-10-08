@@ -1,0 +1,123 @@
+openapi: 3.0.0
+info:
+  title: Policy Mate Comprehensive Document Analysis API
+  version: 1.0.0
+  description: API for comprehensive compliance analysis of entire documents
+paths:
+  /compliance/comprehensive:
+    post:
+      summary: Perform comprehensive compliance analysis on document
+      description: Analyze entire document against all controls in a framework with text-level findings
+      operationId: comprehensiveComplianceCheck
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - document_id
+                - framework_id
+                - bearer_token
+              properties:
+                bearer_token:
+                  type: string
+                  description: JWT bearer token for authentication (use the access_token from login)
+                document_id:
+                  type: string
+                  description: The document ID to analyze
+                framework_id:
+                  type: string
+                  enum:
+                    - GDPR
+                    - SOC2
+                    - HIPAA
+                  description: Compliance framework to check against
+      responses:
+        '200':
+          description: Comprehensive analysis completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  document_id:
+                    type: string
+                  framework:
+                    type: string
+                  overall_verdict:
+                    type: string
+                    enum:
+                      - COMPLIANT
+                      - NON_COMPLIANT
+                      - PARTIAL
+                  findings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        text_snippet:
+                          type: string
+                        start_char:
+                          type: number
+                        end_char:
+                          type: number
+                        controls_addressed:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              control_id:
+                                type: string
+                              status:
+                                type: string
+                              reasoning:
+                                type: string
+                        verdict:
+                          type: string
+                        summary:
+                          type: string
+                        gaps:
+                          type: array
+                          items:
+                            type: string
+                        recommendations:
+                          type: array
+                          items:
+                            type: string
+                        clarity_issues:
+                          type: array
+                          items:
+                            type: string
+                  missing_controls:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        control_id:
+                          type: string
+                        control_name:
+                          type: string
+                        severity:
+                          type: string
+                        reason:
+                          type: string
+                  statistics:
+                    type: object
+                    properties:
+                      total_controls_checked:
+                        type: number
+                      compliant:
+                        type: number
+                      partial:
+                        type: number
+                      non_compliant:
+                        type: number
+                      not_addressed:
+                        type: number
+        '400':
+          description: Bad request - missing or invalid parameters
+        '401':
+          description: Unauthorized - invalid or expired token
+        '404':
+          description: Document not found

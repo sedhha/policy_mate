@@ -12,6 +12,11 @@ def convert_decimals(obj: Any) -> Any:
     return obj
 
 def bedrock_response(event: Dict[str, Any], status_code: int, body: Union[Dict[str, Any], str]) -> Dict[str, Any]:
+    # Add user-friendly error message for agent
+    if isinstance(body, dict) and status_code >= 400:
+        error_msg = body.get('error', 'Unknown error')
+        body['user_message'] = f"Error ({status_code}): {error_msg}"
+    
     return {
         'messageVersion': '1.0',
         'response': {

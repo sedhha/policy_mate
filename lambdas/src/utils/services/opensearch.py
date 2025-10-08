@@ -2,10 +2,46 @@ from typing import Any
 import boto3
 from opensearchpy import OpenSearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth  # type: ignore
-from src.utils.settings import OPEN_SEARCH_HOST, OPEN_SEARCH_REGION
+from src.utils.settings import (
+    OPEN_SEARCH_ENV,
+    OPEN_SEARCH_HOST,
+    OPEN_SEARCH_REGION,
+    OPEN_SEARCH_LOCAL_HOST,
+    OPEN_SEARCH_LOCAL_PORT
+)
 
 def get_opensearch_client() -> OpenSearch:
-    """Get OpenSearch client with AWS authentication"""
+    """Get OpenSearch client with environment-based configuration"""
+    if OPEN_SEARCH_ENV == 'local':
+        return OpenSearch(
+            hosts=[{'host': OPEN_SEARCH_LOCAL_HOST, 'port': OPEN_SEARCH_LOCAL_PORT}],
+            use_ssl=False,
+            verify_certs=False
+        )
+    
+    # AWS OpenSearch Service (managed)
+    if OPEN_SEARCH_ENV == 'aws':
+        service = 'es'
+        credentials = boto3.Session().get_credentials()
+        assert credentials is not None, "AWS credentials not found"
+        
+        awsauth = AWS4Auth(
+            credentials.access_key,
+            credentials.secret_key,
+            OPEN_SEARCH_REGION,
+            service,
+            session_token=credentials.token
+        )
+        
+        return OpenSearch(
+            hosts=[{'host': OPEN_SEARCH_HOST, 'port': 443}],
+            http_auth=awsauth,
+            use_ssl=True,
+            verify_certs=True,
+            connection_class=RequestsHttpConnection
+        )
+    
+    # AWS OpenSearch Serverless
     service = 'aoss'
     credentials = boto3.Session().get_credentials()
     assert credentials is not None, "AWS credentials not found"
