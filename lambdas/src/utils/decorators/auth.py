@@ -23,7 +23,7 @@ def require_auth(handler: F) -> F:
             log_with_context("INFO", f"Bearer token extracted: {bearer_token[:50] if bearer_token else 'NONE'}...", request_id=context.aws_request_id)
             if not bearer_token:
                 log_with_context("ERROR", "Missing bearer_token", request_id=context.aws_request_id)
-                return bedrock_response(event, 401, {'error': 'Missing bearer_token'})
+                return bedrock_response(event, 401, {'error': 'Missing bearer_token parameter. Please provide authentication token.'})
             
             # Validate token and get claims
             log_with_context("INFO", "Validating token...", request_id=context.aws_request_id)
@@ -40,17 +40,17 @@ def require_auth(handler: F) -> F:
             return handler(event, context)
         except ValueError as e:
             log_with_context("ERROR", f"Auth failed: {str(e)}", request_id=context.aws_request_id)
-            return bedrock_response(event, 401, {'error': 'Unauthorized'})
+            return bedrock_response(event, 401, {'error': f'Authentication failed: {str(e)}'})
         except KeyError as e:
             log_with_context("ERROR", f"Missing required field: {str(e)}", request_id=context.aws_request_id)
-            return bedrock_response(event, 500, {'error': 'Internal error'})
+            return bedrock_response(event, 500, {'error': f'Missing required field: {str(e)}'})
         except TypeError as e:
             import traceback
             log_with_context("ERROR", f"Type error in auth: {str(e)}, traceback: {traceback.format_exc()}", request_id=context.aws_request_id)
-            return bedrock_response(event, 500, {'error': 'Internal error'})
+            return bedrock_response(event, 500, {'error': f'Type error: {str(e)}'})
         except Exception as e:
             import traceback
             log_with_context("ERROR", f"Auth error: {str(e)}, traceback: {traceback.format_exc()}", request_id=context.aws_request_id)
-            return bedrock_response(event, 500, {'error': 'Internal error'})
+            return bedrock_response(event, 500, {'error': f'Authentication error: {str(e)}'})
 
     return cast(F, wrapper)

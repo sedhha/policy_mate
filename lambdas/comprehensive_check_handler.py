@@ -141,6 +141,16 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
             return bedrock_response(event, 404, {'error': 'Document not found'})
         
         document = doc_response['Items'][0]
+        
+        # Check if document is already indexed
+        compliance_status = document.get('compliance_status', 'unknown')
+        if compliance_status in ['initialized', 'in_progress']:
+            return bedrock_response(event, 202, {
+                'message': 'This document is new and currently being indexed. Please check back in a few minutes.',
+                'document_id': document_id,
+                'status': compliance_status
+            })
+        
         s3_url_raw = document.get('s3_url', '')
         
         if not s3_url_raw:

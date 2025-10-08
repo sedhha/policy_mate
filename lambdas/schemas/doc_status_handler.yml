@@ -21,7 +21,7 @@ paths:
           required: true
           schema:
             type: string
-          description: JWT bearer token for authentication
+          description: JWT bearer token for authentication (use the access_token from login)
       responses:
         '200':
           description: Document found

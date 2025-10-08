@@ -77,6 +77,12 @@ ENV_VARS=""
 if [ -f .env ]; then
     ENV_VARS=$(grep -v '^#' .env | grep -v '^$' | grep -v 'AWS_PROFILE' | grep -v 'AWS_REGION' | \
         awk -F= '{printf "%s=%s,", $1, $2}' | sed 's/,$//')
+    # Force OPEN_SEARCH_ENV to 'aws' for Lambda deployments
+    ENV_VARS=$(echo "$ENV_VARS" | sed 's/OPEN_SEARCH_ENV=[^,]*/OPEN_SEARCH_ENV=aws/')
+    # Add OPEN_SEARCH_ENV=aws if not present
+    if ! echo "$ENV_VARS" | grep -q "OPEN_SEARCH_ENV="; then
+        ENV_VARS="${ENV_VARS},OPEN_SEARCH_ENV=aws"
+    fi
 fi
 
 for handler_file in *_handler.py; do

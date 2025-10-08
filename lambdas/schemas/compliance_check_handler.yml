@@ -9,13 +9,6 @@ paths:
       summary: Check compliance of policy text
       description: Analyze policy text against compliance framework requirements
       operationId: checkCompliance
-      parameters:
-        - name: bearer_token
-          in: query
-          required: true
-          schema:
-            type: string
-          description: JWT bearer token for authentication
       requestBody:
         required: true
         content:
@@ -26,7 +19,11 @@ paths:
                 - text
                 - question
                 - framework_id
+                - bearer_token
               properties:
+                bearer_token:
+                  type: string
+                  description: JWT bearer token for authentication (use the access_token from login)
                 text:
                   type: string
                   description: The policy text to analyze
