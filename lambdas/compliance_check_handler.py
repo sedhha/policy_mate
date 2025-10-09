@@ -7,25 +7,28 @@ from src.utils.decorators.auth import require_auth
 from src.utils.bedrock_response import bedrock_response
 from src.utils.services.dynamoDB import get_table, DynamoDBTable
 from src.utils.services.embeddings import generate_embedding
-from src.utils.services.opensearch import search_controls
+
 from src.utils.settings import OPEN_SEARCH_REGION
 
 bedrock = boto3.client('bedrock-runtime', region_name=OPEN_SEARCH_REGION)  # type: ignore
 
 def get_relevant_controls(query: str, framework_id: str, control_id: str | None = None) -> list[dict[str, Any]]:
     """Get relevant compliance controls"""
+    table = get_table(DynamoDBTable.COMPLIANCE_CONTROLS)
     
     # If specific control_id provided, get it from DynamoDB
     if control_id:
-        table = get_table(DynamoDBTable.COMPLIANCE_CONTROLS)
-        response = table.get_item(Key={'framework_id': framework_id, 'control_id': control_id})
+        response = table.get_item(Key={'framework_id': f'{framework_id.lower()}_2025', 'control_id': control_id})
         if 'Item' in response:
             return [response['Item']]
         return []
     
-    # Otherwise, use vector search to find relevant controls
-    query_embedding = generate_embedding(query)
-    return search_controls(query_embedding, framework_id, k=5)
+    # Get all controls for framework and use simple keyword matching
+    response = table.scan(
+        FilterExpression='framework_id = :fid',
+        ExpressionAttributeValues={':fid': f'{framework_id.lower()}_2025'}
+    )
+    return response.get('Items', [])[:5]
 
 def analyze_compliance(user_text: str, question: str, controls: list[dict[str, Any]]) -> dict[str, Any]:
     """Use Bedrock to analyze compliance"""

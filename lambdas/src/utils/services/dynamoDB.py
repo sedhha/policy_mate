@@ -12,6 +12,7 @@ class DynamoDBTable(Enum):
     ORGANIZATIONS = "PolicyMateOrganizations"
     COMPLIANCE_REPORTS = "PolicyMateComplianceReports"
     COMPLIANCE_CONTROLS = "PolicyMateComplianceControls"
+    CONVERSATION_HISTORY = "PolicyMateConversationHistory"
 
 def get_table(table_name: DynamoDBTable) -> Table:
     return dynamodb.Table(table_name.value)

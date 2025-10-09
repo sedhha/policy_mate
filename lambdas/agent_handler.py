@@ -8,8 +8,10 @@ from aws_lambda_typing import context as context_
 from src.utils.decorators.cognito_auth import require_cognito_auth
 from src.utils.logger import log_with_context
 from src.utils.settings import AGENT_ID, AGENT_ALIAS_ID
+from src.utils.conversation_store import ConversationStore
 
 bedrock_agent: AgentsforBedrockRuntimeClient = boto3.client('bedrock-agent-runtime', region_name='us-east-1') # pyright: ignore[reportUnknownMemberType]
+conversation_store = ConversationStore()
 
 @require_cognito_auth
 def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str, Any]:
@@ -41,6 +43,10 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
             if 'chunk' in event_chunk and 'bytes' in event_chunk['chunk']:
                 chunk_bytes: bytes = event_chunk['chunk']['bytes']
                 result += chunk_bytes.decode('utf-8')
+        
+        # Save conversation to DynamoDB
+        conversation_store.save_message(session_id, user_id, 'user', prompt)
+        conversation_store.save_message(session_id, user_id, 'assistant', result)
         
         return {
             'statusCode': 200,
