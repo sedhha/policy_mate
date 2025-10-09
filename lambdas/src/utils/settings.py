@@ -13,3 +13,8 @@ OPEN_SEARCH_HOST = os.environ['OPEN_SEARCH_HOST']
 OPEN_SEARCH_REGION = os.environ.get('OPEN_SEARCH_REGION', 'us-east-1')
 OPEN_SEARCH_LOCAL_HOST = os.environ.get('OPEN_SEARCH_LOCAL_HOST', 'localhost')
 OPEN_SEARCH_LOCAL_PORT = int(os.environ.get('OPEN_SEARCH_LOCAL_PORT', '9200'))
+
+# AGENT DETAILS
+AGENT_NAME = os.environ['AGENT_NAME']
+AGENT_ID = os.environ['AGENT_ID']
+AGENT_ALIAS_ID = os.environ['AGENT_ALIAS_ID']

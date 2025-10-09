@@ -1,0 +1,82 @@
+openapi: 3.0.0
+info:
+  title: Policy Mate Agent Chat API
+  version: 1.0.0
+  description: API for conversational interaction with Policy Mate Bedrock Agent
+paths:
+  /agent/chat:
+    post:
+      summary: Chat with Policy Mate Agent
+      description: Send a message to the Bedrock Agent and receive a response
+      operationId: chatWithAgent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - prompt
+              properties:
+                prompt:
+                  type: string
+                  description: User's message or question
+                  example: 'What are the GDPR compliance requirements for data retention?'
+                session_id:
+                  type: string
+                  description: Optional session ID to continue a conversation (defaults to user_id)
+                  example: 'user-123-uuid'
+                new_conversation:
+                  type: boolean
+                  description: Set to true to start a new conversation thread
+                  default: false
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Agent response received
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response:
+                    type: string
+                    description: Agent's response text
+                  session_id:
+                    type: string
+                    description: Session ID for conversation continuity
+        '400':
+          description: Bad request - missing prompt
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized - invalid or expired token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Cognito JWT access token (include in Authorization header as "Bearer <token>")

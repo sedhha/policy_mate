@@ -39,6 +39,9 @@ wheels = [
 ]
 
 [package.optional-dependencies]
+bedrock-agent-runtime = [
+    { name = "mypy-boto3-bedrock-agent-runtime" },
+]
 dynamodb = [
     { name = "mypy-boto3-dynamodb" },
 ]
@@ -275,6 +278,15 @@ wheels = [
 ]
 
 [[package]]
+name = "mypy-boto3-bedrock-agent-runtime"
+version = "1.40.40"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/b5/74/b1aabbb359829f5baa3a87ce95581fa126d04d9f24411ebb47d97c92d7ca/mypy_boto3_bedrock_agent_runtime-1.40.40.tar.gz", hash = "sha256:674049ed09614f69beb9a83c4553f07a985da8bfab772fb5ca8bb8092abe6d51", size = 41814, upload-time = "2025-09-26T19:29:47.76Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e4/ec/a0769a0ea7ab7641638e950d48b941a702ec492e7d3f5106dad69c0f493d/mypy_boto3_bedrock_agent_runtime-1.40.40-py3-none-any.whl", hash = "sha256:9be6f0faa4945327b62cf9e4297bb6abe4638621e37c391dc24014702219b6cb", size = 50561, upload-time = "2025-09-26T19:24:53.388Z" },
+]
+
+[[package]]
 name = "mypy-boto3-dynamodb"
 version = "1.40.44"
 source = { registry = "https://pypi.org/simple" }
@@ -315,24 +327,26 @@ source = { virtual = "." }
 dependencies = [
     { name = "aws-lambda-typing" },
     { name = "boto3" },
-    { name = "boto3-stubs", extra = ["dynamodb", "s3"] },
+    { name = "boto3-stubs", extra = ["bedrock-agent-runtime", "dynamodb", "s3"] },
     { name = "opensearch-py" },
     { name = "python-dotenv" },
     { name = "python-jose", extra = ["cryptography"] },
     { name = "requests" },
     { name = "requests-aws4auth" },
+    { name = "uuid6" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "aws-lambda-typing", specifier = ">=2.20.0" },
     { name = "boto3", specifier = ">=1.35.0" },
-    { name = "boto3-stubs", extras = ["s3", "dynamodb"], specifier = ">=1.40.45" },
+    { name = "boto3-stubs", extras = ["bedrock-agent-runtime", "dynamodb", "s3"], specifier = ">=1.40.45" },
     { name = "opensearch-py", specifier = ">=3.0.0" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "python-jose", extras = ["cryptography"], specifier = ">=3.3.0" },
     { name = "requests", specifier = ">=2.32.0" },
     { name = "requests-aws4auth", specifier = ">=1.3.1" },
+    { name = "uuid6", specifier = ">=2025.0.1" },
 ]
 
 [[package]]
@@ -478,4 +492,13 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/15/22/9ee70a2574a4f4599c47dd506532914ce044817c7752a79b6a51286319bc/urllib3-2.5.0.tar.gz", hash = "sha256:3fc47733c7e419d4bc3f6b3dc2b4f890bb743906a30d56ba4a5bfa4bbff92760", size = 393185, upload-time = "2025-06-18T14:07:41.644Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a7/c2/fe1e52489ae3122415c51f387e221dd0773709bad6c6cdaa599e8a2c5185/urllib3-2.5.0-py3-none-any.whl", hash = "sha256:e6b01673c0fa6a13e374b50871808eb3bf7046c4b125b216f6bf1cc604cff0dc", size = 129795, upload-time = "2025-06-18T14:07:40.39Z" },
+]
+
+[[package]]
+name = "uuid6"
+version = "2025.0.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ca/b7/4c0f736ca824b3a25b15e8213d1bcfc15f8ac2ae48d1b445b310892dc4da/uuid6-2025.0.1.tar.gz", hash = "sha256:cd0af94fa428675a44e32c5319ec5a3485225ba2179eefcf4c3f205ae30a81bd", size = 13932, upload-time = "2025-07-04T18:30:35.186Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3d/b2/93faaab7962e2aa8d6e174afb6f76be2ca0ce89fde14d3af835acebcaa59/uuid6-2025.0.1-py3-none-any.whl", hash = "sha256:80530ce4d02a93cdf82e7122ca0da3ebbbc269790ec1cb902481fa3e9cc9ff99", size = 6979, upload-time = "2025-07-04T18:30:34.001Z" },
 ]
