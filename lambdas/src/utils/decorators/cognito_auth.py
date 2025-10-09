@@ -30,7 +30,7 @@ def require_cognito_auth(handler: F) -> F:
             
             # Inject validated token and claims
             event['validated_token'] = token
-            event['claims'] = claims
+            event['user_claims'] = claims
             
             return handler(event, context)
             
