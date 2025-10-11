@@ -34,13 +34,13 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
     
     try:
         # Parse request body
-        body = json.loads(event.get('body', '{}'))
-        file_id = body.get('fileId')
+        query: dict[str, Any] = event.get('queryStringParameters') or {}
+        file_id = query.get('fileId')
         
         if not file_id:
             log_with_context("ERROR", "Missing fileId", request_id=context.aws_request_id)
-            return response(400, {'error': 'Missing fileId'})
-        
+            return response(400, {'error': 'Missing fileId', **event})
+
         # Get file metadata from DynamoDB
         files_table = get_table(DynamoDBTable.FILES)
         file_item_response = files_table.get_item(Key={'file_id': file_id})

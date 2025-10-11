@@ -100,7 +100,7 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
             file_id_str = str(file_id)
             
             # Only deduplicate if same org, same upload type, and status is not 'failed'
-            if existing_org_id == org_id and existing_upload_type == upload_type and file_status != 'failed':
+            if existing_org_id == org_id and existing_upload_type == upload_type and file_status == 'completed':
                 # Add file to user's uploaded_files set
                 users_table = get_table(DynamoDBTable.USERS)
                 users_table.update_item(
@@ -147,7 +147,12 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
             },
             Conditions=[
                 {'Content-Type': file_type},
-                ['content-length-range', file_size, file_size]  # Exact size match
+                {'x-amz-meta-file-id': file_id},              
+                {'x-amz-meta-file-hash': file_hash},          
+                {'x-amz-meta-uploaded-by': user_id},          
+                {'x-amz-meta-org-id': org_id},                
+                {'x-amz-meta-upload-type': upload_type},      
+                ['content-length-range', 0, file_size]
             ],
             ExpiresIn=300  # 5 minutes
         )
