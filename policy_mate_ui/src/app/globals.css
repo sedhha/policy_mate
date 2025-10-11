@@ -1,4 +1,88 @@
+/* Add these to your CSS file (e.g., globals.css or app.css) */
+
 @import 'tailwindcss';
+
+/* Custom keyframes for animations */
+@keyframes spin-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes orbit {
+  0% {
+    transform: rotate(0deg) translateX(4rem) rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg) translateX(4rem) rotate(-360deg);
+  }
+}
+
+@keyframes orbit-reverse {
+  0% {
+    transform: rotate(0deg) translateX(4rem) rotate(0deg);
+  }
+  100% {
+    transform: rotate(-360deg) translateX(4rem) rotate(360deg);
+  }
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom animation utilities */
+@layer utilities {
+  .animate-spin-slow {
+    animation: spin 3s linear infinite;
+  }
+
+  .animate-spin-reverse {
+    animation: spin-reverse 2s linear infinite;
+  }
+
+  .animate-orbit {
+    animation: orbit 4s linear infinite;
+  }
+
+  .animate-orbit-reverse {
+    animation: orbit-reverse 3s linear infinite;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.6s ease-out;
+  }
+
+  .animate-fade-in-delay {
+    animation: fade-in 0.6s ease-out 0.3s both;
+  }
+
+  .delay-150 {
+    animation-delay: 150ms;
+  }
+
+  .delay-300 {
+    animation-delay: 300ms;
+  }
+
+  .delay-700 {
+    animation-delay: 700ms;
+  }
+
+  .delay-1000 {
+    animation-delay: 1000ms;
+  }
+}
 
 @layer components {
   .primary-button {
