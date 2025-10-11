@@ -4,14 +4,14 @@ from typing import Any, Literal
 from datetime import datetime, timezone
 from aws_lambda_typing import context as context_
 from src.utils.logger import log_with_context
-from src.utils.decorators.auth import require_auth
+from src.utils.decorators.cognito_auth import require_cognito_auth
 from src.utils.services.dynamoDB import get_table, DynamoDBTable
 from src.utils.services.s3 import s3_client
 from src.utils.settings import S3_BUCKET_NAME as BUCKET_NAME
 from src.utils.response import response
 
 
-@require_auth
+@require_cognito_auth
 def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str, Any]:
     """
     Step 1: Check if file hash exists, if not generate pre-signed URL for upload
