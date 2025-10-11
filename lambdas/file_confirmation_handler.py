@@ -3,7 +3,7 @@ from typing import Any
 from datetime import datetime, timezone
 from aws_lambda_typing import context as context_
 from src.utils.logger import log_with_context
-from src.utils.decorators.cognito_auth import require_cognito_auth
+from src.utils.decorators.cognito_fe_auth import require_fe_auth
 from src.utils.services.dynamoDB import get_table, DynamoDBTable
 from src.utils.services.s3 import s3_client
 from src.utils.settings import S3_BUCKET_NAME as BUCKET_NAME
@@ -11,7 +11,7 @@ from src.utils.response import response
 from botocore.exceptions import ClientError
 
 
-@require_cognito_auth
+@require_fe_auth
 def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str, Any]:
     """
     Step 2: Confirm upload - check if file exists in S3 and update status
@@ -43,26 +43,19 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         
         # Get file metadata from DynamoDB
         files_table = get_table(DynamoDBTable.FILES)
-        file_item_response = files_table.get_item(Key={'file_id': {'S': file_id}})
+        file_item_response = files_table.get_item(Key={'file_id': file_id})
         
         file_item = file_item_response.get('Item')
         if not file_item:
             log_with_context("ERROR", f"File not found: {file_id}", request_id=context.aws_request_id)
             return response(404, {'error': 'File not found'})
         
-        # Extract file metadata
-        s3_key_attr = file_item.get('s3_key', {})
-        s3_key = s3_key_attr.get('S', '') if isinstance(s3_key_attr, dict) else ''
-        file_hash_attr = file_item.get('file_hash', {})
-        file_hash = file_hash_attr.get('S', '') if isinstance(file_hash_attr, dict) else ''
-        file_name_attr = file_item.get('file_name', {})
-        file_name = file_name_attr.get('S', '') if isinstance(file_name_attr, dict) else ''
-        file_status_attr = file_item.get('status', {})
-        file_status = file_status_attr.get('S', 'unknown') if isinstance(file_status_attr, dict) else 'unknown'
-        upload_type_attr = file_item.get('upload_type', {})
-        upload_type = upload_type_attr.get('S', 'custom') if isinstance(upload_type_attr, dict) else 'custom'
-        
-        
+        # Extract file metadata (using high-level syntax)
+        s3_key = str(file_item.get('s3_key', ''))
+        file_hash = str(file_item.get('file_hash', ''))
+        file_name = str(file_item.get('file_name', ''))
+        file_status = str(file_item.get('status', 'unknown'))
+        upload_type = str(file_item.get('upload_type', 'custom'))
         
         # Check if already completed
         if file_status == 'completed':
@@ -85,12 +78,12 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
             # File exists - mark as completed
             timestamp = datetime.now(timezone.utc).isoformat()
             files_table.update_item(
-                Key={'file_id': {'S': file_id}},
+                Key={'file_id': file_id},
                 UpdateExpression='SET #status = :status, updated_at = :timestamp',
                 ExpressionAttributeNames={'#status': 'status'},
                 ExpressionAttributeValues={
-                    ':status': {'S': 'completed'},
-                    ':timestamp': {'S': timestamp}
+                    ':status': 'completed',
+                    ':timestamp': timestamp
                 }
             )
             log_with_context("INFO", f"Updated file status to completed: {file_id}", 
@@ -99,11 +92,11 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
             # Link file to user's uploaded_files set
             users_table = get_table(DynamoDBTable.USERS)
             users_table.update_item(
-                Key={'user_id': {'S': user_id}},
+                Key={'user_id': user_id},
                 UpdateExpression='ADD uploaded_files :file_id SET updated_at = :timestamp',
                 ExpressionAttributeValues={
-                    ':file_id': {'SS': [file_id]},
-                    ':timestamp': {'S': timestamp}
+                    ':file_id': {file_id},
+                    ':timestamp': timestamp
                 }
             )
             log_with_context("INFO", f"Linked file {file_id} to user {user_id}", 
@@ -127,12 +120,12 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
                 
                 timestamp = datetime.now(timezone.utc).isoformat()
                 files_table.update_item(
-                    Key={'file_id': {'S': file_id}},
+                    Key={'file_id': file_id},
                     UpdateExpression='SET #status = :status, updated_at = :timestamp',
                     ExpressionAttributeNames={'#status': 'status'},
                     ExpressionAttributeValues={
-                        ':status': {'S': 'failed'},
-                        ':timestamp': {'S': timestamp}
+                        ':status': 'failed',
+                        ':timestamp': timestamp
                     }
                 )
                 log_with_context("INFO", f"Marked file as failed: {file_id}", 
