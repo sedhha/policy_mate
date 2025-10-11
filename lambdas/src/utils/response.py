@@ -1,3 +1,4 @@
+import json
 from typing import Any, Dict
 
 def response(status_code: int, body: Dict[str, Any]) -> Dict[str, Any]:
@@ -9,5 +10,5 @@ def response(status_code: int, body: Dict[str, Any]) -> Dict[str, Any]:
             'Access-Control-Allow-Headers': '*',
             'Access-Control-Allow-Methods': '*'
         },
-        'body': body
+        'body': json.dumps(body)
     }

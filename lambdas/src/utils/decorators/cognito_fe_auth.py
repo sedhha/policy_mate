@@ -14,6 +14,18 @@ def require_fe_auth(handler: F) -> F:
     def wrapper(event: dict[str, Any], context: context_.Context) -> dict[str, Any]:
         try:
             log_with_context("INFO", f"Event keys: {list(event.keys())}", request_id=context.aws_request_id)
+            http_method = event.get('httpMethod') or event.get('requestContext', {}).get('http', {}).get('method')
+            if http_method == 'OPTIONS':
+                return {
+                    'statusCode': 200,
+                    'headers': {
+                        'Access-Control-Allow-Origin': '*',  # or 'http://localhost:3000' for more security
+                        'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token',
+                        'Access-Control-Allow-Methods': 'POST,OPTIONS',
+                        'Access-Control-Max-Age': '86400'
+                    },
+                    'body': ''
+                }
             
             # Extract token from Authorization header
             headers = event.get('headers', {})
