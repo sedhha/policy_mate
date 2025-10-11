@@ -9,6 +9,7 @@ export interface IUserState {
   user?: User;
   setUser: (user: User) => void;
   setIdToken: (idToken: string) => void;
+  clearAuth: () => void;
 }
 
 export interface DecodedToken {

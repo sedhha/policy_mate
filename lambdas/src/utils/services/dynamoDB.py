@@ -7,12 +7,13 @@ dynamodb: DynamoDBServiceResource = boto3.resource('dynamodb', region_name=DYNAM
 
 
 class DynamoDBTable(Enum):
-    DOCUMENTS = "PolicyMateDocuments"
-    USERS = "PolicyMateUsers"
-    ORGANIZATIONS = "PolicyMateOrganizations"
-    COMPLIANCE_REPORTS = "PolicyMateComplianceReports"
     COMPLIANCE_CONTROLS = "PolicyMateComplianceControls"
     CONVERSATION_HISTORY = "PolicyMateConversationHistory"
+    COMPLIANCE_REPORTS = "PolicyMateComplianceReports"
+    DOCUMENTS = "PolicyMateDocuments"
+    FILES = "PolicyMateFiles"
+    ORGANIZATIONS = "PolicyMateOrganizations"
+    USERS = "PolicyMateUserFiles"
 
 def get_table(table_name: DynamoDBTable) -> Table:
     return dynamodb.Table(table_name.value)
