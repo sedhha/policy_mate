@@ -1,21 +1,38 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Shield, Lock, Key, CheckCircle } from 'lucide-react';
 
 export const Router = () => {
     const { idToken } = useAuthStore();
     const router = useRouter();
+    const [isHydrated, setIsHydrated] = useState(false);
 
+    // Wait for Zustand to hydrate from sessionStorage
     useEffect(() => {
-        if (!idToken) {
+        const unsubscribe = useAuthStore.persist.onFinishHydration(() => {
+            setIsHydrated(true);
+        });
+
+        // If already hydrated, set immediately
+        if (useAuthStore.persist.hasHydrated()) {
+            setIsHydrated(true);
+        }
+
+        return unsubscribe;
+    }, []);
+
+    // Only check auth after hydration is complete
+    useEffect(() => {
+        if (isHydrated && !idToken) {
+            console.log('Redirecting to login - no token found after hydration');
             router.push('/login');
         }
-    }, [idToken, router]);
+    }, [idToken, router, isHydrated]);
 
-    // Show mesmerizing loading animation while checking authentication
-    if (!idToken) {
+    // Show loading while hydrating or if no token (before redirect)
+    if (!isHydrated || !idToken) {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700">
                 {/* Animated background elements */}
@@ -63,7 +80,7 @@ export const Router = () => {
                             Securing Your Session
                         </h2>
                         <p className="text-blue-100 text-lg animate-fade-in-delay">
-                            Verifying credentials...
+                            {!isHydrated ? 'Loading session...' : 'Verifying credentials...'}
                         </p>
                     </div>
 

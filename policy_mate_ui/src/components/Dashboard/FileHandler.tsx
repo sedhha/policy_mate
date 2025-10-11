@@ -241,7 +241,7 @@ export const FileHandler = () => {
                                                 <h3 className="font-semibold text-gray-800 break-all">{fileName}</h3>
                                                 <button
                                                     onClick={() => setIsEditing(true)}
-                                                    className="p-1 hover:bg-white rounded transition-colors flex-shrink-0"
+                                                    className="p-1 hover:bg-white cursor-pointer rounded transition-colors flex-shrink-0"
                                                     title="Rename file"
                                                 >
                                                     <Edit3 className="w-4 h-4 text-gray-600" />
@@ -299,7 +299,7 @@ export const FileHandler = () => {
                             <button
                                 onClick={handleUpload}
                                 disabled={!isFileNameValid || isUploading}
-                                className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="cursor-pointer flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {isUploading ? (
                                     <>
@@ -316,7 +316,7 @@ export const FileHandler = () => {
                             <button
                                 onClick={clearFile}
                                 disabled={isUploading}
-                                className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-6 py-3 cursor-pointer border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Cancel
                             </button>
