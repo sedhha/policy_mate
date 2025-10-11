@@ -16,7 +16,7 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
     # Access claims injected by decorator
     claims: dict[str, Any] = event['claims']
     user_id = claims.get('sub')
-    org_id = claims.get('custom:org_id')  # Adjust based on your Cognito attributes    
+    org_id = claims.get('custom:org_id')   
     log_with_context("INFO", f"Processing for user: {user_id}, org: {org_id}", request_id=context.aws_request_id)
     file_id = params.get('file_id')
     if not file_id:
