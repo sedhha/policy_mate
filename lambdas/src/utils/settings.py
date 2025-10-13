@@ -18,6 +18,7 @@ OPEN_SEARCH_LOCAL_PORT = int(os.environ.get('OPEN_SEARCH_LOCAL_PORT', '9200'))
 AGENT_NAME = os.environ['AGENT_NAME']
 AGENT_ID = os.environ['AGENT_ID']
 AGENT_ALIAS_ID = os.environ['AGENT_ALIAS_ID']
+AGENT_REGION = os.environ.get('AGENT_REGION', 'us-east-1')
 
 # S3
 S3_REGION = os.environ.get('S3_REGION', 'us-east-1')
