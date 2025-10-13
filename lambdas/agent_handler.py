@@ -2,7 +2,7 @@
 import json
 import boto3
 from uuid6 import uuid7
-from typing import Any
+from typing import Any, Optional
 from mypy_boto3_bedrock_agent_runtime.client import AgentsforBedrockRuntimeClient
 from aws_lambda_typing import context as context_
 from src.utils.decorators.cognito_auth import require_cognito_auth
@@ -12,6 +12,67 @@ from src.utils.conversation_store import ConversationStore
 
 bedrock_agent: AgentsforBedrockRuntimeClient = boto3.client('bedrock-agent-runtime', region_name='us-east-1') # pyright: ignore[reportUnknownMemberType]
 conversation_store = ConversationStore()
+
+
+def extract_json_from_response(text: str) -> str:
+    """
+    Extract JSON from agent response that may have preamble text.
+    
+    Returns:
+        tuple: (extracted_json_string, was_extraction_needed)
+    """
+    # Check if response is already pure JSON
+    text_stripped = text.strip()
+    if text_stripped.startswith('{') and text_stripped.endswith('}'):
+        try:
+            json.loads(text_stripped)
+            return text_stripped  # Already valid JSON, no extraction needed
+        except json.JSONDecodeError:
+            pass  # Continue to extraction logic
+    
+    # Find first { and last }
+    first_brace = text.find('{')
+    last_brace = text.rfind('}')
+    
+    if first_brace == -1 or last_brace == -1 or first_brace >= last_brace:
+        return text  # No valid JSON structure found
+    
+    # Extract potential JSON
+    potential_json = text[first_brace:last_brace + 1]
+    
+    # Validate it's actually JSON
+    try:
+        json.loads(potential_json)
+        return potential_json  # Extraction successful
+    except json.JSONDecodeError:
+        return text  # Extraction failed, return original
+
+
+def create_fallback_response(text: str, error_msg: Optional[str] = None) -> dict[str, Any]:
+    """
+    Create a fallback response when agent returns invalid JSON.
+    
+    Args:
+        text: The original text from the agent
+        error_msg: Optional error message for logging
+    
+    Returns:
+        dict: A valid JSON response structure
+    """
+    return {
+        'response_type': 'conversation',
+        'content': {
+            'markdown': text,
+            'metadata': {
+                'timestamp': '',
+                'fallback': True,
+                'parse_error': error_msg
+            }
+        },
+        'data': {},
+        'response': text  # Keep backwards compatibility
+    }
+
 
 @require_cognito_auth
 def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str, Any]:
@@ -42,7 +103,6 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         chunk_count = 0
         for event_chunk in response['completion']:
             chunk_count += 1
-            log_with_context("DEBUG", f"Chunk {chunk_count}: {event_chunk.keys()}", request_id=context.aws_request_id)
             
             if 'chunk' in event_chunk and 'bytes' in event_chunk['chunk']:
                 chunk_bytes: bytes = event_chunk['chunk']['bytes']
@@ -50,12 +110,14 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
                 log_with_context("DEBUG", f"Decoded chunk {chunk_count}: {decoded_chunk[:200]}", request_id=context.aws_request_id)
                 result += decoded_chunk
         
-        log_with_context("INFO", f"Full agent response (first 500 chars): {result[:500]}", request_id=context.aws_request_id)
         log_with_context("INFO", f"Full agent response length: {len(result)} characters", request_id=context.aws_request_id)
         
-        # Try to parse as JSON, fall back to plain text if it fails
+        # Try to extract JSON if there's preamble text
+        extracted_json = extract_json_from_response(result)
+        
+        # Try to parse as JSON
         try:
-            parsed_response = json.loads(result)
+            parsed_response = json.loads(extracted_json)
             log_with_context("INFO", f"Successfully parsed JSON response with keys: {parsed_response.keys()}", request_id=context.aws_request_id)
             
             # If it's a proper structured response, use it directly
@@ -63,6 +125,7 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
                 response_data = parsed_response
             else:
                 # Legacy format - wrap it
+                log_with_context("WARNING", "Response missing 'response_type'. Wrapping as legacy format.", request_id=context.aws_request_id)
                 response_data = {
                     'response_type': 'conversation',
                     'content': {
@@ -73,21 +136,14 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
                 }
         except json.JSONDecodeError as e:
             log_with_context("WARNING", f"Agent returned plain text instead of JSON (error: {str(e)}). This should not happen. Check agent instructions.", request_id=context.aws_request_id)
-            # Wrap plain text in expected structure
-            response_data:dict[str,Any] = {
-                'response_type': 'conversation',
-                'content': {
-                    'markdown': result,
-                    'metadata': {'timestamp': ''}
-                },
-                'response': result  # Keep backwards compatibility
-            }
+            # Create fallback response
+            response_data: dict[str, Any] = create_fallback_response(result, str(e))
         
         # Save conversation to DynamoDB
         conversation_store.save_message(session_id, user_id, 'user', prompt)
         conversation_store.save_message(session_id, user_id, 'assistant', result)
         
-        final_response:dict[str, Any] = {**response_data, 'session_id': session_id}
+        final_response: dict[str, Any] = {**response_data, 'session_id': session_id}
         log_with_context("INFO", f"Returning response with keys: {final_response.keys()}", request_id=context.aws_request_id)
         
         return {
