@@ -1,3 +1,4 @@
+# filePath: lambdas/src/utils/services/embeddings.py
 import json
 import boto3
 from src.utils.settings import OPEN_SEARCH_REGION

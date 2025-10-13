@@ -1,3 +1,4 @@
+// filePath: policy_mate_ui/src/utils/variables.ts
 import { z } from 'zod';
 
 export const EnvSchema = z.object({

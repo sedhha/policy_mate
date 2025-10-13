@@ -1,3 +1,4 @@
+# filePath: lambdas/src/utils/services/opensearch.py
 from typing import Any
 import boto3
 from opensearchpy import OpenSearch, RequestsHttpConnection

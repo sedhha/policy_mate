@@ -1,3 +1,4 @@
+# filePath: lambdas/src/utils/bedrock_response.py
 from typing import Any, Dict, Union
 import json
 from decimal import Decimal

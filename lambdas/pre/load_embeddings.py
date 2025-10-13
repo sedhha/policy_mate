@@ -1,3 +1,4 @@
+# filePath: lambdas/pre/load_embeddings.py
 import json
 import boto3
 from src.utils.services.dynamoDB import DynamoDBTable, get_table

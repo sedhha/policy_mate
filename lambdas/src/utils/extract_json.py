@@ -1,4 +1,4 @@
-# lambdas/agent_gateway_handler.py
+# filePath: lambdas/src/utils/extract_json.py
 import json
 import re
 from typing import Any

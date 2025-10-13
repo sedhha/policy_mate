@@ -1,3 +1,4 @@
+// filePath: policy_mate_ui/src/types/reducers/login.ts
 type LoginState = {
   username: string;
   password: string;

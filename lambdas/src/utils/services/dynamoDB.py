@@ -1,3 +1,4 @@
+# filePath: lambdas/src/utils/services/dynamoDB.py
 import boto3
 from enum import Enum
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table

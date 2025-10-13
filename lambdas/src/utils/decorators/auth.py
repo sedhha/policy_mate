@@ -1,3 +1,4 @@
+# filePath: lambdas/src/utils/decorators/auth.py
 from functools import wraps
 import json
 from typing import Any, Callable, TypeVar, cast

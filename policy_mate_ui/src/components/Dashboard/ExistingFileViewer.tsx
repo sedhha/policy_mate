@@ -1,3 +1,4 @@
+// filePath: policy_mate_ui/src/components/Dashboard/ExistingFileViewer.tsx
 'use client';
 import { useState } from 'react';
 import { FileText, Upload, Eye, Trash2, Info, CheckCircle, AlertCircle, Edit3, X, Download } from 'lucide-react';

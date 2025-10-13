@@ -1,3 +1,4 @@
+# filePath: lambdas/file_upload_handler.py
 import json
 import uuid
 from typing import Any, Literal

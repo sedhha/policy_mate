@@ -1,3 +1,4 @@
+# filePath: lambdas/src/utils/settings.py
 import os
 from dotenv import load_dotenv
 

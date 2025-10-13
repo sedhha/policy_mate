@@ -1,3 +1,4 @@
+# filePath: lambdas/src/utils/services/document_extractor.py
 import boto3
 from typing import Any
 
@@ -21,7 +22,7 @@ def extract_text_from_s3(s3_url: str) -> list[dict[str, Any]]:
     content = obj['Body'].read().decode('utf-8', errors='ignore')  # type: ignore
     
     # Split into paragraphs with position tracking
-    chunks = []
+    chunks:list[dict[str, Any]] = []
     pos = 0
     
     for para in content.split('\n\n'):

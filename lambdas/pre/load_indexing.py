@@ -1,3 +1,4 @@
+# filePath: lambdas/pre/load_indexing.py
 from typing import Any
 from src.utils.services.opensearch import get_opensearch_client
 

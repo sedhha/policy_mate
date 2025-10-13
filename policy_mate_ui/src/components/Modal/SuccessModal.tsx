@@ -1,3 +1,4 @@
+// filePath: policy_mate_ui/src/components/Modal/SuccessModal.tsx
 import { SuccessModalProps } from "@/types";
 import { CheckCircle } from "lucide-react";
 

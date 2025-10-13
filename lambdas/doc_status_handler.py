@@ -1,3 +1,4 @@
+# filePath: lambdas/doc_status_handler.py
 from typing import Any
 from aws_lambda_typing import context as context_
 from src.utils.logger import log_with_context

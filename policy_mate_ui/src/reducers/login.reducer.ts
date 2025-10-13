@@ -1,3 +1,4 @@
+// filePath: policy_mate_ui/src/reducers/login.reducer.ts
 import { LoginAction, LoginState } from '@/types';
 
 export const loginState: LoginState = {
