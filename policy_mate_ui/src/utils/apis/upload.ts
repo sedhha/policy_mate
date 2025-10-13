@@ -34,7 +34,9 @@ export const prepareUpload = async (
   request: PrepareUploadRequest
 ): Promise<PrepareUploadResponse> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/uploads`, {
+    const url = `${API_BASE_URL}/uploads`;
+
+    const response = await fetch(url, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(request),
@@ -49,7 +51,7 @@ export const prepareUpload = async (
 
     return await response.json();
   } catch (error) {
-    console.error('Error preparing upload:', error);
+    console.error('❌ Error preparing upload:', error);
     throw error;
   }
 };
