@@ -18,7 +18,15 @@ paths:
           description: JWT bearer token for authentication (use the access_token from login)
       responses:
         '200':
-          description: Documents retrieved successfully
+          description: |
+            Documents retrieved successfully. 
+
+            AGENT INSTRUCTIONS:
+            - DEFAULT: Return formatted markdown (response_type="conversation") with nice table
+            - ONLY return structured format (response_type="document_list") when user explicitly says:
+              "exactly as is", "raw format", "unformatted", "json format", "structured format", etc.
+            - ALWAYS include the full documents array in the data field regardless of format
+            - Make the default experience user-friendly and conversational
           content:
             application/json:
               schema:
@@ -26,9 +34,13 @@ paths:
                 properties:
                   documents:
                     type: array
+                    description: Array of document objects with all details
                     items:
                       type: object
                       properties:
+                        document_id:
+                          type: string
+                          description: Unique identifier for the document
                         file_name:
                           type: string
                           description: Name of the file
@@ -38,6 +50,9 @@ paths:
                         document_size:
                           type: number
                           description: Size of the document in bytes
+                        formatted_size:
+                          type: string
+                          description: Human-readable file size (e.g., "195.3 KB")
                         compliance_status:
                           type: string
                           enum:
@@ -46,8 +61,26 @@ paths:
                             - completed
                             - failed
                           description: Current compliance analysis status
+                        status_label:
+                          type: string
+                          description: Human-readable status label
+                        status_color:
+                          type: string
+                          description: Color code for UI (green, yellow, blue, red, gray)
+                        status_emoji:
+                          type: string
+                          description: Emoji representation of status
                         timestamp:
                           type: number
                           description: Document upload timestamp in milliseconds
+                        formatted_date:
+                          type: string
+                          description: Human-readable date (e.g., "Jan 13, 2025")
+                  count:
+                    type: number
+                    description: Total number of documents
+                  timestamp:
+                    type: string
+                    description: ISO timestamp when the response was generated
         '401':
           description: Unauthorized - invalid or expired token

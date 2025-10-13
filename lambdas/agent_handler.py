@@ -39,19 +39,61 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         
         # Collect streaming response
         result: str = ''
+        chunk_count = 0
         for event_chunk in response['completion']:
+            chunk_count += 1
+            log_with_context("DEBUG", f"Chunk {chunk_count}: {event_chunk.keys()}", request_id=context.aws_request_id)
+            
             if 'chunk' in event_chunk and 'bytes' in event_chunk['chunk']:
                 chunk_bytes: bytes = event_chunk['chunk']['bytes']
-                result += chunk_bytes.decode('utf-8')
+                decoded_chunk = chunk_bytes.decode('utf-8')
+                log_with_context("DEBUG", f"Decoded chunk {chunk_count}: {decoded_chunk[:200]}", request_id=context.aws_request_id)
+                result += decoded_chunk
+        
+        log_with_context("INFO", f"Full agent response (first 500 chars): {result[:500]}", request_id=context.aws_request_id)
+        log_with_context("INFO", f"Full agent response length: {len(result)} characters", request_id=context.aws_request_id)
+        
+        # Try to parse as JSON, fall back to plain text if it fails
+        try:
+            parsed_response = json.loads(result)
+            log_with_context("INFO", f"Successfully parsed JSON response with keys: {parsed_response.keys()}", request_id=context.aws_request_id)
+            
+            # If it's a proper structured response, use it directly
+            if 'response_type' in parsed_response:
+                response_data = parsed_response
+            else:
+                # Legacy format - wrap it
+                response_data = {
+                    'response_type': 'conversation',
+                    'content': {
+                        'markdown': parsed_response.get('response', str(parsed_response)),
+                        'metadata': {'timestamp': parsed_response.get('timestamp', '')}
+                    },
+                    'data': parsed_response
+                }
+        except json.JSONDecodeError as e:
+            log_with_context("WARNING", f"Agent returned plain text instead of JSON (error: {str(e)}). This should not happen. Check agent instructions.", request_id=context.aws_request_id)
+            # Wrap plain text in expected structure
+            response_data:dict[str,Any] = {
+                'response_type': 'conversation',
+                'content': {
+                    'markdown': result,
+                    'metadata': {'timestamp': ''}
+                },
+                'response': result  # Keep backwards compatibility
+            }
         
         # Save conversation to DynamoDB
         conversation_store.save_message(session_id, user_id, 'user', prompt)
         conversation_store.save_message(session_id, user_id, 'assistant', result)
         
+        final_response:dict[str, Any] = {**response_data, 'session_id': session_id}
+        log_with_context("INFO", f"Returning response with keys: {final_response.keys()}", request_id=context.aws_request_id)
+        
         return {
             'statusCode': 200,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'response': result, 'session_id': session_id})
+            'body': json.dumps(final_response)
         }
         
     except Exception as e:
