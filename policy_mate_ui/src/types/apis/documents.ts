@@ -20,16 +20,15 @@ export interface DocumentsData {
   timestamp: string;
 }
 
-export interface GetDocumentsResponse {
-  response_type: string;
-  content: {
-    markdown: string;
-    metadata: {
-      timestamp: string;
-    };
-  };
-  data: DocumentsData;
-  session_id?: string;
+export interface IAction {
+  action: string;
+  description: string;
+}
+export interface AgentResponse<T> {
+  error_message?: string;
+  tool_payload?: T;
+  summarised_markdown?: string;
+  suggested_actions?: IAction[];
 }
 
 export interface ChatRequest {

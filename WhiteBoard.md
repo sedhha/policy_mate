@@ -159,3 +159,36 @@ Standard Framework → Extract Control Requirements → Score Document Against C
 
 SQS listens to the documents in pipeline - where status = 'in_progress'
 -> Runs analysis on this document
+
+Agent Response structure:
+
+1. compliance check
+2. comprehensive check
+3. doc status
+4. list docs
+
+Response payload for:
+
+- compliance check
+
+```json
+{
+            "verdict": "UNCLEAR",
+            "summary": content[:200],
+            "detailed_analysis": content,
+            "matched_controls": [],
+            "gaps": [],
+            "recommendations": []
+        }
+```
+
+```json
+{
+  "error_message": "", // If error occurs, this will be given highest priority above all other fields
+  "data": {
+    "response_type": "<agent_id>",
+    {...}
+  },
+  "summarised_markdown": "## Summary\n\nYour document is largely compliant with minor gaps needing attention.",
+}
+```

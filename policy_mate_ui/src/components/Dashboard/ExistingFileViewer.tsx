@@ -84,7 +84,12 @@ export const ExistingFiles = () => {
             setLoading(true);
             setError(null);
             const response = await fetchDocuments();
-            setDocuments(response.data.documents);
+            if (response.error_message) {
+                setError(response.error_message);
+                setDocuments([]);
+                return;
+            }
+            setDocuments(response.tool_payload?.documents || []);
         } catch (err) {
             console.error('Failed to load documents:', err);
             setError(err instanceof Error ? err.message : 'Failed to load documents');
