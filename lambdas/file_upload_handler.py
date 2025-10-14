@@ -179,7 +179,7 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
                         request_id=context.aws_request_id)
         
         # Reserve the file_id in DynamoDB with PROCESSING status
-        timestamp = datetime.now(timezone.utc).isoformat()
+        timestamp_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
         file_metadata: dict[str, Any] = {
             'file_id': file_id,
             'file_hash': file_hash,
@@ -191,8 +191,8 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
             'org_id': org_id,
             'upload_type': upload_type,
             'status': DocumentStatus.PROCESSING.value,
-            'created_at': timestamp,
-            'updated_at': timestamp
+            'created_at': timestamp_ms,
+            'updated_at': timestamp_ms
         }
         
         files_table.put_item(Item=file_metadata)

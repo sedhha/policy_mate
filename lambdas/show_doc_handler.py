@@ -88,6 +88,8 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
     for row in results:
         id_set:set[str] = row.get("uploaded_files", set()) # pyright: ignore[reportAssignmentType]
         complete_id_set = complete_id_set.union(id_set)
+    
+    log_with_context("INFO", f"User {user_id} has {len(complete_id_set)} uploaded files", request_id=context.aws_request_id)
         
     # Query from files table to get metadata file_id in ids and  status = completed 
     response = get_table(DynamoDBTable.FILES).scan(
@@ -95,10 +97,12 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
             list(complete_id_set)
             ) & Attr("status").gte(DocumentStatus.UPLOAD_SUCCESS.value)
         )
+    
+    log_with_context("INFO", f"Fetched {response.get('Count', 0)} documents from Files table", request_id=context.aws_request_id)
 
     documents: list[dict[str, Any]] = []
     for item in response.get('Items', []):
-        status = item.get('status', 'unknown')
+        status:int = item.get('status', DocumentStatus.UNKNOWN.value) # pyright: ignore[reportAssignmentType]
         status_details = get_status_details(status)
         
         doc_size = item.get('file_size')
