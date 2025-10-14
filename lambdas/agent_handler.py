@@ -95,7 +95,7 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
             agentId=AGENT_ID,
             agentAliasId=AGENT_ALIAS_ID,
             sessionId=session_id,
-            inputText=f"bearer_token: {access_token}\n\n{prompt}"
+            inputText=f"You are a JSON API. Make sure to stick your responses strictly to JSON format.\n\nbearer_token: {access_token}\n\n{prompt}"
         )
         
         # Collect streaming response
@@ -107,13 +107,17 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
             if 'chunk' in event_chunk and 'bytes' in event_chunk['chunk']:
                 chunk_bytes: bytes = event_chunk['chunk']['bytes']
                 decoded_chunk = chunk_bytes.decode('utf-8')
+                print(f"Debug chunk: '{decoded_chunk}'")
                 log_with_context("DEBUG", f"Decoded chunk {chunk_count}: {decoded_chunk[:200]}", request_id=context.aws_request_id)
                 result += decoded_chunk
         
         log_with_context("INFO", f"Full agent response length: {len(result)} characters", request_id=context.aws_request_id)
-        
+        # log_with_context("DEBUG", f"Full agent response: {result}", request_id=context.aws_request_id)
+        print(f'INFO: Full agent response: "{result}"')
         # Try to extract JSON if there's preamble text
         extracted_json = extract_json_from_response(result)
+        print(f'INFO: Extracted JSON: "{extracted_json}"')
+        # log_with_context("INFO", f"Extracted JSON: {extracted_json}", request_id=context.aws_request_id)
         
         # Try to parse as JSON
         try:
