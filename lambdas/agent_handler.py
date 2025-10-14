@@ -13,6 +13,10 @@ from src.utils.conversation_store import ConversationStore
 bedrock_agent: AgentsforBedrockRuntimeClient = boto3.client('bedrock-agent-runtime', region_name='us-east-1') # pyright: ignore[reportUnknownMemberType]
 conversation_store = ConversationStore()
 
+# READ markdown for system prompt instructions: lambdas/instructions/policyMateDocumentAgent.md
+system_prompt: str = ""
+with open('src/instructions/policyMateDocumentAgent.md', 'r') as f:
+    system_prompt = f.read()
 
 def extract_json_from_response(text: str) -> str:
     """
@@ -95,7 +99,7 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
             agentId=AGENT_ID,
             agentAliasId=AGENT_ALIAS_ID,
             sessionId=session_id,
-            inputText=f"You are a JSON API. Make sure to stick your responses strictly to JSON format.\n\nbearer_token: {access_token}\n\n{prompt}"
+            inputText=f"{system_prompt}\n\nbearer_token: {access_token}\n\n{prompt}"
         )
         
         # Collect streaming response
@@ -107,37 +111,19 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
             if 'chunk' in event_chunk and 'bytes' in event_chunk['chunk']:
                 chunk_bytes: bytes = event_chunk['chunk']['bytes']
                 decoded_chunk = chunk_bytes.decode('utf-8')
-                print(f"Debug chunk: '{decoded_chunk}'")
                 log_with_context("DEBUG", f"Decoded chunk {chunk_count}: {decoded_chunk[:200]}", request_id=context.aws_request_id)
                 result += decoded_chunk
         
         log_with_context("INFO", f"Full agent response length: {len(result)} characters", request_id=context.aws_request_id)
         # log_with_context("DEBUG", f"Full agent response: {result}", request_id=context.aws_request_id)
-        print(f'INFO: Full agent response: "{result}"')
         # Try to extract JSON if there's preamble text
         extracted_json = extract_json_from_response(result)
-        print(f'INFO: Extracted JSON: "{extracted_json}"')
         # log_with_context("INFO", f"Extracted JSON: {extracted_json}", request_id=context.aws_request_id)
         
         # Try to parse as JSON
         try:
-            parsed_response = json.loads(extracted_json)
-            log_with_context("INFO", f"Successfully parsed JSON response with keys: {parsed_response.keys()}", request_id=context.aws_request_id)
-            
-            # If it's a proper structured response, use it directly
-            if 'response_type' in parsed_response:
-                response_data = parsed_response
-            else:
-                # Legacy format - wrap it
-                log_with_context("WARNING", "Response missing 'response_type'. Wrapping as legacy format.", request_id=context.aws_request_id)
-                response_data = {
-                    'response_type': 'conversation',
-                    'content': {
-                        'markdown': parsed_response.get('response', str(parsed_response)),
-                        'metadata': {'timestamp': parsed_response.get('timestamp', '')}
-                    },
-                    'data': parsed_response
-                }
+            response_data = json.loads(extracted_json)
+            log_with_context("INFO", f"Successfully parsed JSON response with keys: {response_data.keys()}", request_id=context.aws_request_id)
         except json.JSONDecodeError as e:
             log_with_context("WARNING", f"Agent returned plain text instead of JSON (error: {str(e)}). This should not happen. Check agent instructions.", request_id=context.aws_request_id)
             # Create fallback response
@@ -149,7 +135,6 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         
         final_response: dict[str, Any] = {**response_data, 'session_id': session_id}
         log_with_context("INFO", f"Returning response with keys: {final_response.keys()}", request_id=context.aws_request_id)
-        
         return {
             'statusCode': 200,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
