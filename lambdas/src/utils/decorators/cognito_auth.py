@@ -1,5 +1,6 @@
 # lambdas/src/utils/decorators/cognito_auth.py
 from functools import wraps
+import json
 from typing import Any, Callable, TypeVar, cast
 from aws_lambda_typing import context as context_
 from src.utils.validator import validate_user_and_get_claims
@@ -27,7 +28,7 @@ def require_cognito_auth(handler: F) -> F:
                 return {
                     'statusCode': 401,
                     'headers': {'Content-Type': 'application/json'},
-                    'body': {'error': 'Missing or invalid Authorization header'}
+                    'body': json.dumps({'error': 'Missing or invalid Authorization header'})
                 }
             
             token = auth_header[7:]  # Remove 'Bearer ' prefix
@@ -46,14 +47,14 @@ def require_cognito_auth(handler: F) -> F:
             return {
                 'statusCode': 401,
                 'headers': {'Content-Type': 'application/json'},
-                'body': {'error': f'Authentication failed: {str(e)}'}
+                'body': json.dumps({'error': f'Authentication failed: {str(e)}'})
             }
         except Exception as e:
             log_with_context("ERROR", f"Auth error: {str(e)}", request_id=context.aws_request_id)
             return {
                 'statusCode': 500,
                 'headers': {'Content-Type': 'application/json'},
-                'body': {'error': 'Authentication error'}
+                'body': json.dumps({'error': 'Authentication error'})
             }
     
     return cast(F, wrapper)

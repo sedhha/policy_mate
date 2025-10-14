@@ -1,3 +1,4 @@
+// filePath: policy_mate_ui/src/components/Dashboard/Router.tsx
 'use client';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';

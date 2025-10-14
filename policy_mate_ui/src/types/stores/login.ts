@@ -1,3 +1,4 @@
+// filePath: policy_mate_ui/src/types/stores/login.ts
 export interface User {
   username: string;
   email: string;

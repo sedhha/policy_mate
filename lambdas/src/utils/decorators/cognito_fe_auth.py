@@ -1,4 +1,4 @@
-# lambdas/src/utils/decorators/cognito_auth.py
+# filePath: lambdas/src/utils/decorators/cognito_fe_auth.py
 from functools import wraps
 import json
 from typing import Any, Callable, TypeVar, cast

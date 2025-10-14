@@ -1,3 +1,4 @@
+// filePath: policy_mate_ui/src/components/Modal/ErrorModal.tsx
 import { ErrorModalProps } from "@/types";
 import { AlertCircle } from "lucide-react";
 

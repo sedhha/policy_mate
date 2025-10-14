@@ -1,31 +1,12 @@
-import { useAuthStore } from '@/stores/authStore';
+// filePath: policy_mate_ui/src/utils/apis/upload.ts
 import {
   ConfirmUploadResponse,
   PrepareUploadRequest,
   PrepareUploadResponse,
   UploadResult,
 } from '@/types';
-
-const API_BASE_URL =
-  'https://bof2j20cg2.execute-api.us-east-1.amazonaws.com/agentConversationApiV1';
-
-// Helper to get auth token
-const getAuthToken = (): string | null => {
-  const { idToken } = useAuthStore.getState();
-  return idToken || null;
-};
-
-// Helper to create authorized headers
-const getAuthHeaders = (): HeadersInit => {
-  const token = getAuthToken();
-  if (!token) {
-    throw new Error('No authentication token available');
-  }
-  return {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json',
-  };
-};
+import { env } from '@/utils/variables';
+import { getAuthHeaders } from '@/utils/apis/auth';
 
 /**
  * Step 1: Request pre-signed URL for upload
@@ -34,7 +15,7 @@ export const prepareUpload = async (
   request: PrepareUploadRequest
 ): Promise<PrepareUploadResponse> => {
   try {
-    const url = `${API_BASE_URL}/uploads`;
+    const url = `${env.NEXT_PUBLIC_API_BASE_URL}/uploads`;
 
     const response = await fetch(url, {
       method: 'POST',
@@ -97,10 +78,13 @@ export const confirmUpload = async (
   fileId: string
 ): Promise<ConfirmUploadResponse> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/uploads?fileId=${fileId}`, {
-      method: 'GET',
-      headers: getAuthHeaders(),
-    });
+    const response = await fetch(
+      `${env.NEXT_PUBLIC_API_BASE_URL}/uploads?fileId=${fileId}`,
+      {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      }
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));

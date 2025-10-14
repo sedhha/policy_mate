@@ -1,3 +1,4 @@
+# filePath: lambdas/comprehensive_check_handler.py
 import json
 from typing import Any
 from aws_lambda_typing import context as context_

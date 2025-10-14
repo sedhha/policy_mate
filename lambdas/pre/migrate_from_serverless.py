@@ -1,3 +1,4 @@
+# filePath: lambdas/pre/migrate_from_serverless.py
 #!/usr/bin/env python3
 """Migrate data from AWS OpenSearch Serverless to local OpenSearch"""
 import boto3

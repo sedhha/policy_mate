@@ -1,3 +1,4 @@
+# filePath: lambdas/compliance_check_handler.py
 import json
 from typing import Any
 from aws_lambda_typing import context as context_
@@ -6,8 +7,6 @@ from src.utils.logger import log_with_context
 from src.utils.decorators.auth import require_auth
 from src.utils.bedrock_response import bedrock_response
 from src.utils.services.dynamoDB import get_table, DynamoDBTable
-from src.utils.services.embeddings import generate_embedding
-
 from src.utils.settings import OPEN_SEARCH_REGION
 
 bedrock = boto3.client('bedrock-runtime', region_name=OPEN_SEARCH_REGION)  # type: ignore

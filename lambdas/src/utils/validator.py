@@ -1,7 +1,8 @@
+# filePath: lambdas/src/utils/validator.py
 from typing import Any
 from jose import jwt, JWTError
-from utils.settings import COGNITO_REGION, COGNITO_USER_POOL_ID
-from utils.logger import log_with_context
+from src.utils.settings import COGNITO_REGION, COGNITO_USER_POOL_ID
+from src.utils.logger import log_with_context
 import requests
 
 

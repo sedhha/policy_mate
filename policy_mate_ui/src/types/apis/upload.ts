@@ -1,3 +1,4 @@
+// filePath: policy_mate_ui/src/types/apis/upload.ts
 export interface PrepareUploadRequest {
   fileHash: string;
   fileName: string;

@@ -1,3 +1,4 @@
+// filePath: policy_mate_ui/src/stores/authStore.ts
 import { create } from 'zustand';
 import { devtools, persist, createJSONStorage } from 'zustand/middleware';
 import { jwtDecode } from 'jwt-decode';

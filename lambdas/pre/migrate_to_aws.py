@@ -1,3 +1,4 @@
+# filePath: lambdas/pre/migrate_to_aws.py
 #!/usr/bin/env python3
 """Migrate data from local OpenSearch to AWS OpenSearch Service"""
 import os

@@ -1,3 +1,4 @@
+// filePath: policy_mate_ui/src/components/Dashboard/FileHandler.tsx
 'use client';
 
 import { MAX_FILE_SIZE } from '@/constants';

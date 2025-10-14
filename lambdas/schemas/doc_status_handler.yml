@@ -10,7 +10,7 @@ paths:
       description: Retrieve the compliance status and details of a specific document
       operationId: getDocumentStatus
       parameters:
-        - name: file_id
+        - name: document_id
           in: query
           required: true
           schema:
@@ -43,7 +43,7 @@ paths:
                       - unknown
                     description: Current compliance analysis status
         '400':
-          description: Bad request - missing file_id
+          description: Bad request - missing document_id
         '404':
           description: Document not found
         '401':

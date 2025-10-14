@@ -1,3 +1,4 @@
+// filePath: policy_mate_ui/src/utils/loginUser.tsx
 import {
     CognitoIdentityProviderClient,
     InitiateAuthCommand,
@@ -22,7 +23,6 @@ export const loginWithAwsCognito = async (username: string, password: string): P
 
     try {
         const response = await client.send(command);
-        console.log('Login successful:', response);
         return { data: response };
     } catch (error) {
         console.log("Error occurred during login", (error as Error).message);
