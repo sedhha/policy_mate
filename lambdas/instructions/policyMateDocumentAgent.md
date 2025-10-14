@@ -200,7 +200,7 @@ Help users perform full compliance analysis of their documents by:
       "title": "Address missing control",
       "description": "Control description",
       "priority": "high",
-      "status": "pending",
+      "status": 1,
       "category": "compliance"
     }
   ]

@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from aws_lambda_typing import context as context_
 from src.utils.logger import log_with_context
 from src.utils.decorators.cognito_fe_auth import require_fe_auth
-from src.utils.services.dynamoDB import get_table, DynamoDBTable
+from src.utils.services.dynamoDB import DocumentStatus, get_table, DynamoDBTable
 from src.utils.services.s3 import s3_client
 from src.utils.settings import S3_BUCKET_NAME as BUCKET_NAME
 from src.utils.response import response
@@ -178,7 +178,7 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
                         f"Generated pre-signed URL for file_id: {file_id}, upload_type: {upload_type}", 
                         request_id=context.aws_request_id)
         
-        # Reserve the file_id in DynamoDB with pending status
+        # Reserve the file_id in DynamoDB with PROCESSING status
         timestamp = datetime.now(timezone.utc).isoformat()
         file_metadata: dict[str, Any] = {
             'file_id': file_id,
@@ -190,7 +190,7 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
             'uploaded_by': user_id,
             'org_id': org_id,
             'upload_type': upload_type,
-            'status': 'pending',  # Mark as pending upload
+            'status': DocumentStatus.PROCESSING.value,
             'created_at': timestamp,
             'updated_at': timestamp
         }
