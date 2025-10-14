@@ -1,12 +1,12 @@
 // filePath: policy_mate_ui/src/components/Dashboard/Router.tsx
 'use client';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore, isTokenExpired } from '@/stores/authStore';
 import { useEffect, useState } from 'react';
 import { Shield, Lock, Key, CheckCircle } from 'lucide-react';
 
 export const Router = () => {
-    const { idToken } = useAuthStore();
+    const { idToken, clearAuth } = useAuthStore();
     const router = useRouter();
     const [isHydrated, setIsHydrated] = useState(false);
 
@@ -26,11 +26,38 @@ export const Router = () => {
 
     // Only check auth after hydration is complete
     useEffect(() => {
-        if (isHydrated && !idToken) {
+        if (!isHydrated) return;
+
+        // Check if token is missing
+        if (!idToken) {
             console.log('Redirecting to login - no token found after hydration');
             router.push('/login');
+            return;
         }
-    }, [idToken, router, isHydrated]);
+
+        // Check if token has expired
+        if (isTokenExpired(idToken)) {
+            console.log('Redirecting to login - token has expired');
+            clearAuth(); // Clear expired token from store
+            router.push('/login');
+            return;
+        }
+    }, [idToken, router, isHydrated, clearAuth]);
+
+    // Periodic token expiration check (every 60 seconds)
+    useEffect(() => {
+        if (!isHydrated || !idToken) return;
+
+        const intervalId = setInterval(() => {
+            if (isTokenExpired(idToken)) {
+                console.log('Token expired during session - redirecting to login');
+                clearAuth();
+                router.push('/login');
+            }
+        }, 60000); // Check every 60 seconds
+
+        return () => clearInterval(intervalId);
+    }, [idToken, router, isHydrated, clearAuth]);
 
     // Show loading while hydrating or if no token (before redirect)
     if (!isHydrated || !idToken) {

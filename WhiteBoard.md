@@ -158,3 +158,4 @@ Standard Framework → Extract Control Requirements → Score Document Against C
 ### Document Lifecycle:
 
 SQS listens to the documents in pipeline - where status = 'in_progress'
+-> Runs analysis on this document

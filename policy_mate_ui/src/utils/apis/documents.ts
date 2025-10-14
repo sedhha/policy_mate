@@ -37,7 +37,7 @@ export const fetchDocuments = async (
       return {
         response_type: 'error',
         content: {
-          markdown: 'No documents found in response',
+          markdown: data.content.markdown || 'No documents found',
           metadata: { timestamp: new Date().toISOString() },
         },
         data: { documents: [], count: 0, timestamp: new Date().toISOString() },
