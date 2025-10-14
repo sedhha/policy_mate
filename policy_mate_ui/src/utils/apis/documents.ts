@@ -34,7 +34,14 @@ export const fetchDocuments = async (
 
     // Validate that we got document data
     if (!data.data || !data.data.documents) {
-      throw new Error('Invalid response format: missing document data');
+      return {
+        response_type: 'error',
+        content: {
+          markdown: 'No documents found in response',
+          metadata: { timestamp: new Date().toISOString() },
+        },
+        data: { documents: [], count: 0, timestamp: new Date().toISOString() },
+      };
     }
 
     return data;

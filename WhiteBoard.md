@@ -155,6 +155,6 @@ Instead of full side-by-side comparison, use a control-based checklist approach:
 
 Standard Framework → Extract Control Requirements → Score Document Against Controls
 
-### UI Features -
+### Document Lifecycle:
 
-- I am feeling lucky
+SQS listens to the documents in pipeline - where status = 'in_progress'

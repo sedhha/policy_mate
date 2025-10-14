@@ -6,7 +6,7 @@ export interface Document {
   file_type: string;
   document_size: number;
   formatted_size: string;
-  compliance_status: 'compliant' | 'non-compliant' | 'in-progress' | 'unknown';
+  compliance_status: 'compliant' | 'non-compliant' | 'in_progress' | 'unknown';
   status_label: string;
   status_color: string;
   status_emoji: string;

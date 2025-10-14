@@ -55,7 +55,7 @@ const getComplianceStyles = (status: string) => {
                 border: 'border-red-200',
                 icon: XCircle,
             };
-        case 'in-progress':
+        case 'in_progress':
             return {
                 bg: 'bg-yellow-100',
                 text: 'text-yellow-700',
