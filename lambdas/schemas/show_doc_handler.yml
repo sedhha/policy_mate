@@ -8,7 +8,7 @@ paths:
     get:
       summary: Get all user documents
       description: Retrieve all documents accessible by the authenticated user
-      operationId: showUserDocuments
+      operationId: show_doc
       parameters:
         - name: bearer_token
           in: query

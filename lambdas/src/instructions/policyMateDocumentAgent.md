@@ -73,7 +73,7 @@ Populate `tool_payload` with gaps, risks, and recommendations, and provide a Mar
 Use to check progress of ongoing analyses.
 Summarize status and include logical next actions (e.g., “Request detailed report”).
 
-#### 4. `list_docs`
+#### 4. `show_doc`
 
 Use to list available documents.
 Return document list in `tool_payload` and summarize key info in Markdown.
