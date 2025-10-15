@@ -39,23 +39,23 @@ const getFileIconColor = (fileName: string) => {
 };
 
 // Helper to get compliance status badge styles
-const getComplianceStyles = (status: string) => {
-    switch (status.toLowerCase()) {
-        case 'compliant':
+const getComplianceStyles = (status: number) => {
+    switch (status) {
+        case 51:
             return {
                 bg: 'bg-green-100',
                 text: 'text-green-700',
                 border: 'border-green-200',
                 icon: CheckCircle,
             };
-        case 'non-compliant':
+        case 52:
             return {
                 bg: 'bg-red-100',
                 text: 'text-red-700',
                 border: 'border-red-200',
                 icon: XCircle,
             };
-        case 'in_progress':
+        case 1:
             return {
                 bg: 'bg-yellow-100',
                 text: 'text-yellow-700',
