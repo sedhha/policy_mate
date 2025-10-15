@@ -1,6 +1,7 @@
 // filePath: policy_mate_ui/src/components/Dashboard/ExistingFileViewer.tsx
 'use client';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
     FileText,
     Eye,
@@ -14,7 +15,8 @@ import {
     ChevronDown,
     ChevronUp,
     Clock,
-    HelpCircle
+    HelpCircle,
+    MessageSquare
 } from 'lucide-react';
 import { Document } from '@/types';
 import { useAgentStore } from '@/stores/agentStore';
@@ -74,6 +76,7 @@ const getComplianceStyles = (status: number) => {
 
 export const ExistingFiles = () => {
     const [selectedFile, setSelectedFile] = useState<string | null>(null);
+    const router = useRouter();
 
     const {
         documents,
@@ -102,6 +105,12 @@ export const ExistingFiles = () => {
     const handleView = async (documentId: string) => {
         // TODO: Implement view functionality
         console.log('View document:', documentId);
+    };
+
+    const handleStartChat = () => {
+        if (selectedDocument) {
+            router.push('/chat');
+        }
     };
 
     if (loading) {
@@ -137,7 +146,6 @@ export const ExistingFiles = () => {
             </div>
         );
     }
-    console.log('Documents:', documents);
 
     return (
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
@@ -166,6 +174,34 @@ export const ExistingFiles = () => {
                     />
                 </button>
             </div>
+
+            {/* Start Chat Button - Shows when a document is selected */}
+            {selectedDocument && (
+                <div className="mb-4 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                                <MessageSquare className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-semibold text-gray-800">
+                                    Selected: {selectedDocument.file_name}
+                                </p>
+                                <p className="text-xs text-gray-600">
+                                    Ready to chat about this document
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={handleStartChat}
+                            className="px-4 py-2 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 font-medium"
+                        >
+                            <MessageSquare className="w-4 h-4" />
+                            Start Chat
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Documents List */}
             {documents.length === 0 ? (
