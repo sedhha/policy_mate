@@ -43,7 +43,6 @@ export const useAgentStore = create<IAgentState>()((set) => ({
         return;
       }
 
-      console.log('Fetched documents:', response);
 
       set((prev) => ({
         documents: response.tool_payload?.documents || [],
