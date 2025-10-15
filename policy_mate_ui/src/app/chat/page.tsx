@@ -27,9 +27,9 @@ export default function ChatPage() {
         // TODO: Implement API call to send message and get response
         // For now, we'll just add a placeholder response
         setTimeout(() => {
-            setMessages(prev => [...prev, { 
-                role: 'assistant', 
-                content: 'This is a placeholder response. API integration coming soon!' 
+            setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: 'This is a placeholder response. API integration coming soon!'
             }]);
         }, 500);
     };
@@ -92,11 +92,10 @@ export default function ChatPage() {
                                     className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                                 >
                                     <div
-                                        className={`max-w-[70%] rounded-2xl px-4 py-3 ${
-                                            msg.role === 'user'
+                                        className={`max-w-[70%] rounded-2xl px-4 py-3 ${msg.role === 'user'
                                                 ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white'
                                                 : 'bg-gray-100 text-gray-800'
-                                        }`}
+                                            }`}
                                     >
                                         <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                                     </div>
