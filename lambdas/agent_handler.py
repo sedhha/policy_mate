@@ -93,29 +93,41 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         session_id = body.get('session_id', f"{user_id}-{uuid7()}" if body.get('new_conversation') else user_id)
         
         log_with_context("INFO", f"Invoking agent: session={session_id}", request_id=context.aws_request_id)
-        
+        log_with_context("INFO",f"Agent details: agentId={AGENT_ID}, agentAliasId={AGENT_ALIAS_ID}", request_id=context.aws_request_id)
         # Invoke Bedrock Agent
         response = bedrock_agent.invoke_agent(
             agentId=AGENT_ID,
             agentAliasId=AGENT_ALIAS_ID,
             sessionId=session_id,
-            inputText=f"{system_prompt}\n\nbearer_token: {access_token}\n\n{prompt}"
+            enableTrace=True,
+            inputText=f"bearer_token: {access_token}\n\n{prompt}"
         )
         
         # Collect streaming response
         result: str = ''
         chunk_count = 0
+        trace_info:list[dict[str,Any]] = []
+        
         for event_chunk in response['completion']:
             chunk_count += 1
+            
+            # Log trace information if available
+            if 'trace' in event_chunk:
+                trace_data = event_chunk['trace']
+                trace_info.append(trace_data) # pyright: ignore[reportArgumentType]
+                log_with_context("INFO", f"Trace data: {json.dumps(trace_data, default=str)[:1000]}", request_id=context.aws_request_id)
             
             if 'chunk' in event_chunk and 'bytes' in event_chunk['chunk']:
                 chunk_bytes: bytes = event_chunk['chunk']['bytes']
                 decoded_chunk = chunk_bytes.decode('utf-8')
-                log_with_context("DEBUG", f"Decoded chunk {chunk_count}: {decoded_chunk[:200]}", request_id=context.aws_request_id)
+                log_with_context("INFO", f"Decoded chunk {chunk_count}: {decoded_chunk[:500]}", request_id=context.aws_request_id)
                 result += decoded_chunk
         
+        if trace_info:
+            log_with_context("INFO", f"Collected {len(trace_info)} trace events", request_id=context.aws_request_id)
+        
         log_with_context("INFO", f"Full agent response length: {len(result)} characters", request_id=context.aws_request_id)
-        # log_with_context("DEBUG", f"Full agent response: {result}", request_id=context.aws_request_id)
+        log_with_context("DEBUG", f"Full agent response: {result}", request_id=context.aws_request_id)
         # Try to extract JSON if there's preamble text
         extracted_json = extract_json_from_response(result)
         # log_with_context("INFO", f"Extracted JSON: {extracted_json}", request_id=context.aws_request_id)

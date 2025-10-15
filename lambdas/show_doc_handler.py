@@ -90,6 +90,21 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         complete_id_set = complete_id_set.union(id_set)
     
     log_with_context("INFO", f"User {user_id} has {len(complete_id_set)} uploaded files", request_id=context.aws_request_id)
+    
+    documents: list[dict[str, Any]] = []
+    
+    # If user has no files, return empty list
+    if not complete_id_set:
+        log_with_context("INFO", "No uploaded files found for user", request_id=context.aws_request_id)
+        return bedrock_response(
+            event,
+            200,
+            {
+                'documents': [],
+                'count': 0,
+                'timestamp': datetime.now().isoformat()
+            }
+        )
         
     # Query from files table to get metadata file_id in ids and  status = completed 
     response = get_table(DynamoDBTable.FILES).scan(
@@ -99,8 +114,6 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         )
     
     log_with_context("INFO", f"Fetched {response.get('Count', 0)} documents from Files table", request_id=context.aws_request_id)
-
-    documents: list[dict[str, Any]] = []
     for item in response.get('Items', []):
         status:int = item.get('status', DocumentStatus.UNKNOWN.value) # pyright: ignore[reportAssignmentType]
         status_details = get_status_details(status)

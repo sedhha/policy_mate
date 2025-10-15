@@ -28,6 +28,8 @@ class DocumentStatus(Enum):
     ANALYSIS_SUCCEEDED = 31
     ANALYSIS_FAILED = 32
     REPORT_GENERATED = 41
+    COMPLIANT = 51
+    NON_COMPLIANT = 52
 
 def get_table(table_name: DynamoDBTable) -> Table:
     return dynamodb.Table(table_name.value)
