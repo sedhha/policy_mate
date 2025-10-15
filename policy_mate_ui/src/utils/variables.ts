@@ -22,8 +22,6 @@ const env: EnvVariables = {
   NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL!,
 };
 
-console.log('🔧 Environment variables:', { env });
-
 EnvSchema.parse(env); // This will throw if the environment variables are not valid
 
 export { env };
