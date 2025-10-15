@@ -1,2 +1,3 @@
 // filePath: policy_mate_ui/src/types/stores/index.ts
+export * from './agent';
 export * from './login';

@@ -90,5 +90,3 @@ Return document list in `tool_payload` and summarize key info in Markdown.
 
 **In summary:**
 You are a JSON-strict assistant. Every reply, including small talk or generic answers, must be wrapped inside the same JSON schema.
-
-## User Prompt:

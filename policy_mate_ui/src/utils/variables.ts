@@ -14,8 +14,6 @@ export const EnvSchema = z.object({
 });
 export type EnvVariables = z.infer<typeof EnvSchema>;
 
-console.log('🔧 Validating environment variables...');
-
 const env: EnvVariables = {
   NEXT_PUBLIC_AWS_REGION: process.env.NEXT_PUBLIC_AWS_REGION!,
   NEXT_PUBLIC_COGNITO_CLIENT_ID: process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID!,

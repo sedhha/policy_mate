@@ -13,11 +13,6 @@ from src.utils.conversation_store import ConversationStore
 bedrock_agent: AgentsforBedrockRuntimeClient = boto3.client('bedrock-agent-runtime', region_name='us-east-1') # pyright: ignore[reportUnknownMemberType]
 conversation_store = ConversationStore()
 
-# READ markdown for system prompt instructions: lambdas/instructions/policyMateDocumentAgent.md
-system_prompt: str = ""
-with open('src/instructions/policyMateDocumentAgent.md', 'r') as f:
-    system_prompt = f.read()
-
 def extract_json_from_response(text: str) -> str:
     """
     Extract JSON from agent response that may have preamble text.
@@ -127,8 +122,9 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
             log_with_context("INFO", f"Collected {len(trace_info)} trace events", request_id=context.aws_request_id)
         
         log_with_context("INFO", f"Full agent response length: {len(result)} characters", request_id=context.aws_request_id)
-        log_with_context("DEBUG", f"Full agent response: {result}", request_id=context.aws_request_id)
+        log_with_context("INFO", f"Full agent response: {result}", request_id=context.aws_request_id)
         # Try to extract JSON if there's preamble text
+        print(f'Result: {result}')
         extracted_json = extract_json_from_response(result)
         # log_with_context("INFO", f"Extracted JSON: {extracted_json}", request_id=context.aws_request_id)
         
