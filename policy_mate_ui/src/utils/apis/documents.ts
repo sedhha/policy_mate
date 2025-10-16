@@ -8,7 +8,7 @@ import { getAuthHeaders } from '@/utils/apis/auth';
  * The agent will return document information in structured format
  */
 export const fetchDocuments = async (
-  prompt: string = 'Show me my docs in raw format'
+  prompt: string = 'Show me my docs in JSON format'
 ): Promise<AgentResponse<DocumentsData>> => {
   try {
     const url = `${env.NEXT_PUBLIC_API_BASE_URL}/chat`;
