@@ -8,7 +8,7 @@ paths:
     post:
       summary: Perform comprehensive compliance analysis on document
       description: Analyze entire document against all controls in a framework with text-level findings
-      operationId: comprehensiveComplianceCheck
+      operationId: comprehensive_check
       requestBody:
         required: true
         content:

@@ -6,7 +6,7 @@ export interface Document {
   file_type: string;
   document_size: number;
   formatted_size: string;
-  compliance_status: 'compliant' | 'non-compliant' | 'in-progress' | 'unknown';
+  compliance_status: number;
   status_label: string;
   status_color: string;
   status_emoji: string;
@@ -20,16 +20,16 @@ export interface DocumentsData {
   timestamp: string;
 }
 
-export interface GetDocumentsResponse {
-  response_type: string;
-  content: {
-    markdown: string;
-    metadata: {
-      timestamp: string;
-    };
-  };
-  data: DocumentsData;
-  session_id?: string;
+export interface IAction {
+  action: string;
+  description: string;
+}
+export interface AgentResponse<T> {
+  error_message?: string;
+  tool_payload?: T;
+  session_id: string;
+  summarised_markdown?: string;
+  suggested_actions?: IAction[];
 }
 
 export interface ChatRequest {

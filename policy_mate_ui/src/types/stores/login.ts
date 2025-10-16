@@ -17,5 +17,6 @@ export interface DecodedToken {
   sub?: string;
   email?: string;
   name?: string;
+  exp?: number; // Token expiration time (Unix timestamp)
   [key: string]: any;
 }

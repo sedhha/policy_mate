@@ -4,6 +4,22 @@ import { devtools, persist, createJSONStorage } from 'zustand/middleware';
 import { jwtDecode } from 'jwt-decode';
 import { IUserState, User, DecodedToken } from '@/types';
 
+// Helper function to check if token is expired
+export const isTokenExpired = (token: string | undefined): boolean => {
+  if (!token) return true;
+
+  try {
+    const decoded = jwtDecode<DecodedToken>(token);
+    if (!decoded.exp) return false; // If no expiry, treat as valid
+
+    const currentTime = Math.floor(Date.now() / 1000);
+    return decoded.exp < currentTime;
+  } catch (err) {
+    console.error('Error decoding token:', err);
+    return true; // Treat invalid tokens as expired
+  }
+};
+
 export const useAuthStore = create<IUserState>()(
   devtools(
     persist(

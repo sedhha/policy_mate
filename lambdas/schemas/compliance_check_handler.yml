@@ -8,7 +8,7 @@ paths:
     post:
       summary: Check compliance of policy text
       description: Analyze policy text against compliance framework requirements
-      operationId: checkCompliance
+      operationId: compliance_check
       requestBody:
         required: true
         content:

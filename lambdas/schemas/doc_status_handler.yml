@@ -8,7 +8,7 @@ paths:
     get:
       summary: Get document compliance status
       description: Retrieve the compliance status and details of a specific document
-      operationId: getDocumentStatus
+      operationId: doc_status
       parameters:
         - name: document_id
           in: query

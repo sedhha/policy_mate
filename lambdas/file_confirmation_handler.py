@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from aws_lambda_typing import context as context_
 from src.utils.logger import log_with_context
 from src.utils.decorators.cognito_fe_auth import require_fe_auth
-from src.utils.services.dynamoDB import get_table, DynamoDBTable
+from src.utils.services.dynamoDB import DocumentStatus, get_table, DynamoDBTable
 from src.utils.services.s3 import s3_client
 from src.utils.settings import S3_BUCKET_NAME as BUCKET_NAME
 from src.utils.response import response
@@ -67,11 +67,11 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         s3_key = str(file_item.get('s3_key', ''))
         file_hash = str(file_item.get('file_hash', ''))
         file_name = str(file_item.get('file_name', ''))
-        file_status = str(file_item.get('status', 'unknown'))
+        file_status = file_item.get('status', DocumentStatus.UNKNOWN.value)
         upload_type = str(file_item.get('upload_type', 'custom'))
         
         # Check if already completed
-        if file_status == 'completed':
+        if file_status == DocumentStatus.UPLOAD_SUCCESS.value:
             log_with_context("INFO", f"File {file_id} already completed", 
                            request_id=context.aws_request_id)
             return response(200, {
@@ -95,7 +95,7 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
                 UpdateExpression='SET #status = :status, updated_at = :timestamp',
                 ExpressionAttributeNames={'#status': 'status'},
                 ExpressionAttributeValues={
-                    ':status': 'completed',
+                    ':status': DocumentStatus.UPLOAD_SUCCESS.value,
                     ':timestamp': timestamp
                 }
             )

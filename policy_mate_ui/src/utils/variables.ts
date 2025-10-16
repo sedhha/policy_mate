@@ -14,15 +14,11 @@ export const EnvSchema = z.object({
 });
 export type EnvVariables = z.infer<typeof EnvSchema>;
 
-console.log('🔧 Validating environment variables...');
-
 const env: EnvVariables = {
   NEXT_PUBLIC_AWS_REGION: process.env.NEXT_PUBLIC_AWS_REGION!,
   NEXT_PUBLIC_COGNITO_CLIENT_ID: process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID!,
   NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL!,
 };
-
-console.log('🔧 Environment variables:', { env });
 
 EnvSchema.parse(env); // This will throw if the environment variables are not valid
 

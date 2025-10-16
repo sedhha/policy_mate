@@ -31,7 +31,7 @@ if __name__ == "__main__":
             'Authorization': f'Bearer {id_token}'
         },
         "body": json.dumps({
-                "prompt": "Share me my docs in raw format.",
+                "prompt": "Share me my docs.",
                 "session_id": "b4d8b4d8-1031-705e-a4a8-849522fb20b1"
             })
     }

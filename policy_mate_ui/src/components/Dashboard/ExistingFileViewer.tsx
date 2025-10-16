@@ -1,6 +1,7 @@
 // filePath: policy_mate_ui/src/components/Dashboard/ExistingFileViewer.tsx
 'use client';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
     FileText,
     Eye,
@@ -14,10 +15,11 @@ import {
     ChevronDown,
     ChevronUp,
     Clock,
-    HelpCircle
+    HelpCircle,
+    MessageSquare
 } from 'lucide-react';
-import { fetchDocuments } from '@/utils/apis/documents';
 import { Document } from '@/types';
+import { useAgentStore } from '@/stores/agentStore';
 
 // Helper to get file type icon color based on file extension
 const getFileIconColor = (fileName: string) => {
@@ -39,23 +41,23 @@ const getFileIconColor = (fileName: string) => {
 };
 
 // Helper to get compliance status badge styles
-const getComplianceStyles = (status: string) => {
-    switch (status.toLowerCase()) {
-        case 'compliant':
+const getComplianceStyles = (status: number) => {
+    switch (status) {
+        case 51:
             return {
                 bg: 'bg-green-100',
                 text: 'text-green-700',
                 border: 'border-green-200',
                 icon: CheckCircle,
             };
-        case 'non-compliant':
+        case 52:
             return {
                 bg: 'bg-red-100',
                 text: 'text-red-700',
                 border: 'border-red-200',
                 icon: XCircle,
             };
-        case 'in-progress':
+        case 1:
             return {
                 bg: 'bg-yellow-100',
                 text: 'text-yellow-700',
@@ -73,33 +75,25 @@ const getComplianceStyles = (status: string) => {
 };
 
 export const ExistingFiles = () => {
-    const [documents, setDocuments] = useState<Document[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<string | null>(null);
-    const [refreshing, setRefreshing] = useState(false);
+    const router = useRouter();
 
-    const loadDocuments = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            const response = await fetchDocuments();
-            setDocuments(response.data.documents);
-        } catch (err) {
-            console.error('Failed to load documents:', err);
-            setError(err instanceof Error ? err.message : 'Failed to load documents');
-        } finally {
-            setLoading(false);
-            setRefreshing(false);
-        }
-    };
+    const {
+        documents,
+        selectedDocument,
+        setSelectedDocument,
+        loadDocuments,
+        agentStates
+    } = useAgentStore();
+
+    const loading = agentStates.listDocs.loading;
+    const error = agentStates.listDocs.error;
 
     useEffect(() => {
         loadDocuments();
-    }, []);
+    }, [loadDocuments]);
 
     const handleRefresh = async () => {
-        setRefreshing(true);
         await loadDocuments();
     };
 
@@ -113,7 +107,13 @@ export const ExistingFiles = () => {
         console.log('View document:', documentId);
     };
 
-    if (loading && !refreshing) {
+    const handleStartChat = () => {
+        if (selectedDocument) {
+            router.push('/chat');
+        }
+    };
+
+    if (loading) {
         return (
             <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
                 <div className="flex items-center justify-center py-12">
@@ -164,16 +164,44 @@ export const ExistingFiles = () => {
                 </div>
                 <button
                     onClick={handleRefresh}
-                    disabled={refreshing}
+                    disabled={loading}
                     className="p-2 hover:bg-gray-100 rounded-lg transition-colors group disabled:opacity-50"
                     title="Refresh documents"
                 >
                     <RefreshCw
-                        className={`w-5 h-5 text-gray-600 group-hover:text-blue-600 ${refreshing ? 'animate-spin' : ''
+                        className={`w-5 h-5 text-gray-600 group-hover:text-blue-600 ${loading ? 'animate-spin' : ''
                             }`}
                     />
                 </button>
             </div>
+
+            {/* Start Chat Button - Shows when a document is selected */}
+            {selectedDocument && (
+                <div className="mb-4 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                                <MessageSquare className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-semibold text-gray-800">
+                                    Selected: {selectedDocument.file_name}
+                                </p>
+                                <p className="text-xs text-gray-600">
+                                    Ready to chat about this document
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={handleStartChat}
+                            className="px-4 py-2 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 font-medium"
+                        >
+                            <MessageSquare className="w-4 h-4" />
+                            Start Chat
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Documents List */}
             {documents.length === 0 ? (
@@ -191,11 +219,16 @@ export const ExistingFiles = () => {
                         const complianceStyles = getComplianceStyles(doc.compliance_status);
                         const ComplianceIcon = complianceStyles.icon;
                         const isExpanded = selectedFile === doc.document_id;
+                        const isSelected = selectedDocument?.document_id === doc.document_id;
 
                         return (
                             <div
                                 key={doc.document_id}
-                                className="border border-gray-200 rounded-xl p-4 hover:border-blue-300 hover:shadow-md transition-all duration-200"
+                                onClick={() => setSelectedDocument(doc)}
+                                className={`border-2 rounded-xl p-4 transition-all duration-200 cursor-pointer ${isSelected
+                                    ? 'border-blue-500 bg-blue-50 shadow-lg'
+                                    : 'border-gray-200 hover:border-blue-300 hover:shadow-md'
+                                    }`}
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     {/* File Icon & Info */}
@@ -237,14 +270,20 @@ export const ExistingFiles = () => {
                                     {/* Action Buttons */}
                                     <div className="flex items-center gap-1 flex-shrink-0">
                                         <button
-                                            onClick={() => handleView(doc.document_id)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleView(doc.document_id);
+                                            }}
                                             className="p-2 hover:bg-blue-50 rounded-lg transition-colors group"
                                             title="View Document"
                                         >
                                             <Eye className="w-4 h-4 text-gray-600 group-hover:text-blue-600" />
                                         </button>
                                         <button
-                                            onClick={() => setSelectedFile(isExpanded ? null : doc.document_id)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedFile(isExpanded ? null : doc.document_id);
+                                            }}
                                             className="p-2 hover:bg-indigo-50 rounded-lg transition-colors group"
                                             title={isExpanded ? "Hide Details" : "Show Details"}
                                         >
@@ -255,7 +294,10 @@ export const ExistingFiles = () => {
                                             )}
                                         </button>
                                         <button
-                                            onClick={() => handleDelete(doc.document_id)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDelete(doc.document_id);
+                                            }}
                                             className="p-2 hover:bg-red-50 rounded-lg transition-colors group"
                                             title="Delete Document"
                                         >
