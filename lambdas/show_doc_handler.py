@@ -6,67 +6,8 @@ from src.utils.logger import log_with_context
 from src.utils.decorators.auth import require_auth
 from src.utils.services.dynamoDB import DocumentStatus, get_table, DynamoDBTable
 from src.utils.bedrock_response import bedrock_response
+from src.utils.services.document_extractor import format_file_size, format_timestamp, get_status_details
 from boto3.dynamodb.conditions import Attr
-
-def format_file_size(bytes_size: int | None) -> str:
-    """Format bytes to human readable format"""
-    if not bytes_size:
-        return "Unknown"
-    
-    if bytes_size < 1024:
-        return f"{bytes_size} B"
-    elif bytes_size < 1048576:
-        return f"{bytes_size / 1024:.1f} KB"
-    else:
-        return f"{bytes_size / 1048576:.1f} MB"
-
-def format_timestamp(timestamp_ms: int | None) -> str:
-    """Format Unix timestamp to readable date"""
-    if not timestamp_ms:
-        return "Unknown"
-    
-    try:
-        dt = datetime.fromtimestamp(int(timestamp_ms) / 1000)
-        return dt.strftime("%b %d, %Y")
-    except Exception:
-        return "Unknown"
-
-
-def get_status_details(status: Any) -> dict[str, str]:
-    """Return user-friendly label, color, and emoji for a given DocumentStatus."""
-    
-    # Normalize input: accept Enum, int, or str
-    if isinstance(status, DocumentStatus):
-        status_value = status.value
-    elif isinstance(status, int):
-        status_value = status
-    elif isinstance(status, str):
-        try:
-            # Try parsing numeric strings like "12"
-            status_value = int(status)
-        except ValueError:
-            # Fallback: unknown string
-            return {'label': 'Unknown', 'color': 'gray', 'emoji': '❓'}
-    else:
-        return {'label': 'Unknown', 'color': 'gray', 'emoji': '❓'}
-
-    # Map by range or specific value
-    if 1 <= status_value <= 10:
-        return {'label': 'Processing', 'color': 'yellow', 'emoji': '⚙️'}
-    elif status_value == DocumentStatus.UPLOAD_FAILED.value:
-        return {'label': 'Upload Failed', 'color': 'red', 'emoji': '❌'}
-    elif status_value == DocumentStatus.UPLOAD_SUCCESS.value:
-        return {'label': 'Upload Successful', 'color': 'green', 'emoji': '✅'}
-    elif status_value == DocumentStatus.ANALYSIS_INITIATED.value:
-        return {'label': 'Analysis Started', 'color': 'blue', 'emoji': '🔍'}
-    elif status_value == DocumentStatus.ANALYSIS_SUCCEEDED.value:
-        return {'label': 'Analysis Complete', 'color': 'green', 'emoji': '🧠'}
-    elif status_value == DocumentStatus.ANALYSIS_FAILED.value:
-        return {'label': 'Analysis Failed', 'color': 'red', 'emoji': '💥'}
-    elif status_value == DocumentStatus.REPORT_GENERATED.value:
-        return {'label': 'Report Ready', 'color': 'purple', 'emoji': '📄'}
-    else:
-        return {'label': 'Unknown', 'color': 'gray', 'emoji': '❓'}
 
 
 @require_auth
