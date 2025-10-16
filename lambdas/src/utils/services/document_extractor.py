@@ -1,6 +1,8 @@
 # filePath: lambdas/src/utils/services/document_extractor.py
 import boto3
 from typing import Any
+from datetime import datetime
+from src.utils.services.dynamoDB import DocumentStatus
 
 s3 = boto3.client('s3')  # type: ignore
 
