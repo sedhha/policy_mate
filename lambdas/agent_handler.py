@@ -85,7 +85,7 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         user_id = event['user_claims']['sub']  # Cognito user ID (uid)
         
         # Use user_id as default, or generate new UUID7 if not provided
-        session_id = body.get('session_id', f"{user_id}-{uuid7()}" if body.get('new_conversation') else user_id)
+        session_id = body.get('session_id', str(uuid7()))
         
         log_with_context("INFO", f"Invoking agent: session={session_id}", request_id=context.aws_request_id)
         log_with_context("INFO",f"Agent details: agentId={AGENT_ID}, agentAliasId={AGENT_ALIAS_ID}", request_id=context.aws_request_id)
@@ -102,7 +102,6 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         result: str = ''
         chunk_count = 0
         trace_info:list[dict[str,Any]] = []
-        
         for event_chunk in response['completion']:
             chunk_count += 1
             
@@ -110,7 +109,7 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
             if 'trace' in event_chunk:
                 trace_data = event_chunk['trace']
                 trace_info.append(trace_data) # pyright: ignore[reportArgumentType]
-                log_with_context("INFO", f"Trace data: {json.dumps(trace_data, default=str)[:1000]}", request_id=context.aws_request_id)
+                log_with_context("DEBUG", f"Trace data: {json.dumps(trace_data, default=str)[:1000]}", request_id=context.aws_request_id)
             
             if 'chunk' in event_chunk and 'bytes' in event_chunk['chunk']:
                 chunk_bytes: bytes = event_chunk['chunk']['bytes']
@@ -124,7 +123,6 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         log_with_context("INFO", f"Full agent response length: {len(result)} characters", request_id=context.aws_request_id)
         log_with_context("INFO", f"Full agent response: {result}", request_id=context.aws_request_id)
         # Try to extract JSON if there's preamble text
-        print(f'Result: {result}')
         extracted_json = extract_json_from_response(result)
         # log_with_context("INFO", f"Extracted JSON: {extracted_json}", request_id=context.aws_request_id)
         
