@@ -27,6 +27,7 @@ export interface IAction {
 export interface AgentResponse<T> {
   error_message?: string;
   tool_payload?: T;
+  session_id: string;
   summarised_markdown?: string;
   suggested_actions?: IAction[];
 }

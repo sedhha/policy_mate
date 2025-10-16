@@ -1,4 +1,4 @@
-import { Document } from '@/types';
+import { Document, AgentResponse } from '@/types';
 
 export interface IndividualState {
   loading: boolean;
@@ -6,6 +6,7 @@ export interface IndividualState {
 }
 export interface IndividualAgentState {
   listDocs: IndividualState;
+  chat: IndividualState;
 }
 export interface IAgentState {
   // state
@@ -23,4 +24,8 @@ export interface IAgentState {
     state: IndividualState
   ) => void;
   loadDocuments: () => Promise<void>;
+  sendChatMessage: <T = any>(
+    message: string,
+    documentId?: string
+  ) => Promise<AgentResponse<T> | null>;
 }

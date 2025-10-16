@@ -1,14 +1,25 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAgentStore } from '@/stores/agentStore';
+import { stripBackendInstructions } from '@/utils/apis';
 import { ArrowLeft, FileText, MessageSquare, Send, Loader2 } from 'lucide-react';
 
 export default function ChatPage() {
     const router = useRouter();
-    const { selectedDocument } = useAgentStore();
+    const { selectedDocument, sendChatMessage, agentStates } = useAgentStore();
     const [message, setMessage] = useState('');
-    const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
+    const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string; isLoading?: boolean }>>([]);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Auto-scroll to bottom when new messages arrive
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
 
     useEffect(() => {
         if (!selectedDocument) {
@@ -16,22 +27,51 @@ export default function ChatPage() {
         }
     }, [selectedDocument, router]);
 
-    const handleSendMessage = (e: React.FormEvent) => {
+    const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!message.trim()) return;
+        if (!message.trim() || !selectedDocument || agentStates.chat.loading) return;
+
+        const userMessage = message.trim();
 
         // Add user message to chat
-        setMessages([...messages, { role: 'user', content: message }]);
+        setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
         setMessage('');
 
-        // TODO: Implement API call to send message and get response
-        // For now, we'll just add a placeholder response
-        setTimeout(() => {
-            setMessages(prev => [...prev, {
-                role: 'assistant',
-                content: 'This is a placeholder response. API integration coming soon!'
-            }]);
-        }, 500);
+        // Add a loading placeholder for assistant response
+        setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: '',
+            isLoading: true
+        }]);
+
+        // Send message to agent with document context
+        const response = await sendChatMessage(
+            userMessage,
+            selectedDocument.document_id
+        );
+
+        // Remove loading placeholder and add actual response
+        setMessages(prev => {
+            const messagesWithoutLoading = prev.filter(msg => !msg.isLoading);
+
+            if (response) {
+                // Extract and display the response, stripping all backend instructions
+                const assistantMessage = stripBackendInstructions(
+                    response.summarised_markdown || 'No response from agent'
+                );
+
+                return [...messagesWithoutLoading, {
+                    role: 'assistant',
+                    content: assistantMessage
+                }];
+            } else {
+                // Handle error case
+                return [...messagesWithoutLoading, {
+                    role: 'assistant',
+                    content: agentStates.chat.error || '❌ Failed to get response from agent. Please try again.'
+                }];
+            }
+        });
     };
 
     if (!selectedDocument) {
@@ -86,21 +126,31 @@ export default function ChatPage() {
                                 </p>
                             </div>
                         ) : (
-                            messages.map((msg, idx) => (
-                                <div
-                                    key={idx}
-                                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                                >
+                            <>
+                                {messages.map((msg, idx) => (
                                     <div
-                                        className={`max-w-[70%] rounded-2xl px-4 py-3 ${msg.role === 'user'
+                                        key={idx}
+                                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                                    >
+                                        <div
+                                            className={`max-w-[70%] rounded-2xl px-4 py-3 ${msg.role === 'user'
                                                 ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white'
                                                 : 'bg-gray-100 text-gray-800'
-                                            }`}
-                                    >
-                                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                                                }`}
+                                        >
+                                            {msg.isLoading ? (
+                                                <div className="flex items-center gap-2">
+                                                    <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                                                    <span className="text-sm text-gray-600">Thinking...</span>
+                                                </div>
+                                            ) : (
+                                                <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            ))
+                                ))}
+                                <div ref={messagesEndRef} />
+                            </>
                         )}
                     </div>
 
@@ -112,15 +162,25 @@ export default function ChatPage() {
                                 value={message}
                                 onChange={(e) => setMessage(e.target.value)}
                                 placeholder="Ask a question about this document..."
-                                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                disabled={agentStates.chat.loading}
+                                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                             <button
                                 type="submit"
-                                disabled={!message.trim()}
+                                disabled={!message.trim() || agentStates.chat.loading}
                                 className="px-6 py-3 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-md hover:shadow-lg"
                             >
-                                <Send className="w-4 h-4" />
-                                <span className="font-medium">Send</span>
+                                {agentStates.chat.loading ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <span className="font-medium">Sending...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Send className="w-4 h-4" />
+                                        <span className="font-medium">Send</span>
+                                    </>
+                                )}
                             </button>
                         </form>
                     </div>
