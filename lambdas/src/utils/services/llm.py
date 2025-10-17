@@ -1,4 +1,4 @@
-from src.utils.settings import OPEN_SEARCH_REGION
+from src.utils.settings import OPEN_SEARCH_REGION, AGENT_CLAUDE_HAIKU as AGENT_NAME
 import boto3
 import json
 
@@ -7,7 +7,7 @@ bedrock = boto3.client('bedrock-runtime', region_name=OPEN_SEARCH_REGION) # type
 class LLM():
     def invoke(self, prompt: str) -> str:
         response = bedrock.invoke_model(  # type: ignore
-            modelId='anthropic.claude-3-5-sonnet-20240620-v1:0',
+            modelId=AGENT_NAME,
             body=json.dumps({
                 "anthropic_version": "bedrock-2023-05-31",
                 "max_tokens": 4000,
