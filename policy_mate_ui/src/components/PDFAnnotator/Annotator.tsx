@@ -8,7 +8,6 @@ import "./PDFAnnotator.css";
 
 // ✅ dynamically import react-pdf in browser only
 import { useState, useEffect, useRef } from "react";
-import dynamic from "next/dynamic";
 
 // Lazy-load Toolbar, Panels, etc.
 import { withLazyLoader } from "@/components/PDFAnnotator/hoc/LazyLoader/Loader";

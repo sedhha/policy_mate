@@ -3,11 +3,8 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAgentStore } from '@/stores/agentStore';
 import {
-    ArrowLeft,
     FileText,
-    MessageSquare,
     Send,
-    Star,
     Copy,
     Check,
     FileCode,
@@ -19,6 +16,7 @@ import {
     Loader2,
     Shield,
     ShieldCheck,
+    ChevronDown,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -272,9 +270,11 @@ export default function ChatPage() {
     const [message, setMessage] = useState('');
     const [frameworkId, setFrameworkId] = useState<'GDPR' | 'SOC2' | 'HIPAA'>('GDPR');
     const [messages, setMessages] = useState<Message[]>([]);
+    const [isFrameworkDropdownOpen, setIsFrameworkDropdownOpen] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
+    const frameworkDropdownRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -297,6 +297,18 @@ export default function ChatPage() {
             textareaRef.current.style.height = `${newHeight}px`;
         }
     }, [message]);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (frameworkDropdownRef.current && !frameworkDropdownRef.current.contains(event.target as Node)) {
+                setIsFrameworkDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const handleActionClick = (action: string) => {
         setMessage(action);
@@ -355,64 +367,89 @@ export default function ChatPage() {
     }
 
     return (
-        <div className="flex flex-col h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-            {/* Header */}
-            <div className="flex-shrink-0 bg-white/90 backdrop-blur-xl border-b border-gray-200/50 shadow-sm z-10">
-                <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
-                    <button
-                        onClick={() => router.push('/')}
-                        className="p-2 hover:bg-gray-100 rounded-xl transition-all hover:scale-105 active:scale-95"
-                    >
-                        <ArrowLeft className="w-5 h-5 text-gray-700" />
-                    </button>
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="relative">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-                                <FileText className="w-5 h-5 text-white" />
-                            </div>
-                            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full animate-pulse" />
-                        </div>
-                        <div className="truncate flex-1">
-                            <h1 className="text-base md:text-lg font-bold text-gray-900 truncate flex items-center gap-2">
-                                {selectedDocument.file_name}
-                                <div className="relative">
-                                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                                    <div className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-40" />
+        <div className="flex flex-col h-full overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+            {/* Messages */}
+            <div className="flex flex-col flex-1 min-h-0">
+                {/* Document Info & Framework Selector Bar */}
+                <div className="flex-shrink-0 bg-white/90 backdrop-blur-xl border-b border-gray-200/50 shadow-sm">
+                    <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className="relative">
+                                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                    <FileText className="w-5 h-5 text-white" />
                                 </div>
-                            </h1>
-                            <p className="text-xs text-gray-500">AI-Powered Compliance Analysis</p>
-                        </div>
-                    </div>
-
-                    {/* Framework Selector */}
-                    <div className="relative group">
-                        <div className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-200/60 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105">
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" />
-                                <span className="text-xs font-medium text-gray-600">Framework:</span>
+                                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full animate-pulse" />
                             </div>
-                            <select
-                                value={frameworkId}
-                                onChange={(e) => setFrameworkId(e.target.value as 'GDPR' | 'SOC2' | 'HIPAA')}
-                                className="bg-transparent text-sm font-bold text-purple-700 border-none outline-none cursor-pointer appearance-none pr-6 focus:ring-0"
-                                style={{
-                                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%237c3aed'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                                    backgroundRepeat: 'no-repeat',
-                                    backgroundPosition: 'right 0.25rem center',
-                                    backgroundSize: '1.25rem 1.25rem'
-                                }}
+                            <div className="truncate flex-1">
+                                <h2 className="text-base md:text-lg font-bold text-gray-900 truncate flex items-center gap-2">
+                                    {selectedDocument.file_name}
+                                    <div className="relative">
+                                        <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                                        <div className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-40" />
+                                    </div>
+                                </h2>
+                                <p className="text-xs text-gray-500">Document under analysis</p>
+                            </div>
+                        </div>
+
+                        {/* Framework Selector */}
+                        <div className="relative" ref={frameworkDropdownRef}>
+                            <button
+                                onClick={() => setIsFrameworkDropdownOpen(!isFrameworkDropdownOpen)}
+                                className="relative group"
                             >
-                                <option value="GDPR">GDPR</option>
-                                <option value="SOC2">SOC2</option>
-                                <option value="HIPAA">HIPAA</option>
-                            </select>
+                                <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-indigo-500 rounded-xl opacity-75 blur group-hover:opacity-100 transition-opacity duration-300"></div>
+                                <div className="relative flex items-center gap-3 px-5 py-2.5 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-white/20">
+                                    <Shield className="w-4 h-4 text-purple-200 flex-shrink-0" />
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs font-semibold text-white/90 whitespace-nowrap">Framework:</span>
+                                        <span className="text-sm font-bold text-white">{frameworkId}</span>
+                                    </div>
+                                    <ChevronDown className={`w-4 h-4 text-white/90 transition-transform duration-300 ${isFrameworkDropdownOpen ? 'rotate-180' : ''}`} />
+                                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse flex-shrink-0"></div>
+                                </div>
+                            </button>
+
+                            {/* Custom Dropdown Menu */}
+                            {isFrameworkDropdownOpen && (
+                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-50 animate-fade-in">
+                                    {(['GDPR', 'SOC2', 'HIPAA'] as const).map((framework) => (
+                                        <button
+                                            key={framework}
+                                            onClick={() => {
+                                                setFrameworkId(framework);
+                                                setIsFrameworkDropdownOpen(false);
+                                            }}
+                                            className={`w-full px-4 py-3 text-left transition-all duration-200 flex items-center gap-3 group ${frameworkId === framework
+                                                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white'
+                                                    : 'hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50 text-gray-700'
+                                                }`}
+                                        >
+                                            <Shield className={`w-4 h-4 flex-shrink-0 ${frameworkId === framework ? 'text-white' : 'text-purple-600'
+                                                }`} />
+                                            <div className="flex-1">
+                                                <div className={`font-semibold text-sm ${frameworkId === framework ? 'text-white' : 'text-gray-900'
+                                                    }`}>
+                                                    {framework}
+                                                </div>
+                                                <div className={`text-xs ${frameworkId === framework ? 'text-purple-100' : 'text-gray-500'
+                                                    }`}>
+                                                    {framework === 'GDPR' && 'General Data Protection'}
+                                                    {framework === 'SOC2' && 'Security & Compliance'}
+                                                    {framework === 'HIPAA' && 'Healthcare Privacy'}
+                                                </div>
+                                            </div>
+                                            {frameworkId === framework && (
+                                                <Check className="w-5 h-5 text-white flex-shrink-0" />
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Messages */}
-            <div className="flex flex-col flex-1 min-h-0">
                 <div
                     ref={messagesContainerRef}
                     className="flex-1 overflow-y-auto px-4 py-6"
