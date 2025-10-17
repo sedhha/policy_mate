@@ -1,6 +1,7 @@
 # lambdas/agent_gateway_handler.py
 import json
 import boto3
+import traceback
 from uuid6 import uuid7
 from typing import Any, Optional
 from mypy_boto3_bedrock_agent_runtime.client import AgentsforBedrockRuntimeClient
@@ -130,7 +131,8 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         # Try to parse as JSON
         try:
             response_data = json.loads(extracted_json)
-            updated_response = cached_response(response_data)
+            log_with_context("INFO", f"Successfully parsed JSON response from agent {response_data}", request_id=context.aws_request_id)
+            updated_response = cached_response(response_data, request_id=context.aws_request_id)
             summarised_markdown = updated_response.get('summarised_markdown', 'Unknown response')
             log_with_context("INFO", f"Successfully parsed JSON response with keys: {response_data.keys()}", request_id=context.aws_request_id)
         except json.JSONDecodeError as e:
@@ -153,7 +155,8 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         }
         
     except Exception as e:
-        log_with_context("ERROR", f"Agent invocation failed: {str(e)}", request_id=context.aws_request_id)
+        error_traceback = traceback.format_exc()
+        log_with_context("ERROR", f"Agent invocation failed: {str(e)}\nTraceback:\n{error_traceback}", request_id=context.aws_request_id)
         return {
             'statusCode': 500,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
