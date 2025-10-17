@@ -7,10 +7,7 @@ import {
     FileText,
     MessageSquare,
     Send,
-    Loader2,
     Sparkles,
-    Bot,
-    User,
     Copy,
     Check,
     FileCode,
@@ -25,198 +22,6 @@ import rehypeKatex from 'rehype-katex';
 import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css';
 import 'katex/dist/katex.min.css';
-
-const dummyMarkdownResponse = `## Document Analysis Complete
-
-The document **sample_compliance_document.pdf** has been thoroughly analyzed using our advanced AI system.
-
-### Executive Summary
-
-This comprehensive analysis covers multiple aspects of your document:
-
-- **Compliance Status**: Currently marked as Unknown
-- **Document Size**: 4.7 KB
-- **Last Updated**: Oct 15, 2025
-- **Risk Level**: Low to Medium
-
-### Key Findings
-
-#### 1. Document Structure
-
-The document follows a standard compliance format with the following sections:
-
-1. Introduction and scope
-2. Regulatory requirements
-3. Implementation guidelines
-4. Monitoring and reporting
-
-#### 2. Compliance Gaps Identified
-
-> **Important Note**: Several areas require immediate attention to ensure full compliance with current regulations.
-
-We've identified **3 critical gaps** that need addressing:
-
-- Missing signature fields in Section 4.2
-- Outdated reference to 2023 regulations (should cite 2024 amendments)
-- Incomplete risk assessment matrix
-
-### Technical Details
-
-Here's a sample code snippet for automated compliance checking:
-
-\`\`\`python
-def check_compliance(document):
-    """
-    Automated compliance checker
-    """
-    gaps = []
-    
-    if not document.has_signatures():
-        gaps.append("Missing signatures")
-    
-    if document.regulation_year < 2024:
-        gaps.append("Outdated regulations")
-    
-    return {
-        'status': 'incomplete' if gaps else 'compliant',
-        'gaps': gaps,
-        'confidence': 0.87
-    }
-\`\`\`
-
-For inline code references, use \`document.validate()\` to run validation checks.
-
-### Compliance Metrics
-
-| Metric | Current Value | Target | Status |
-| --- | --- | --- | --- |
-| Documentation Coverage | 85% | 95% | ⚠️ Needs Improvement |
-| Regulatory Alignment | 92% | 100% | ✅ Good |
-| Audit Readiness | 78% | 90% | ⚠️ Needs Work |
-| Data Privacy Score | 95% | 95% | ✅ Excellent |
-
-### Recommendations
-
-***Strong emphasis***: The following actions are *highly recommended*:
-
-1. **Update Regulatory References**
-   - Replace 2023 citations with current 2024 amendments
-   - Review Section 3.4 for outdated terminology
-   - Add missing compliance checkpoints
-
-2. **Complete Documentation**
-   - Add digital signature fields
-   - Include attestation statements
-   - Update risk assessment matrices
-
-3. **Schedule Follow-up Review**
-   - Conduct quarterly compliance audits
-   - Implement continuous monitoring
-   - Set up automated alerts for policy changes
-
-### External Resources
-
-For more information, please refer to:
-
-- [ISO 27001 Compliance Guide](https://www.iso.org/standard/27001)
-- [GDPR Documentation](https://gdpr.eu)
-- [Internal Compliance Portal](https://compliance.yourcompany.com)
-
----
-
-### Mathematical Formulas
-
-The compliance score is calculated using:
-
-$$
-ComplianceScore = \\frac{\\sum_{i=1}^{n} w_i \\cdot s_i}{\\sum_{i=1}^{n} w_i} \\times 100
-$$
-
-Where $w_i$ represents the weight of each criterion and $s_i$ is the individual score.
-
-### Nested Lists
-
-Document hierarchy breakdown:
-
-- **Top Level Requirements**
-  - Regulatory Compliance
-    - Federal regulations
-    - State-specific requirements
-    - Industry standards
-  - Internal Policies
-    - Corporate governance
-    - Data protection
-    - Employee conduct
-- **Supporting Documentation**
-  - Audit trails
-  - Change logs
-  - Approval records
-
-### Code Block with Different Languages
-
-JavaScript example:
-
-\`\`\`javascript
-// Compliance validation middleware
-const validateCompliance = async (req, res, next) => {
-  const document = req.body.document;
-  const result = await complianceEngine.analyze(document);
-  
-  if (result.status === 'non-compliant') {
-    return res.status(400).json({
-      error: 'Compliance check failed',
-      gaps: result.gaps
-    });
-  }
-  
-  next();
-};
-\`\`\`
-
-SQL query for audit logs:
-
-\`\`\`sql
-SELECT 
-  document_id,
-  compliance_status,
-  last_reviewed,
-  reviewer_name
-FROM compliance_audits
-WHERE status = 'pending'
-  AND last_reviewed < DATE_SUB(NOW(), INTERVAL 90 DAY)
-ORDER BY last_reviewed ASC;
-\`\`\`
-
-### Special Formatting
-
-This is a paragraph with **bold text**, *italic text*, and ***bold italic text***. You can also use \`inline code\` within sentences.
-
-> This is a blockquote that contains important information about compliance requirements.
-> 
-> It can span multiple paragraphs and include **formatted text**.
-
-### Multiple Blockquotes
-
-> **Warning**: Failure to address these gaps may result in non-compliance penalties.
-
-> **Tip**: Use our automated compliance checker to monitor document status in real-time.
-
-### Final Notes
-
-#### Quick Action Items
-
-- [ ] Review identified gaps
-- [ ] Update regulatory references  
-- [ ] Schedule compliance audit
-- [ ] Notify stakeholders
-
----
-
-**Document ID**: \`ed9dbabf-517f-4a77-b3f4-dc5b8c44be9c\`  
-**Analysis Date**: October 16, 2025  
-**Confidence Score**: 87.5%
-
-*This analysis was generated by Compliance Copilot AI v2.1*`;
 
 // Custom components for markdown rendering - FIXED for hydration
 const MarkdownComponents = {
@@ -405,6 +210,7 @@ export default function ChatPage() {
     const router = useRouter();
     const { selectedDocument, sendChatMessage, agentStates } = useAgentStore();
     const [message, setMessage] = useState('');
+    const [frameworkId, setFrameworkId] = useState<'GDPR' | 'SOC2' | 'HIPAA'>('GDPR');
     const [messages, setMessages] = useState<
         Array<{ role: 'user' | 'assistant'; content: string; isLoading?: boolean }>
     >([]);
@@ -462,7 +268,10 @@ export default function ChatPage() {
         // Send message to agent with document context
         const response = await sendChatMessage(
             userMessage,
-            selectedDocument.document_id
+            {
+                document_id: selectedDocument.document_id,
+                framework_id: frameworkId,
+            }
         );
 
         setIsTyping(false);
@@ -525,12 +334,37 @@ export default function ChatPage() {
                             </div>
                             <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                         </div>
-                        <div className="truncate">
+                        <div className="truncate flex-1">
                             <h1 className="text-base md:text-lg font-bold text-gray-900 truncate flex items-center gap-2">
                                 {selectedDocument.file_name}
                                 <Sparkles className="w-4 h-4 text-yellow-500" />
                             </h1>
                             <p className="text-xs text-gray-600">AI-Powered Document Analysis</p>
+                        </div>
+                    </div>
+
+                    {/* Framework Selector */}
+                    <div className="relative group">
+                        <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-200 rounded-xl hover:shadow-md transition-all duration-200">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+                                <span className="text-xs font-medium text-gray-600">Framework:</span>
+                            </div>
+                            <select
+                                value={frameworkId}
+                                onChange={(e) => setFrameworkId(e.target.value as 'GDPR' | 'SOC2' | 'HIPAA')}
+                                className="bg-transparent text-sm font-semibold text-purple-700 border-none outline-none cursor-pointer appearance-none pr-6 focus:ring-0"
+                                style={{
+                                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%237c3aed'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                                    backgroundRepeat: 'no-repeat',
+                                    backgroundPosition: 'right 0.25rem center',
+                                    backgroundSize: '1.25rem 1.25rem'
+                                }}
+                            >
+                                <option value="GDPR">GDPR</option>
+                                <option value="SOC2">SOC2</option>
+                                <option value="HIPAA">HIPAA</option>
+                            </select>
                         </div>
                     </div>
                 </div>

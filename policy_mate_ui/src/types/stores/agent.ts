@@ -26,6 +26,6 @@ export interface IAgentState {
   loadDocuments: () => Promise<void>;
   sendChatMessage: <T = any>(
     message: string,
-    documentId?: string
+    metadata?: Record<string, string>
   ) => Promise<AgentResponse<T> | null>;
 }

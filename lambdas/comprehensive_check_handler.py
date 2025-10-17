@@ -131,9 +131,9 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         log_with_context("INFO", f"Starting comprehensive analysis: doc={document_id}, framework={framework_id}", request_id=context.aws_request_id)
         
         # Get document from DynamoDB (same pattern as doc_status_handler)
-        doc_table = get_table(DynamoDBTable.DOCUMENTS)
+        doc_table = get_table(DynamoDBTable.FILES)
         doc_response = doc_table.query(
-            KeyConditionExpression='document_id = :doc_id',
+            KeyConditionExpression='file_id = :doc_id',
             ExpressionAttributeValues={':doc_id': document_id},
             Limit=1
         )
@@ -152,7 +152,7 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
                 'status': compliance_status
             })
         
-        s3_url_raw = document.get('s3_url', '')
+        s3_url_raw = document.get('s3_key', '')
         
         if not s3_url_raw:
             return bedrock_response(event, 400, {'error': 'Document has no S3 URL'})

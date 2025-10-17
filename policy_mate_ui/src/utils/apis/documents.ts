@@ -16,7 +16,7 @@ export interface MessageMetadata {
  * Instructions appended to every message
  * This is stripped from display but sent to the backend
  */
-const FORMAT_INSTRUCTION = ` return response in JSON format Do NOT exclude or TRIM any special characters/new lines/spaces/tabs in the JSON response. Ensure the JSON is properly formatted.`;
+const FORMAT_INSTRUCTION = ` return response in JSON format Make sure to format summarised_markdown attribute in proper markdown syntax with proper new-lines.`;
 /**
  * Build metadata tag string from metadata object
  * Format: [META:file_id=abc123,another_key=value]
