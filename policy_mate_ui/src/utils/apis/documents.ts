@@ -16,8 +16,7 @@ export interface MessageMetadata {
  * Instructions appended to every message
  * This is stripped from display but sent to the backend
  */
-const JSON_FORMAT_INSTRUCTION = ' return response in JSON format';
-
+const FORMAT_INSTRUCTION = ` return response in JSON format Make sure to format summarised_markdown attribute in proper markdown syntax with proper new-lines.`;
 /**
  * Build metadata tag string from metadata object
  * Format: [META:file_id=abc123,another_key=value]
@@ -118,7 +117,7 @@ export const sendMessage = async <T = any>(
     const metadataTag = buildMetadataTag(metadata);
 
     // Append JSON format instruction to every message
-    const promptWithInstruction = `${prompt}${JSON_FORMAT_INSTRUCTION}`;
+    const promptWithInstruction = `${prompt}${FORMAT_INSTRUCTION}`;
     const taggedPrompt = `${metadataTag}${promptWithInstruction}`;
 
     const requestBody: ChatRequest = {

@@ -68,7 +68,10 @@ export const useAgentStore = create<IAgentState>()((set, get) => ({
     }
   },
 
-  sendChatMessage: async <T = any>(message: string, documentId?: string) => {
+  sendChatMessage: async <T = any>(
+    message: string,
+    metadata?: Record<string, string>
+  ) => {
     try {
       set((prev) => ({
         agentStates: {
@@ -78,8 +81,6 @@ export const useAgentStore = create<IAgentState>()((set, get) => ({
       }));
 
       const sessionId = get().sessionId;
-      const metadata = documentId ? { file_id: documentId } : undefined;
-
       const response = await sendMessage<T>(message, sessionId, metadata);
 
       // Update session ID if it changed
