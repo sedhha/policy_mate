@@ -42,23 +42,14 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
     # Import status mapping function from show_doc_handler
     status_details = get_status_details(status)
     
-    return bedrock_response(event, 200, {
+    result: dict[str, Any] = {
         'document_id': document_id,
         'file_name': str(document.get('s3_key', '')).split('/')[-1] if document.get('s3_key') else 'Unknown',
         'status': status,
         'status_label': status_details['label'],
         'status_emoji': status_details['emoji'],
         'status_color': status_details['color']
-    })
+    }
+    log_with_context("INFO", f"Returning document status details: {result}", request_id=context.aws_request_id)
 
-# Note: This handler queries the PolicyMateFiles table
-# Primary Key: file_id (string)
-# Attributes:
-# - status: integer (DocumentStatus enum value)
-# - user_id: string
-# - org_id: string
-# - mime_type: string
-# - file_size: number
-# - s3_key: string
-# - created_at: number (timestamp in milliseconds)
-# - updated_at: number (timestamp in milliseconds)
+    return bedrock_response(event, 200, result)

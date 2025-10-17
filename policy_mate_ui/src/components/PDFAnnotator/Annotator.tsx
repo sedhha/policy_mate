@@ -15,6 +15,8 @@ import { VibrantLoader } from "@/components/PDFAnnotator/hoc/LazyLoader/VibrantL
 import { usePDFStore } from "@/components/PDFAnnotator/stores/pdfStore";
 import type { CommentPannelProps, BookmarkPopoverProps } from "@/components/PDFAnnotator/types";
 import { setupPdfWorker } from "@/components/PDFAnnotator/setupPdfWorker";
+import { Toolbar } from "./Toolbar";
+import { AnnotationOverlay } from "./AnnotationOverlay";
 
 const CommentPanel = withLazyLoader<CommentPannelProps>(
     () => import("@/components/PDFAnnotator/CommentPanel"),
@@ -126,6 +128,19 @@ export const SimplePDFAnnotator: React.FC = () => {
             <div className="bg-white/95 backdrop-blur-sm border-b border-gray-200/50 shadow-sm">
                 {/* Keep your Toolbar exactly as before */}
                 {/* For brevity omitted: import Toolbar and pass props */}
+                <Toolbar
+                    scale={scale}
+                    setScale={setPageScale}
+                    minZoom={MIN_ZOOM}
+                    maxZoom={MAX_ZOOM}
+                    clearAnnotations={clearAnnotations}
+                    hasAnnotations={false}
+                    highlightStyle={highlightStyle}
+                    setHighlightStyle={setHighlightStyle}
+                    numPages={numPages}
+                    currentPage={currentPage}
+                    jumpToPage={jumpToPage}
+                />
             </div>
 
             {/* PDF Viewer */}
@@ -151,11 +166,39 @@ export const SimplePDFAnnotator: React.FC = () => {
                                         <Page
                                             pageNumber={Math.min(currentPage || 1, pages)}
                                             scale={scale}
-                                            renderTextLayer
+                                            renderTextLayer={true}
                                             renderAnnotationLayer={false}
-                                            loading={<VibrantLoader variant="dots" size="md" message="Rendering Page" />}
+                                            loading={
+                                                <div className="flex flex-col items-center justify-center py-12">
+                                                    <VibrantLoader
+                                                        variant="dots"
+                                                        size="md"
+                                                        message="Rendering Page"
+                                                    />
+                                                </div>
+                                            }
                                         />
-                                        {/* overlay unchanged */}
+                                        <AnnotationOverlay
+                                            annotations={annotations}
+                                            isLoading={isLoading}
+                                            currentPage={currentPage}
+                                            scale={scale}
+                                            openCreationForId={openCreationForId}
+                                            openCommentForId={openCommentForId}
+                                            openBookmarkForId={openBookmarkForId}
+                                            expandedChipForId={expandedChipForId}
+                                            setOpenCreationForId={setOpenCreationForId}
+                                            setOpenCommentForId={setOpenCommentForId}
+                                            setOpenBookmarkForId={setOpenBookmarkForId}
+                                            setExpandedChipForId={setExpandedChipForId}
+                                            addAnnotation={addAnnotation}
+                                            updateAnnotation={updateAnnotation}
+                                            removeAnnotation={removeAnnotation}
+                                            selectedColor={'#ffe066'}
+                                            strokeWidth={2}
+                                            highlightStyle={highlightStyle}
+                                            pageRef={pageRef}
+                                        />
                                     </div>
                                 )}
                             </Document>
@@ -167,8 +210,37 @@ export const SimplePDFAnnotator: React.FC = () => {
             {/* Keep all your annotation panels, summary, etc. below unchanged */}
             {annotations.length > 0 && (
                 <div className="annotations-summary bg-white/95 backdrop-blur-sm border-t border-gray-200/50 shadow-lg">
-                    <div className="px-6 py-4 text-sm text-gray-600">
-                        {annotations.length} active annotations
+                    <div className="px-6 py-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                                <div className="p-2 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-lg">
+                                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <span className="text-sm font-semibold text-gray-700">
+                                        {annotations.length} annotation{annotations.length !== 1 ? 's' : ''}
+                                    </span>
+                                    <div className="flex items-center mt-1">
+                                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div>
+                                        <span className="text-xs text-gray-500">Active session</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg px-3 py-2 border border-gray-200/50">
+                                    <span className="text-xs text-gray-600 font-medium">
+                                        Double-click highlight to remove
+                                    </span>
+                                    <div className="flex items-center justify-end space-x-2 mt-1">
+                                        <span className="text-xs text-gray-500">💬 Comments</span>
+                                        <span className="text-xs text-gray-400">•</span>
+                                        <span className="text-xs text-gray-500">🔖 Bookmarks</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
@@ -180,6 +252,7 @@ export const SimplePDFAnnotator: React.FC = () => {
                     updateAnnotation={updateAnnotation}
                 />
             )}
+
             {openBookmarkForId && (
                 <BookmarkPopover
                     ann={annotations.find(a => a.id === openBookmarkForId)!}

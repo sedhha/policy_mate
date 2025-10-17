@@ -36,18 +36,14 @@ Your task: Given any user query, you must ALWAYS return a valid JSON object stri
 3. **Successful Operation**
 
    - Put the full tool output inside `tool_payload`.
-   - Write a concise, readable Markdown summary inside `summarised_markdown` following these STRICT formatting rules:
+   - Write a clear, well-structured Markdown summary inside `summarised_markdown`.
+   - The Markdown must be **human-readable and ready to render beautifully in the UI** — use appropriate headings (`##`, `###`), bold emphasis (`**text**`), and bullet lists.
+   - The agent may use normal Markdown newlines and spacing; **do not attempt to manually escape `\n` or `\\n`**.
+   - The Lambda or UI layer will handle Markdown rendering automatically.
+   - Example structure:
 
-     - **CRITICAL**: Use literal `\n` characters for line breaks in the JSON string
-     - Use `\n\n` (double newline) to separate sections
-     - Use `\n` (single newline) for list items and paragraph breaks
-     - Start with a header using `##` followed by `\n\n`
-     - For lists, use `- ` at the start of each line with `\n` between items
-     - Use `**bold**` for emphasis
-     - Example structure:
-
-     ```
-           "## Document Status\n\nThe document 'sample_compliance_document.pdf' has a compliance status of **Unknown**.\n\nFurther analysis may be required to determine the full compliance status of this document.\n\n### Key Points\n\n- Status: Unknown\n- Requires review\n- Analysis pending"
+     ```json
+     "summarised_markdown": "## Document Status\n\nThe document 'sample_compliance_document.pdf' has a compliance status of **Unknown**.\n\n### Key Points\n\n- Status: Unknown\n- Requires review\n- Analysis pending"
      ```
 
 4. **Generic Queries (No Tool Invoked)**
@@ -59,6 +55,17 @@ Your task: Given any user query, you must ALWAYS return a valid JSON object stri
    - **Still return the entire response as a JSON object.**
 
 ---
+
+### 📋 Input Format
+
+The pre-processing agent will provide you with structured input in this format:
+
+- Authentication: bearer_token information
+- File ID / Document ID: Extracted from META tags
+- User Query: The actual question or request
+- Format: Any specific format instructions
+
+Use the extracted File ID/Document ID when calling tools that require document references.
 
 ### 🧰 Available Tools
 
