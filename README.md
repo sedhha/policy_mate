@@ -74,6 +74,18 @@ cat output.json
 ## Environment Configuration
 
 Edit `lambdas/.env`:
+
 - `OPEN_SEARCH_ENV=local` - Use local OpenSearch
 - `OPEN_SEARCH_ENV=aws` - Use AWS OpenSearch Service
 - `OPEN_SEARCH_ENV=serverless` - Use AWS OpenSearch Serverless
+
+## Updating max tokens:
+
+```bash
+aws bedrock-agent update-agent \
+    --agent-id ZTRCQMAYKG \
+    --agent-name policyMateIngestionAgent \
+    --agent-resource-role-arn 'arn:aws:bedrock:us-east-1:354468042457:agent/ZTRCQMAYKG' \
+    --foundation-model 'anthropic.claude-2' \
+    --inference-configuration '{"maximumLength": 8000}'
+```

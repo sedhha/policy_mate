@@ -192,3 +192,7 @@ Response payload for:
   "summarised_markdown": "## Summary\n\nYour document is largely compliant with minor gaps needing attention.",
 }
 ```
+
+## TODO:
+
+- enable CORS of S3 for global URL

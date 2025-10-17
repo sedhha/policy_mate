@@ -33,26 +33,49 @@ paths:
                     - SOC2
                     - HIPAA
                   description: Compliance framework to check against
+                force_reanalysis:
+                  type: boolean
+                  description: Force a new analysis even if cached results exist. Use when user explicitly requests fresh/new analysis, re-analysis, or mentions the existing analysis might be outdated. Defaults to false.
+                  default: false
       responses:
         '200':
-          description: Comprehensive analysis completed
+          description: Comprehensive analysis completed or reference to existing analysis
           content:
             application/json:
               schema:
                 type: object
                 properties:
+                  message:
+                    type: string
+                    description: Status message about the analysis
+                  dynamo_db_query_key:
+                    type: string
+                    description: The key used to query the DynamoDB table
+                  dynamo_db_value_key:
+                    type: string
+                    description: The value key in DynamoDB where the analysis result is stored
+                  dynamo_db_document_id:
+                    type: string
+                    description: The unique record ID in DynamoDB where the full analysis is stored
+                  dynamo_db_table_name:
+                    type: string
+                    description: The DynamoDB table name containing the analysis (PolicyMateInferredFiles)
                   document_id:
                     type: string
+                    description: The original document ID that was analyzed (only in full response)
                   framework:
                     type: string
+                    description: The compliance framework used (only in full response)
                   overall_verdict:
                     type: string
                     enum:
                       - COMPLIANT
                       - NON_COMPLIANT
                       - PARTIAL
+                    description: Overall compliance verdict (only in full response)
                   findings:
                     type: array
+                    description: Detailed findings from the analysis (only in full response)
                     items:
                       type: object
                       properties:
@@ -91,6 +114,7 @@ paths:
                             type: string
                   missing_controls:
                     type: array
+                    description: Controls not addressed in the document (only in full response)
                     items:
                       type: object
                       properties:
@@ -104,6 +128,7 @@ paths:
                           type: string
                   statistics:
                     type: object
+                    description: Statistical summary of the analysis (only in full response)
                     properties:
                       total_controls_checked:
                         type: number
@@ -115,9 +140,24 @@ paths:
                         type: number
                       not_addressed:
                         type: number
+        '202':
+          description: Document is still being indexed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  document_id:
+                    type: string
+                  status:
+                    type: string
         '400':
           description: Bad request - missing or invalid parameters
         '401':
           description: Unauthorized - invalid or expired token
         '404':
           description: Document not found
+        '500':
+          description: Internal server error

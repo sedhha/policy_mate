@@ -14,11 +14,15 @@ def extract_text_from_s3(s3_url: str) -> list[dict[str, Any]]:
         parts = s3_url.split('/', 1)
         bucket = parts[0]
         key = parts[1] if len(parts) > 1 else ''
-    else:
+    elif s3_url.startswith('https://') or s3_url.startswith('http://'):
         # Handle https:// format
         parts = s3_url.replace('https://', '').replace('http://', '').split('/')
         bucket = parts[0].split('.')[0]
         key = '/'.join(parts[1:])
+    else:
+        # Handle plain S3 key (no protocol prefix)
+        bucket = 'policy-mate'
+        key = s3_url
     
     obj = s3.get_object(Bucket=bucket, Key=key)  # type: ignore
     content = obj['Body'].read().decode('utf-8', errors='ignore')  # type: ignore

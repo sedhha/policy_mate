@@ -3,6 +3,7 @@ import json
 from typing import Any
 from aws_lambda_typing import context as context_
 import boto3
+from src.utils.services.inference import comprehensive_file_analysis
 from src.utils.logger import log_with_context
 from src.utils.decorators.auth import require_auth
 from src.utils.bedrock_response import bedrock_response
@@ -11,6 +12,7 @@ from src.utils.services.embeddings import generate_embedding
 from src.utils.services.document_extractor import extract_text_from_s3, cosine_similarity
 from src.utils.settings import OPEN_SEARCH_REGION
 from collections import defaultdict
+from uuid6 import uuid7
 
 bedrock = boto3.client('bedrock-runtime', region_name=OPEN_SEARCH_REGION)  # type: ignore
 
@@ -61,36 +63,36 @@ def analyze_chunks_batch(chunks: list[dict[str, Any]], controls: list[dict[str, 
     
     prompt = f"""Analyze these document text snippets against {category} compliance controls.
 
-DOCUMENT TEXT SNIPPETS:
-{chunks_text}
+        DOCUMENT TEXT SNIPPETS:
+        {chunks_text}
 
-CONTROLS TO CHECK:
-{controls_text}
+        CONTROLS TO CHECK:
+        {controls_text}
 
-For EACH text snippet, identify which controls it addresses and provide analysis.
-Return JSON array with this structure:
-[
-  {{
-    "text_index": 0,
-    "text_snippet": "exact text from document",
-    "start_char": number,
-    "end_char": number,
-    "controls_addressed": [
-      {{
-        "control_id": "GDPR-X.X",
-        "status": "COMPLIANT" | "NON_COMPLIANT" | "PARTIAL" | "UNCLEAR",
-        "reasoning": "specific reasoning"
-      }}
-    ],
-    "verdict": "overall verdict for this text",
-    "summary": "brief summary",
-    "gaps": ["list of gaps"],
-    "recommendations": ["actionable recommendations"],
-    "clarity_issues": ["ambiguous language issues"]
-  }}
-]
+        For EACH text snippet, identify which controls it addresses and provide analysis.
+        Return JSON array with this structure:
+        [
+        {{
+            "text_index": 0,
+            "text_snippet": "exact text from document",
+            "start_char": number,
+            "end_char": number,
+            "controls_addressed": [
+            {{
+                "control_id": "GDPR-X.X",
+                "status": "COMPLIANT" | "NON_COMPLIANT" | "PARTIAL" | "UNCLEAR",
+                "reasoning": "specific reasoning"
+            }}
+            ],
+            "verdict": "overall verdict for this text",
+            "summary": "brief summary",
+            "gaps": ["list of gaps"],
+            "recommendations": ["actionable recommendations"],
+            "clarity_issues": ["ambiguous language issues"]
+        }}
+        ]
 
-Return ONLY valid JSON array, no additional text."""
+        Return ONLY valid JSON array, no additional text."""
 
     response = bedrock.invoke_model(  # type: ignore
         modelId='anthropic.claude-3-haiku-20240307-v1:0',
@@ -108,6 +110,26 @@ Return ONLY valid JSON array, no additional text."""
         return json.loads(content)
     except json.JSONDecodeError:
         return []
+    
+    
+def obtain_inferred_file_record(document_id: str, framework_id: str) -> str | None:
+    """Fetch inferred file record from DynamoDB by scanning for document_id and framework_id"""
+    table = get_table(DynamoDBTable.INFERRED_FILES)
+    response = table.scan(
+        FilterExpression='document_id = :doc_id AND framework_id = :fw_id',
+        ExpressionAttributeValues={
+            ':doc_id': document_id,
+            ':fw_id': framework_id
+        },
+        Limit=1
+    )
+    items = response.get('Items', [])
+    # If result is found return the record id
+    if not items or not items[0].get('record_id'):
+        return None
+    
+    return str(items[0]['record_id'])
+    
 
 @require_auth
 def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str, Any]:
@@ -121,6 +143,9 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         
         document_id = params.get('document_id', '').strip()
         framework_id = params.get('framework_id', '').upper()
+        force_reanalysis = params.get('force_reanalysis', False)
+        
+        log_with_context("INFO", f"Parameters received: document_id={document_id}, framework_id={framework_id}, force_reanalysis={force_reanalysis}", request_id=context.aws_request_id)
         
         if not document_id:
             return bedrock_response(event, 400, {'error': 'document_id is required'})
@@ -128,8 +153,22 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         if framework_id not in ['GDPR', 'SOC2', 'HIPAA']:
             return bedrock_response(event, 400, {'error': 'framework_id must be GDPR, SOC2, or HIPAA'})
         
-        log_with_context("INFO", f"Starting comprehensive analysis: doc={document_id}, framework={framework_id}", request_id=context.aws_request_id)
+        # Check if inferred file record exists
+        if not force_reanalysis:
+            log_with_context("INFO", "Checking for existing analysis record", request_id=context.aws_request_id)
+            inferred_record_id = obtain_inferred_file_record(document_id, framework_id)
+            if inferred_record_id:
+                log_with_context("INFO", f"Existing analysis found with record_id={inferred_record_id}, skipping re-analysis", request_id=context.aws_request_id)
+                return bedrock_response(event, 200, {
+                    'message': 'Analysis already exists for this document and framework.',
+                    'dynamo_db_document_id': inferred_record_id,
+                    'dynamo_db_table_name': DynamoDBTable.INFERRED_FILES.value,
+                    'dynamo_db_query_key': 'record_id',
+                    'dynamo_db_value_key': 'analysis_result'
+                })
         
+        log_with_context("INFO", f"Starting comprehensive analysis: doc={document_id}, framework={framework_id}", request_id=context.aws_request_id)
+        record_id = uuid7()
         # Get document from DynamoDB (same pattern as doc_status_handler)
         doc_table = get_table(DynamoDBTable.FILES)
         doc_response = doc_table.query(
@@ -149,7 +188,7 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
             return bedrock_response(event, 202, {
                 'message': 'This document is new and currently being indexed. Please check back in a few minutes.',
                 'document_id': document_id,
-                'status': compliance_status
+                'status': compliance_status,
             })
         
         s3_url_raw = document.get('s3_key', '')
@@ -229,15 +268,33 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         
         log_with_context("INFO", f"Analysis complete: {len(findings)} findings, verdict={overall_verdict}", request_id=context.aws_request_id)
         
-        return bedrock_response(event, 200, {
+        result: dict[str, Any] = {
             'document_id': document_id,
             'framework': framework_id,
             'overall_verdict': overall_verdict,
             'findings': findings,
             'missing_controls': missing_controls,
             'statistics': stats
-        })
+        }
         
+        inferred_result = comprehensive_file_analysis(result)
+        
+        # Store result in DynamoDB InferredFiles table
+        inferred_table = get_table(DynamoDBTable.INFERRED_FILES)
+        item: dict[str, Any] = {
+            'record_id': str(record_id),
+            'document_id': document_id,
+            'framework_id': framework_id,
+            'analysis_result': inferred_result
+        }
+        inferred_table.put_item(Item=item)
+        log_with_context("INFO", f"Stored analysis result with record_id={record_id}", request_id=context.aws_request_id)
+        return bedrock_response(event, 200, {
+            'message': 'Analysis complete', 'dynamo_db_document_id': str(record_id),
+            'dynamo_db_query_key': 'record_id',
+            'dynamo_db_table_name': DynamoDBTable.INFERRED_FILES.value,
+            'dynamo_db_value_key': 'analysis_result'
+        })
     except Exception as e:
         log_with_context("ERROR", f"Error in comprehensive check: {str(e)}", request_id=context.aws_request_id)
         return bedrock_response(event, 500, {'error': str(e)})

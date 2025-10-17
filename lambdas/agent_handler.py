@@ -5,6 +5,7 @@ from uuid6 import uuid7
 from typing import Any, Optional
 from mypy_boto3_bedrock_agent_runtime.client import AgentsforBedrockRuntimeClient
 from aws_lambda_typing import context as context_
+from src.utils.services.cached_response import cached_response
 from src.utils.decorators.cognito_auth import require_cognito_auth
 from src.utils.logger import log_with_context
 from src.utils.settings import AGENT_ID, AGENT_ALIAS_ID
@@ -129,17 +130,21 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         # Try to parse as JSON
         try:
             response_data = json.loads(extracted_json)
+            updated_response = cached_response(response_data)
+            summarised_markdown = updated_response.get('summarised_markdown', 'Unknown response')
             log_with_context("INFO", f"Successfully parsed JSON response with keys: {response_data.keys()}", request_id=context.aws_request_id)
         except json.JSONDecodeError as e:
             log_with_context("WARNING", f"Agent returned plain text instead of JSON (error: {str(e)}). This should not happen. Check agent instructions.", request_id=context.aws_request_id)
             # Create fallback response
             response_data: dict[str, Any] = create_fallback_response(result, str(e))
+            updated_response = {'error_message': str(e)}
+            summarised_markdown = str(e)
         
         # Save conversation to DynamoDB
         conversation_store.save_message(session_id, user_id, 'user', prompt)
-        conversation_store.save_message(session_id, user_id, 'assistant', result)
+        conversation_store.save_message(session_id, user_id, 'assistant', summarised_markdown)
         
-        final_response: dict[str, Any] = {**response_data, 'session_id': session_id}
+        final_response: dict[str, Any] = {**updated_response, 'session_id': session_id}
         log_with_context("INFO", f"Returning response with keys: {final_response.keys()}", request_id=context.aws_request_id)
         return {
             'statusCode': 200,

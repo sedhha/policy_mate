@@ -15,6 +15,7 @@ class DynamoDBTable(Enum):
     FILES = "PolicyMateFiles"
     ORGANIZATIONS = "PolicyMateOrganizations"
     USERS = "PolicyMateUserFiles"
+    INFERRED_FILES = "PolicyMateInferredFiles"
     
 # We're trying to create a processing workflow simple enough for Hack
 # Once our idea looks great -> we can move to step functions or 
