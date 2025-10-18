@@ -61,7 +61,9 @@ def list_docs(user_id: str) -> dict[str, Any]:
     This tool returns raw data only. The agent will intelligently format
     the results into a beautiful markdown summary.
     """
-    return show_doc_tool(user_id)
+    result = show_doc_tool(user_id)
+    # Ensure result is JSON-serializable (show_doc_tool already uses replace_decimals)
+    return result
 ##################################################################################################
 @tool(
     inputSchema={
@@ -253,23 +255,20 @@ def list_controls(framework_id: str) -> dict[str, Any]:
 
 non_streaming_model = BedrockModel(model_id=AGENT_CLAUDE_HAIKU, streaming=False)
 
-SYSTEM_PROMPT = """You are a JSON API that returns structured compliance data.
+SYSTEM_PROMPT = """⚠️ CRITICAL CHARACTER ENCODING RULES ⚠️
 
-═══════════════════════════════════════════════════════════
-OUTPUT FORMAT (STRICT):
-═══════════════════════════════════════════════════════════
+When including quoted text in your JSON response:
+- Use STRAIGHT quotes: "text" and 'text'
+- NEVER use curly/smart quotes: " " ' '
+- Escape quotes inside strings: \\"text\\"
 
-Your response MUST be valid JSON starting with { and ending with }
-NO text before or after the JSON object
-NO markdown code blocks (no ```)
+Example CORRECT: "the right to erasure (\\"right to be forgotten\\")"
+Example WRONG: "the right to erasure ("right to be forgotten")"
 
-⚠️ CRITICAL JSON RULES:
-- Use \\n for newlines inside strings (NOT literal newlines)
-- Escape all quotes inside strings with \"
-- Escape all backslashes with \\\\
-- Do NOT use literal tab or control characters
+You are a compliance analysis API that returns ONLY valid JSON.
 
-Required structure:
+🚨 OUTPUT FORMAT: Your entire response must be a single JSON object with this exact structure:
+
 {
   "error_message": "",
   "tool_payload": {},
@@ -277,138 +276,124 @@ Required structure:
   "suggested_next_actions": []
 }
 
-═══════════════════════════════════════════════════════════
-FIELD RULES:
-═══════════════════════════════════════════════════════════
+📋 CRITICAL JSON RULES:
+- Response MUST start with { and end with }
+- Use double quotes for all strings: "text" not 'text'
+- Use lowercase booleans: true/false not True/False
+- Use null not None
+- Escape newlines as \\n inside strings
+- NO trailing commas
+- NO markdown code blocks (no ```)
+- NO text before { or after }
 
-**tool_payload**: Exact unmodified data from tools. Empty {} if no tool called.
+📊 FIELD DESCRIPTIONS:
 
-**summarised_markdown**: Your formatted response with headers, tables, emojis (📄 ✅ ⚠️). Make it beautiful and helpful.
+1. **error_message** (string): Empty "" on success, error description on failure
 
-**error_message**: Empty "" on success, error text on failure.
+2. **tool_payload** (object): Raw unmodified data from tool execution
+   - Empty {} if no tool was called
+   - Must be valid JSON (convert Python types: True→true, None→null, Decimal→number)
 
-**suggested_next_actions**: 1-3 action objects with "action" and "description" keys.
+3. **summarised_markdown** (string): Human-readable formatted response
+   - Use markdown headers (##), tables, emojis (📄 ✅ ⚠️ ❌)
+   - Escape newlines as \\n: "## Title\\n\\nContent"
+   - Make it clear, concise, and actionable
 
-═══════════════════════════════════════════════════════════
-TOOLS:
-═══════════════════════════════════════════════════════════
+4. **suggested_next_actions** (array): 1-3 suggested actions
+   - Each: {"action": "identifier", "description": "What user can do"}
+   - Examples: {"action": "check_document", "description": "Analyze compliance"}
 
-- **list_docs(user_id)**: Get all user documents
-- **doc_status(document_id)**: Get specific document status
-- **list_controls(framework_id)**: Get all compliance controls for a framework (GDPR/SOC2/HIPAA). Use when user asks "what are the controls?", "list requirements", or "show me all GDPR controls"
-- **comprehensive_check(document_id, framework_id, force_reanalysis=False)**: Perform comprehensive compliance analysis on entire document against all controls in framework (GDPR/SOC2/HIPAA)
-- **phrase_wise_compliance_check(text, question, framework_id, control_id=None)**: Analyze specific text snippets or phrases for compliance against a framework. Use when user provides specific text to evaluate or asks about particular passages.
+🛠️ AVAILABLE TOOLS:
 
-⚠️ CRITICAL: When users ask for documents or status, you MUST call the tool.
-Never fabricate or use placeholder data. Always use real tool responses.
+**list_docs(user_id)** - Get all documents for a user
+Use when: "show my documents", "list files"
 
-Tool Selection Guide:
-- Use **list_controls** to show available controls/requirements (e.g., "what are GDPR controls?")
-- Use **comprehensive_check** for full document analysis (e.g., "analyze my entire document")
-- Use **phrase_wise_compliance_check** for specific text evaluation (e.g., "does this text comply?", "check this phrase")
+**doc_status(document_id)** - Get compliance status of specific document
+Use when: "status of doc-123", "check document xyz"
 
-═══════════════════════════════════════════════════════════
-EXAMPLES:
-═══════════════════════════════════════════════════════════
+**list_controls(framework_id)** - Get all controls for framework (GDPR/SOC2/HIPAA)
+Use when: "what are GDPR controls?", "list SOC2 requirements", "show HIPAA rules"
+
+**comprehensive_check(document_id, framework_id, force_reanalysis)** - Analyze entire document against all framework controls
+Use when: "analyze my document for GDPR", "check full compliance", "is doc-123 HIPAA compliant?"
+Parameters:
+  - document_id: Document to analyze
+  - framework_id: "GDPR", "SOC2", or "HIPAA"
+  - force_reanalysis: false (default) | true (only if user says "re-analyze", "check again")
+
+**phrase_wise_compliance_check(text, question, framework_id, control_id)** - Analyze specific text snippet
+Use when: "does this text comply?", "check this phrase for GDPR", user provides specific text to evaluate
+Parameters:
+  - text: The text snippet to analyze
+  - question: Compliance question about the text
+  - framework_id: "GDPR", "SOC2", or "HIPAA"
+  - control_id: Optional specific control (e.g., "GDPR.ART.15")
+
+⚠️ CRITICAL TOOL USAGE RULES:
+1. ALWAYS call tools when user requests data - NEVER fabricate responses
+2. Use tool_payload to store exact tool response (no modifications)
+3. Use summarised_markdown to format tool data beautifully for users
+4. If tool fails, set error_message and explain in summarised_markdown
+
+📝 EXAMPLE VALID RESPONSES:
 
 User: "What can you do?"
-Response:
 {
   "error_message": "",
   "tool_payload": {},
-  "summarised_markdown": "## 👋 Compliance Copilot\n\nI help you manage compliance documents:\n\n- **List documents** - View all your files\n- **Check status** - Get compliance details\n\nJust ask: 'Show my documents' or 'Status of doc xyz-123'",
+  "summarised_markdown": "## 👋 Compliance Copilot\\n\\nI help you analyze compliance documents:\\n\\n**📚 Document Management**\\n- List your documents\\n- Check document status\\n\\n**🔍 Compliance Analysis**\\n- Analyze full documents (GDPR, SOC2, HIPAA)\\n- Check specific text snippets\\n- View framework controls\\n\\nTry: *'Show my documents'* or *'What are GDPR controls?'*",
   "suggested_next_actions": [
-    {"action": "list_documents", "description": "View all your documents"}
+    {"action": "list_documents", "description": "View all your uploaded documents"},
+    {"action": "list_controls", "description": "Browse compliance framework controls"}
   ]
 }
-
-─────────────────────────────────────────────────────────
 
 User: "Show my documents"
-Actions:
-1. Call list_docs(user_id) with actual user_id
-2. Put exact tool response in tool_payload
-3. Format that data in summarised_markdown WITH PROPER \\n ESCAPING
-
-Example response:
+[Tool called: list_docs(user_id="user-123")]
+[Tool returns: {"documents": [{"id": "doc-1", "name": "Privacy Policy.pdf", "status": "COMPLIANT"}]}]
 {
   "error_message": "",
-  "tool_payload": {<exact_tool_response>},
-  "summarised_markdown": "## 📚 Your Documents\\n\\n| ID | Name | Type | Size | Status |\\n|---|---|---|---|---|\\n| abc-123 | Policy.docx | docx | 41 KB | ✅ COMPLIANT |",
-  "suggested_next_actions": [...]
-}
-
-⚠️ NOTE: Use \\n for newlines, NOT literal newlines!
-
-─────────────────────────────────────────────────────────
-
-User: "Status of document abc-123"
-Actions:
-1. Call doc_status(document_id="abc-123")
-2. Put exact tool response in tool_payload
-3. Format markdown with \\n escaping
-
-─────────────────────────────────────────────────────────
-
-User: "Check document xyz-789 for GDPR compliance"
-Actions:
-1. Call comprehensive_check(document_id="xyz-789", framework_id="GDPR", force_reanalysis=False)
-2. Put exact tool response in tool_payload
-3. Format markdown WITH \\n ESCAPING
-
-Example response:
-{
-  "error_message": "",
-  "tool_payload": {<exact_tool_response>},
-  "summarised_markdown": "## 🔍 GDPR Compliance Analysis\\n\\n**Verdict**: ✅ COMPLIANT\\n\\n**Stats:**\\n- Total: 34\\n- Passed: 32\\n- Failed: 2\\n\\n**Findings:**\\n| Text | Control |\\n|---|---|\\n| We may share... | GDPR.ART.5.1.b |",
-  "suggested_next_actions": [...]
-}
-
-⚠️ REMEMBER: Always use \\n for line breaks, NEVER literal newlines!
-
-─────────────────────────────────────────────────────────
-
-User: "What are all the GDPR controls?"
-Actions:
-1. Call list_controls(framework_id="GDPR")
-2. Put exact tool response in tool_payload
-3. Format markdown WITH \\n ESCAPING
-
-Example response:
-{
-  "error_message": "",
-  "tool_payload": {<exact_tool_response>},
-  "summarised_markdown": "## 📋 GDPR Compliance Controls\\n\\n**Framework**: GDPR\\n**Total Controls**: 34\\n\\n| Control ID | Category | Requirement | Severity |\\n|---|---|---|---|\\n| GDPR.ART.5.1.a | Data Processing | Lawfulness, fairness... | HIGH |\\n| GDPR.ART.5.1.b | Data Processing | Purpose limitation | HIGH |",
+  "tool_payload": {
+    "documents": [
+      {"id": "doc-1", "name": "Privacy Policy.pdf", "status": "COMPLIANT"}
+    ]
+  },
+  "summarised_markdown": "## 📚 Your Documents\\n\\n| Document ID | Name | Status |\\n|-------------|------|--------|\\n| doc-1 | Privacy Policy.pdf | ✅ COMPLIANT |\\n\\n*1 document found*",
   "suggested_next_actions": [
-    {"action": "analyze_document", "description": "Check a document against these controls"}
+    {"action": "analyze_document", "description": "Run compliance analysis on a document"},
+    {"action": "check_status", "description": "Get detailed status of a document"}
   ]
 }
 
-─────────────────────────────────────────────────────────
-
-User: "Does this text comply with GDPR: 'We collect and process user data for analytics'"
-Actions:
-1. Call phrase_wise_compliance_check(text="We collect and process user data for analytics", question="Does this comply with GDPR data processing requirements?", framework_id="GDPR")
-2. Put exact tool response in tool_payload
-3. Format markdown WITH \\n ESCAPING
-
-Example response:
+User: "What are GDPR controls?"
+[Tool called: list_controls(framework_id="GDPR")]
 {
   "error_message": "",
-  "tool_payload": {<exact_tool_response>},
-  "summarised_markdown": "## 🔍 Text Compliance Check\\n\\n**Text Analyzed**: 'We collect and process...'\\n**Framework**: GDPR\\n\\n**Verdict**: ⚠️ PARTIAL\\n\\n**Issues:**\\n- Missing legal basis\\n- No purpose limitation\\n\\n**Recommendations:**\\n- Add specific purpose\\n- Document legal basis",
-  "suggested_next_actions": [...]
+  "tool_payload": {
+    "framework_id": "GDPR",
+    "controls": [
+      {"id": "GDPR.ART.5.1.a", "requirement": "Lawfulness, fairness, transparency"},
+      {"id": "GDPR.ART.6", "requirement": "Lawful basis for processing"}
+    ]
+  },
+  "summarised_markdown": "## 📋 GDPR Controls\\n\\n**Total Controls:** 2\\n\\n### Key Requirements:\\n\\n**GDPR.ART.5.1.a** - Lawfulness, fairness, transparency\\n**GDPR.ART.6** - Lawful basis for processing\\n\\n*Use these control IDs for targeted compliance checks*",
+  "suggested_next_actions": [
+    {"action": "comprehensive_check", "description": "Analyze a document against GDPR"},
+    {"action": "check_specific_control", "description": "Check text against specific control"}
+  ]
 }
 
-═══════════════════════════════════════════════════════════
-FINAL CHECK:
-═══════════════════════════════════════════════════════════
+🎯 FINAL CHECKLIST (verify before responding):
+☑ Response is valid JSON starting with { and ending with }
+☑ All strings use double quotes
+☑ All booleans are true/false (lowercase)
+☑ All null values are null (not None)
+☑ Newlines in strings are escaped as \\n
+☑ No trailing commas
+☑ No markdown code blocks
+☑ No text before { or after }
 
-Before responding:
-✓ Response is valid JSON starting with { and ending with }
-✓ Called appropriate tool if user asked for data
-✓ tool_payload has real tool data (not placeholder/example data)
-✓ All required fields present
+Your response will be parsed by JSON.parse() - invalid JSON will crash the system.
 """
 
 compliance_agent = Agent(
@@ -422,104 +407,96 @@ app = BedrockAgentCoreApp()
 
 def parse_agent_json(text: str) -> dict[str, Any]:
     """
-    Parse JSON from agent response with aggressive sanitization.
-    Handles control characters, unescaped newlines, and mixed quote formats.
+    Parse JSON from agent response with comprehensive error handling.
+    Handles: smart quotes, Python syntax, malformed JSON, truncation.
     """
     import re
-    
-    # Strategy 1: Direct parse (valid JSON)
+    sanitized: str = "{}"
+    if not text or not text.strip():
+        raise ValueError("Empty response from agent")
     try:
         return json.loads(text)
     except json.JSONDecodeError:
-        pass
+        pass  # Continue to extraction logic
     
-    # Strategy 2: Aggressive sanitization
-    try:
-        # Remove any leading/trailing whitespace
-        cleaned = text.strip()
-        
-        # Find the actual JSON object (between first { and last })
-        start_idx = cleaned.find('{')
-        end_idx = cleaned.rfind('}')
-        
-        if start_idx == -1 or end_idx == -1:
-            raise ValueError("No JSON object found")
-        
-        cleaned = cleaned[start_idx:end_idx + 1]
-        
-        # Fix common issues:
-        # 1. Replace literal newlines in strings with \n
-        # This regex finds quoted strings and escapes newlines within them
-        def escape_newlines_in_strings(match: re.Match[str]) -> str:
-            """Escape newlines and tabs within quoted strings."""
-            quoted_str = match.group(0)
-            # Escape control characters
-            quoted_str = quoted_str.replace('\n', '\\n')
-            quoted_str = quoted_str.replace('\r', '\\r')
-            quoted_str = quoted_str.replace('\t', '\\t')
-            return quoted_str
-        
-        # Find all quoted strings (accounting for escaped quotes)
-        # This pattern matches "..." strings while handling \" inside
-        pattern = r'"(?:[^"\\]|\\.)*"'
-        cleaned = re.sub(pattern, escape_newlines_in_strings, cleaned)
-        
-        return json.loads(cleaned)
-    except Exception:
-        pass
+    # Step 1: Clean and extract JSON
+    text = text.strip()
     
-    # Strategy 3: Character-by-character sanitization
-    try:
-        # Build valid JSON by escaping control characters
-        result: list[str] = []
-        in_string = False
-        escape_next = False
-        
-        for char in text:
-            if escape_next:
-                result.append(char)
-                escape_next = False
-                continue
-            
-            if char == '\\':
-                result.append(char)
-                escape_next = True
-                continue
-            
-            if char == '"' and not escape_next:
-                in_string = not in_string
-                result.append(char)
-                continue
-            
-            if in_string:
-                # Escape control characters inside strings
-                if char == '\n':
-                    result.append('\\n')
-                elif char == '\r':
-                    result.append('\\r')
-                elif char == '\t':
-                    result.append('\\t')
-                elif ord(char) < 32:  # Other control characters
-                    result.append(f'\\u{ord(char):04x}')
-                else:
-                    result.append(char)
-            else:
-                # Outside strings, skip whitespace control chars
-                if char not in ['\n', '\r', '\t']:
-                    result.append(char)
-        
-        sanitized = ''.join(result)
-        return json.loads(sanitized)
-    except Exception:
-        pass
+    # Remove markdown code blocks
+    if '```' in text:
+        text = re.sub(r'^```(?:json)?\s*\n?', '', text)
+        text = re.sub(r'\n?```\s*$', '', text)
     
-    # If all strategies fail, raise error with more context
-    raise ValueError(
-        f"Could not parse JSON after all attempts.\n"
-        f"Text length: {len(text)}\n"
-        f"Preview: {text[:500]}\n"
-        f"Last 200 chars: {text[-200:]}"
+    # Find JSON object boundaries
+    start_idx = text.find('{')
+    end_idx = text.rfind('}')
+    
+    if start_idx == -1 or end_idx == -1:
+        raise ValueError(
+            f"No JSON object found in response.\n"
+            f"Response preview: {text[:500]}"
+        )
+    
+    json_str = text[start_idx:end_idx + 1]
+    
+    # Step 2: Pre-process common issues
+    
+    # Fix smart/curly quotes to straight quotes
+    json_str = (json_str
+        .replace('"', '"')  # Left double quote
+        .replace('"', '"')  # Right double quote  
+        .replace(''', "'")  # Left single quote
+        .replace(''', "'")  # Right single quote
     )
+    
+    # Step 3: Attempt parsing
+    try:
+        # Try 1: Direct parse (best case)
+        return json.loads(json_str)
+    except json.JSONDecodeError:
+        pass  # Continue to sanitization
+    
+    # Step 4: Sanitize Python syntax
+    try:
+        sanitized = json_str
+        
+        # Fix Python types to JSON types
+        sanitized = re.sub(r'\bTrue\b', 'true', sanitized)
+        sanitized = re.sub(r'\bFalse\b', 'false', sanitized)
+        sanitized = re.sub(r'\bNone\b', 'null', sanitized)
+        
+        # Remove trailing commas
+        sanitized = re.sub(r',(\s*[}\]])', r'\1', sanitized)
+        
+        # Fix Decimal objects: Decimal('123.45') -> 123.45
+        sanitized = re.sub(r'Decimal\([\'"]([0-9.]+)[\'"]\)', r'\1', sanitized)
+        
+        # Try 2: Parse sanitized version
+        return json.loads(sanitized)
+    except json.JSONDecodeError as second_error:
+        # Both attempts failed - provide detailed error
+        error_pos = second_error.pos
+        
+        # Extract context around error
+        context_start = max(0, error_pos - 150)
+        context_end = min(len(sanitized), error_pos + 150)
+        error_context = sanitized[context_start:context_end]
+        
+        # Check for truncation
+        is_truncated = not sanitized.rstrip().endswith('}')
+        
+        error_details = [
+            f"JSON parsing failed after sanitization",
+            f"Error at position {error_pos}: {second_error.msg}",
+            f"Context: ...{error_context}...",
+            f"Total length: {len(sanitized)} characters",
+        ]
+        
+        if is_truncated:
+            error_details.append("⚠️ JSON appears TRUNCATED (doesn't end with })")
+            error_details.append(f"Ends with: {sanitized[-200:]}")
+        
+        raise ValueError("\n".join(error_details))
 
 
 

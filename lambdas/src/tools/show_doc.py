@@ -3,7 +3,7 @@
 
 from typing import Any
 from datetime import datetime
-from src.utils.services.dynamoDB import DocumentStatus, get_table, DynamoDBTable
+from src.utils.services.dynamoDB import DocumentStatus, get_table, DynamoDBTable, replace_decimals
 from src.utils.services.document_extractor import format_file_size, format_timestamp, get_status_details
 from boto3.dynamodb.conditions import Attr
 
@@ -77,8 +77,9 @@ def show_doc_tool(user_id: str) -> dict[str, Any]:
             'formatted_date': format_timestamp(timestamp_int)
         })
     
-    return {
+    # Ensure all Decimal objects are converted to int/float for JSON serialization
+    return replace_decimals({
         'documents': documents,
         'count': len(documents),
         'timestamp': datetime.now().isoformat()
-    }
+    })

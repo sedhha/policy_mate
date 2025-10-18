@@ -1,6 +1,5 @@
 # lambdas/agent_v2_handler.py
 
-
 from typing import Any
 import json
 import traceback
@@ -19,35 +18,52 @@ def create_user_metadata_str(claims: dict[str, Any]) -> str:
     user_id = claims["sub"]
     return f"[user_email={user_email}] [user_id={user_id}]"
 
+
 @require_cognito_auth
 def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str, Any]:
     """
     Invokes the Bedrock AgentCore runtime.
     Assumes @require_cognito_auth verified the JWT and added event["validated_token"] and event["user_claims"].
     """
-
+    agent_response: str = ""
     try:
-        
         body = json.loads(event.get("body", "{}"))
         prompt = body.get('prompt', '')
         user_meta = create_user_metadata_str(event['user_claims'])
         
-        # Get validated token and user info from decorator
-        # access_token = event['validated_token']
-        
         # Use user_id as default, or generate new UUID7 if not provided
         session_id = body.get('session_id', str(uuid7()))
-        # TODO: This might be a little insecure if user tries to highjack the prompt
-        # But we can address that after hackathon
-        prompt = f'{prompt}\n\n{user_meta}'
-        log_with_context("INFO", f"Invoking compliance agent with prompt: {prompt}", context.aws_request_id)
-        res = str(compliance_agent(prompt))
+        
+        # Append user metadata to prompt
+        prompt_with_meta = f'{prompt}\n\n{user_meta}'
+        
+        log_with_context(
+            "INFO", 
+            f"Invoking compliance agent. Prompt length: {len(prompt_with_meta)} chars",
+            context.aws_request_id
+        )
+        
+        # Get agent response
+        res = compliance_agent(prompt_with_meta)
         agent_response = str(res)
+        
+        # Log response size, NOT content (prevents CloudWatch fragmentation)
+        log_with_context(
+            "INFO",
+            f"Agent response received: {len(agent_response)} characters",
+            context.aws_request_id
+        )
+        
+        # Parse the JSON response
         parsed = parse_agent_json(agent_response)
         parsed["session_id"] = session_id
-        # Use user_id as default, or get from body
-        # runtimeSessionId must be at least 33 characters
-        session_id = body.get("session_id", str(uuid7()))
+        
+        log_with_context(
+            "INFO",
+            "Successfully parsed agent response",
+            context.aws_request_id
+        )
+        
         return {
             "headers": {
                 "Access-Control-Allow-Origin": "*",
@@ -55,13 +71,46 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
                 "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
             },
             "statusCode": 200,
-            "body": json.dumps(parsed), # TODO: Maybe we can avoid re-parsing later
+            "body": json.dumps(parsed),
         }
-    except Exception as e:
-        print("Error invoking AgentCore runtime:", str(e))
-        print(traceback.format_exc())
+        
+    except json.JSONDecodeError as e:
+        error_msg = f"JSON parsing failed: {str(e)}"
+        log_with_context("ERROR", error_msg, context.aws_request_id)
+        
+        # Log parsing context for debugging
+        if 'agent_response' in locals():
+            log_with_context(
+                "ERROR",
+                f"Response preview - First 300 chars: {agent_response[:300]}",
+                context.aws_request_id
+            )
+            log_with_context(
+                "ERROR",
+                f"Response preview - Last 300 chars: {agent_response[-300:]}",
+                context.aws_request_id
+            )
+        
         return {
-             "headers": {
+            "headers": {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Headers": "Content-Type,Authorization",
+                "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
+            },
+            "statusCode": 500,
+            "body": json.dumps({
+                "error": "Failed to parse agent response",
+                "details": str(e)
+            }),
+        }
+        
+    except Exception as e:
+        error_msg = f"Error invoking AgentCore runtime: {str(e)}"
+        log_with_context("ERROR", error_msg, context.aws_request_id)
+        log_with_context("ERROR", traceback.format_exc(), context.aws_request_id)
+        
+        return {
+            "headers": {
                 "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Headers": "Content-Type,Authorization",
                 "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
