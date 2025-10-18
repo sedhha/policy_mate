@@ -31,8 +31,8 @@ if __name__ == "__main__":
             'Authorization': f'Bearer {id_token}'
         },
         "body": json.dumps({
-                "prompt": "[META:file_id=ed9dbabf-517f-4a77-b3f4-dc5b8c44be9c] What is the status of this document? return response in JSON format with properly formatted summarised_markdown using \n for newlines",
-                "session_id": "b4d8b4d8-1031-705e-a4a8-849522fb20b1"
+                "prompt": "[META:file_id=ed9dbabf-517f-4a77-b3f4-dc5b8c44be9c] What is the status of this document? return response in JSON format",
+                "session_id": "b4d8b4d8-1031-705e-a4a8-849522fb20b2"
             })
     }
     ctx:context_.Context = MagicMock()

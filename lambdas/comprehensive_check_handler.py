@@ -7,7 +7,7 @@ from src.utils.services.inference import comprehensive_file_analysis
 from src.utils.logger import log_with_context
 from src.utils.decorators.auth import require_auth
 from src.utils.bedrock_response import bedrock_response
-from src.utils.services.dynamoDB import get_table, DynamoDBTable
+from src.utils.services.dynamoDB import DocumentStatus, get_table, DynamoDBTable
 from src.utils.services.embeddings import generate_embedding
 from src.utils.services.document_extractor import extract_text_from_s3, cosine_similarity
 from src.utils.settings import OPEN_SEARCH_REGION
@@ -289,6 +289,14 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         }
         inferred_table.put_item(Item=item)
         log_with_context("INFO", f"Stored analysis result with record_id={record_id}", request_id=context.aws_request_id)
+        
+        # Update User Files status to COMPLETED
+        doc_table.update_item(
+            Key={'file_id': document_id},
+            UpdateExpression='SET compliance_status = :status',
+            ExpressionAttributeValues={':status': DocumentStatus.ANALYSIS_SUCCEEDED.value}
+        )
+        log_with_context("INFO", f"Updated document compliance_status to COMPLETED for document_id={document_id}", request_id=context.aws_request_id)
         return bedrock_response(event, 200, {
             'message': 'Analysis complete', 'dynamo_db_document_id': str(record_id),
             'dynamo_db_query_key': 'record_id',

@@ -29,7 +29,7 @@ export interface AgentResponse<T> {
   tool_payload?: T;
   session_id: string;
   summarised_markdown?: string;
-  suggested_actions?: IAction[];
+  suggested_next_actions?: IAction[];
 }
 
 export interface ChatRequest {

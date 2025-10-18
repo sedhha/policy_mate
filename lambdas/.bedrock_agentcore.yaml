@@ -1,0 +1,41 @@
+default_agent: policyMateV2
+agents:
+  policyMateV2:
+    name: policyMateV2
+    entrypoint: /home/shivamsahil/projects/2025/oct/policy_mate/lambdas/agent.py
+    platform: linux/arm64
+    container_runtime: none
+    source_path: /home/shivamsahil/projects/2025/oct/policy_mate/lambdas
+    aws:
+      execution_role: arn:aws:iam::354468042457:role/AmazonBedrockAgentCoreSDKRuntime-us-east-1-d28752dc24
+      execution_role_auto_create: false
+      account: '354468042457'
+      region: us-east-1
+      ecr_repository: 354468042457.dkr.ecr.us-east-1.amazonaws.com/bedrock-agentcore-policymatev2
+      ecr_auto_create: false
+      network_configuration:
+        network_mode: PUBLIC
+        network_mode_config: null
+      protocol_configuration:
+        server_protocol: HTTP
+      observability:
+        enabled: true
+    bedrock_agentcore:
+      agent_id: policyMateV2-IOHx2v3WjF
+      agent_arn: arn:aws:bedrock-agentcore:us-east-1:354468042457:runtime/policyMateV2-IOHx2v3WjF
+      agent_session_id: b343e0a4-b026-4958-969a-3feaf9d67798
+    codebuild:
+      project_name: bedrock-agentcore-policymatev2-builder
+      execution_role: arn:aws:iam::354468042457:role/AmazonBedrockAgentCoreSDKCodeBuild-us-east-1-d28752dc24
+      source_bucket: bedrock-agentcore-codebuild-sources-354468042457-us-east-1
+    memory:
+      mode: STM_AND_LTM
+      memory_id: policyMateV2_mem-oEv5a6FyoF
+      memory_arn: null
+      memory_name: policyMateV2_memory
+      event_expiry_days: 30
+      first_invoke_memory_check_done: true
+      was_created_by_toolkit: false
+    authorizer_configuration: null
+    request_header_configuration: null
+    oauth_configuration: null

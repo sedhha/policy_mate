@@ -6,7 +6,7 @@ const Dashboard = () => {
     return (
         <>
             <DashboardRouter />
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
+            <div className="h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6 overflow-auto">
                 <div className="max-w-6xl mx-auto">
                     {/* Header */}
                     <div className="mb-8">

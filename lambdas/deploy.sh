@@ -95,9 +95,11 @@ update_env_vars() {
     if [ -n "$ENV_VARS" ]; then
         echo "[$HANDLER] Waiting for function to be ready..."
         aws lambda wait function-updated --function-name $FUNCTION_NAME
-        echo "[$HANDLER] Setting environment variables"
+        echo "[$HANDLER] Setting environment variables and timeout"
         aws lambda update-function-configuration \
             --function-name $FUNCTION_NAME \
+            --timeout 60 \
+            --memory-size 512 \
             --environment "Variables={$ENV_VARS}" >/dev/null
     fi
 }

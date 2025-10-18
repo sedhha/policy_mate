@@ -16,7 +16,7 @@ export interface MessageMetadata {
  * Instructions appended to every message
  * This is stripped from display but sent to the backend
  */
-const FORMAT_INSTRUCTION = ` return response in JSON format Make sure to format summarised_markdown attribute in proper markdown syntax with proper new-lines.`;
+// const FORMAT_INSTRUCTION = ` return response in JSON format`;
 /**
  * Build metadata tag string from metadata object
  * Format: [META:file_id=abc123,another_key=value]
@@ -111,14 +111,15 @@ export const sendMessage = async <T = any>(
   metadata?: MessageMetadata
 ): Promise<AgentResponse<T>> => {
   try {
-    const url = `${env.NEXT_PUBLIC_API_BASE_URL}/chat`;
+    const url = `${env.NEXT_PUBLIC_API_BASE_URL}/chat_session`;
 
     // Tag the prompt with metadata if provided
     const metadataTag = buildMetadataTag(metadata);
 
     // Append JSON format instruction to every message
-    const promptWithInstruction = `${prompt}${FORMAT_INSTRUCTION}`;
-    const taggedPrompt = `${metadataTag}${promptWithInstruction}`;
+    // const promptWithInstruction = `${prompt}${FORMAT_INSTRUCTION}`;
+    // const taggedPrompt = `${metadataTag}${promptWithInstruction}`;
+    const taggedPrompt = `${metadataTag}${prompt}`;
 
     const requestBody: ChatRequest = {
       prompt: taggedPrompt,
@@ -152,7 +153,7 @@ export const sendMessage = async <T = any>(
  */
 export const fetchDocuments = async (
   sessionId?: string,
-  prompt: string = 'Show me my docs in JSON format'
+  prompt: string = 'List all my documents.'
 ): Promise<AgentResponse<DocumentsData>> => {
   return sendMessage<DocumentsData>(prompt, sessionId);
 };

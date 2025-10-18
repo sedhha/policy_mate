@@ -14,3 +14,4 @@ lambdas/test_bedrock_format.py
 lambdas/src/policy_mate_lambda.egg-info/*
 lambdas/pre/compliance.json
 backup/*
+lambdas/agent_response.txt

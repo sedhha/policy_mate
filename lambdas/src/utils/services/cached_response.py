@@ -2,7 +2,7 @@ from typing import Any
 from src.utils.logger import log_with_context
 from src.utils.services.dynamoDB import get_table, replace_decimals
 
-def cached_response(response: dict[str, Any], request_id: str) -> dict[str, Any]:
+def cached_response(response: dict[str, Any], request_id: str = 'unknown') -> dict[str, Any]:
     tool_payload_response = response.get("tool_payload", {})
     log_with_context("INFO",message=f"Checking for cached response with tool_payload_response: {tool_payload_response}", request_id=request_id)
     if "dynamo_db_document_id" in tool_payload_response and \
