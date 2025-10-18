@@ -10,9 +10,7 @@ from src.utils.services.dynamoDB import DocumentStatus, get_table, DynamoDBTable
 def comprehensive_check_tool(
     document_id: str,
     framework_id: str,
-    force_reanalysis: bool = False,
-    user_id: str | None = None,
-    org_id: str | None = None
+    force_reanalysis: bool = False
 ) -> dict[str, Any]:
     """
     Core comprehensive document analysis logic - shared between Bedrock and Strands agents.
@@ -27,6 +25,7 @@ def comprehensive_check_tool(
     Returns:
         Dictionary with analysis results or reference to cached results
     """
+    print(f'Comes inside with document_id: {document_id}, framework_id: {framework_id}, force_reanalysis: {force_reanalysis}')
     # Validation
     if not document_id:
         raise ValueError('document_id is required')

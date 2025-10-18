@@ -3,6 +3,8 @@ from bedrock_agentcore import BedrockAgentCoreApp
 from pydantic import BaseModel, Field
 from strands import Agent
 from uuid6 import uuid7
+from src.utils.services.cached_response import cached_response
+from src.tools.comprehensive_check import comprehensive_check_tool
 from src.tools.doc_status import doc_status_tool
 from src.utils.settings import AGENT_CLAUDE_HAIKU
 from strands.models import BedrockModel
@@ -87,6 +89,66 @@ def doc_status(document_id: str) -> dict[str, Any]:
     result = doc_status_tool(document_id)
     return result
 
+##################################################################################################
+@tool(
+    inputSchema={
+        "json": {
+            "type": "object",
+            "properties": {
+                "document_id": {
+                    "type": "string",
+                    "description": "The unique identifier of the document to analyze. This is the file_id returned from document upload or listing."
+                },
+                "framework_id": {
+                    "type": "string",
+                    "enum": ["GDPR", "SOC2", "HIPAA"],
+                    "description": "The compliance framework to check against. Must be one of: GDPR (EU data protection), SOC2 (security controls), or HIPAA (healthcare data privacy)."
+                },
+                "force_reanalysis": {
+                    "type": "boolean",
+                    "description": "Optional. Force a new analysis even if cached results exist. Set to true only when user explicitly requests fresh analysis or re-analysis. Defaults to false to use cached results when available.",
+                    "default": False
+                }
+            },
+            "required": ["document_id", "framework_id"]
+        }
+    }
+)
+def comprehensive_check(document_id: str, framework_id: str, force_reanalysis: bool = False) -> dict[str, Any]:
+    """
+    Perform comprehensive compliance analysis on an entire document against all controls in a compliance framework.
+    
+    This tool analyzes the full document text against every control in the specified framework (GDPR, SOC2, or HIPAA) and returns:
+    - Text-level findings with character positions and control mappings
+    - Overall compliance verdict (COMPLIANT/NON_COMPLIANT/PARTIAL)
+    - Missing controls that aren't addressed in the document
+    - Statistical summary of compliance status
+    - Detailed recommendations and gap analysis
+    
+    Use this tool when:
+    - User requests full/comprehensive compliance analysis
+    - User wants to check entire document against framework
+    - User asks "is my document compliant with [framework]?"
+    - User needs detailed findings with specific text references
+    
+    Results are cached by (document_id, framework_id). Use force_reanalysis=true only when:
+    - User explicitly requests fresh/new/re-analysis
+    - User mentions existing analysis might be outdated
+    - User says "run it again" or "check again"
+    
+    Args:
+        document_id: The unique identifier of the document.
+        framework_id: Compliance framework (GDPR, SOC2, or HIPAA).
+        force_reanalysis: Force new analysis even if cached results exist (default: False).
+    
+    Returns:
+        A dictionary containing detailed compliance analysis results or reference to cached analysis in DynamoDB.
+    """
+    result = comprehensive_check_tool(document_id, framework_id, force_reanalysis)
+    updated_response = cached_response(result)
+    return updated_response
+##############################################################################################################
+
 
 non_streaming_model = BedrockModel(model_id=AGENT_CLAUDE_HAIKU, streaming=False)
 
@@ -99,6 +161,12 @@ OUTPUT FORMAT (STRICT):
 Your response MUST be valid JSON starting with { and ending with }
 NO text before or after the JSON object
 NO markdown code blocks (no ```)
+
+⚠️ CRITICAL JSON RULES:
+- Use \\n for newlines inside strings (NOT literal newlines)
+- Escape all quotes inside strings with \"
+- Escape all backslashes with \\\\
+- Do NOT use literal tab or control characters
 
 Required structure:
 {
@@ -126,6 +194,7 @@ TOOLS:
 
 - **list_docs(user_id)**: Get all user documents
 - **doc_status(document_id)**: Get specific document status
+- **comprehensive_check(document_id, framework_id, force_reanalysis=False)**: Perform comprehensive compliance analysis on entire document against all controls in framework (GDPR/SOC2/HIPAA)
 
 ⚠️ CRITICAL: When users ask for documents or status, you MUST call the tool.
 Never fabricate or use placeholder data. Always use real tool responses.
@@ -151,15 +220,17 @@ User: "Show my documents"
 Actions:
 1. Call list_docs(user_id) with actual user_id
 2. Put exact tool response in tool_payload
-3. Format that data in summarised_markdown
+3. Format that data in summarised_markdown WITH PROPER \\n ESCAPING
 
-Response structure:
+Example response:
 {
   "error_message": "",
   "tool_payload": {<exact_tool_response>},
-  "summarised_markdown": "## 📚 Your Documents\n\n[Create table with real data from tool]",
+  "summarised_markdown": "## 📚 Your Documents\\n\\n| ID | Name | Type | Size | Status |\\n|---|---|---|---|---|\\n| abc-123 | Policy.docx | docx | 41 KB | ✅ COMPLIANT |",
   "suggested_next_actions": [...]
 }
+
+⚠️ NOTE: Use \\n for newlines, NOT literal newlines!
 
 ─────────────────────────────────────────────────────────
 
@@ -167,7 +238,25 @@ User: "Status of document abc-123"
 Actions:
 1. Call doc_status(document_id="abc-123")
 2. Put exact tool response in tool_payload
-3. Format that data in summarised_markdown
+3. Format markdown with \\n escaping
+
+─────────────────────────────────────────────────────────
+
+User: "Check document xyz-789 for GDPR compliance"
+Actions:
+1. Call comprehensive_check(document_id="xyz-789", framework_id="GDPR", force_reanalysis=False)
+2. Put exact tool response in tool_payload
+3. Format markdown WITH \\n ESCAPING
+
+Example response:
+{
+  "error_message": "",
+  "tool_payload": {<exact_tool_response>},
+  "summarised_markdown": "## 🔍 GDPR Compliance Analysis\\n\\n**Verdict**: ✅ COMPLIANT\\n\\n**Stats:**\\n- Total: 34\\n- Passed: 32\\n- Failed: 2\\n\\n**Findings:**\\n| Text | Control |\\n|---|---|\\n| We may share... | GDPR.ART.5.1.b |",
+  "suggested_next_actions": [...]
+}
+
+⚠️ REMEMBER: Always use \\n for line breaks, NEVER literal newlines!
 
 ═══════════════════════════════════════════════════════════
 FINAL CHECK:
@@ -182,7 +271,7 @@ Before responding:
 
 compliance_agent = Agent(
     model=non_streaming_model,
-    tools=[list_docs, doc_status],
+    tools=[list_docs, doc_status, comprehensive_check],
     system_prompt=SYSTEM_PROMPT
 )
 
@@ -191,55 +280,104 @@ app = BedrockAgentCoreApp()
 
 def parse_agent_json(text: str) -> dict[str, Any]:
     """
-    Parse JSON from agent response with multiple fallback strategies.
-    Handles mixed format where outer JSON has double quotes but nested dicts have single quotes.
+    Parse JSON from agent response with aggressive sanitization.
+    Handles control characters, unescaped newlines, and mixed quote formats.
     """
-    import ast
+    import re
     
     # Strategy 1: Direct parse (valid JSON)
     try:
         return json.loads(text)
-    except json.JSONDecodeError as e:
-        print(f"Direct parse failed: {e}")
+    except json.JSONDecodeError:
+        pass
     
-    # Strategy 2: Replace single quotes with double quotes (handles mixed format)
+    # Strategy 2: Aggressive sanitization
     try:
-        # Use regex to replace single quotes with double quotes, but preserve apostrophes in strings
-        # This is a heuristic approach that works for most cases
-        fixed_text = text.replace("'", '"')
-        return json.loads(fixed_text)
-    except json.JSONDecodeError as e:
-        print(f"Quote replacement parse failed: {e}")
-    
-    # Strategy 3: Parse with strict=False (allows control characters)
-    try:
-        return json.loads(text, strict=False)
-    except json.JSONDecodeError as e:
-        print(f"Lenient parse failed: {e}")
-    
-    # Strategy 4: Use ast.literal_eval to handle Python dict syntax, then convert to JSON-safe dict
-    try:
-        # Remove any trailing/leading whitespace
+        # Remove any leading/trailing whitespace
         cleaned = text.strip()
-        # Try to evaluate as Python literal
-        result = ast.literal_eval(cleaned)
-        if isinstance(result, dict):
-            # Convert to JSON and back to ensure proper serialization
-            json_str = json.dumps(result, default=str)
-            return json.loads(json_str) # pyright: ignore[reportUnknownVariableType]
-    except Exception as e:
-        print(f"Literal eval with JSON conversion failed: {e}")
+        
+        # Find the actual JSON object (between first { and last })
+        start_idx = cleaned.find('{')
+        end_idx = cleaned.rfind('}')
+        
+        if start_idx == -1 or end_idx == -1:
+            raise ValueError("No JSON object found")
+        
+        cleaned = cleaned[start_idx:end_idx + 1]
+        
+        # Fix common issues:
+        # 1. Replace literal newlines in strings with \n
+        # This regex finds quoted strings and escapes newlines within them
+        def escape_newlines_in_strings(match: re.Match[str]) -> str:
+            """Escape newlines and tabs within quoted strings."""
+            quoted_str = match.group(0)
+            # Escape control characters
+            quoted_str = quoted_str.replace('\n', '\\n')
+            quoted_str = quoted_str.replace('\r', '\\r')
+            quoted_str = quoted_str.replace('\t', '\\t')
+            return quoted_str
+        
+        # Find all quoted strings (accounting for escaped quotes)
+        # This pattern matches "..." strings while handling \" inside
+        pattern = r'"(?:[^"\\]|\\.)*"'
+        cleaned = re.sub(pattern, escape_newlines_in_strings, cleaned)
+        
+        return json.loads(cleaned)
+    except Exception:
+        pass
     
-    # Strategy 5: Try to fix common control character issues
+    # Strategy 3: Character-by-character sanitization
     try:
-        # Escape common control characters
-        fixed_text = text.replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
-        return json.loads(fixed_text)
-    except json.JSONDecodeError as e:
-        print(f"Fixed parse failed: {e}")
+        # Build valid JSON by escaping control characters
+        result: list[str] = []
+        in_string = False
+        escape_next = False
+        
+        for char in text:
+            if escape_next:
+                result.append(char)
+                escape_next = False
+                continue
+            
+            if char == '\\':
+                result.append(char)
+                escape_next = True
+                continue
+            
+            if char == '"' and not escape_next:
+                in_string = not in_string
+                result.append(char)
+                continue
+            
+            if in_string:
+                # Escape control characters inside strings
+                if char == '\n':
+                    result.append('\\n')
+                elif char == '\r':
+                    result.append('\\r')
+                elif char == '\t':
+                    result.append('\\t')
+                elif ord(char) < 32:  # Other control characters
+                    result.append(f'\\u{ord(char):04x}')
+                else:
+                    result.append(char)
+            else:
+                # Outside strings, skip whitespace control chars
+                if char not in ['\n', '\r', '\t']:
+                    result.append(char)
+        
+        sanitized = ''.join(result)
+        return json.loads(sanitized)
+    except Exception:
+        pass
     
-    # If all strategies fail, raise the original error
-    raise ValueError(f"Could not parse JSON after all attempts. Text preview: {text[:200]}")
+    # If all strategies fail, raise error with more context
+    raise ValueError(
+        f"Could not parse JSON after all attempts.\n"
+        f"Text length: {len(text)}\n"
+        f"Preview: {text[:500]}\n"
+        f"Last 200 chars: {text[-200:]}"
+    )
 
 
 
