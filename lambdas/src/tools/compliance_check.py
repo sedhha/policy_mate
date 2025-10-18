@@ -104,8 +104,7 @@ def compliance_check_tool(
     text: str,
     question: str,
     framework_id: str,
-    control_id: str | None = None,
-    user_id: str | None = None
+    control_id: str | None = None
 ) -> dict[str, Any]:
     """
     Core compliance check logic - shared between Bedrock and Strands agents.
@@ -146,6 +145,38 @@ def compliance_check_tool(
                 'control_id': c['control_id'],
                 'requirement': c['requirement'],
                 'category': c['category']
+            } for c in controls
+        ]
+    }
+    
+# List All Controls Tool
+def get_all_controls_tool(framework_id: str) -> dict[str, Any]:
+    """
+    List all compliance controls for a given framework.
+    
+    Args:
+        framework_id: Compliance framework (GDPR, SOC2, HIPAA)
+    Returns:
+        Dictionary with list of controls
+    """
+    if framework_id not in ['GDPR', 'SOC2', 'HIPAA']:
+        raise ValueError('framework_id must be GDPR, SOC2, or HIPAA')
+    
+    table = get_table(DynamoDBTable.COMPLIANCE_CONTROLS)
+    response = table.scan(
+        FilterExpression='framework_id = :fid',
+        ExpressionAttributeValues={':fid': f'{framework_id.lower()}_2025'}
+    )
+    controls = response.get('Items', [])
+    
+    return {
+        'framework_id': framework_id,
+        'controls': [
+            {
+                'control_id': c['control_id'],
+                'requirement': c['requirement'],
+                'category': c['category'],
+                'severity': c['severity']
             } for c in controls
         ]
     }

@@ -76,9 +76,9 @@ def comprehensive_check_tool(
             return {
                 'status': 200,
                 'message': 'Using existing analysis (cached)',
-                'dynamo_db_query_key': 'inferred_file_id',
+                'dynamo_db_query_key': 'record_id',
                 'dynamo_db_value_key': 'analysis_result',
-                'dynamo_db_document_id': cached_item['inferred_file_id'],
+                'dynamo_db_document_id': cached_item['record_id'],
                 'dynamo_db_table_name': 'PolicyMateInferredFiles',
                 'is_cached': True
             }

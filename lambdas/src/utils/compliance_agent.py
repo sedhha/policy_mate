@@ -3,6 +3,7 @@ from bedrock_agentcore import BedrockAgentCoreApp
 from pydantic import BaseModel, Field
 from strands import Agent
 from uuid6 import uuid7
+from src.tools.compliance_check import compliance_check_tool, get_all_controls_tool
 from src.utils.services.cached_response import cached_response
 from src.tools.comprehensive_check import comprehensive_check_tool
 from src.tools.doc_status import doc_status_tool
@@ -149,6 +150,106 @@ def comprehensive_check(document_id: str, framework_id: str, force_reanalysis: b
     return updated_response
 ##############################################################################################################
 
+@tool(
+    inputSchema={
+        "json": {
+            "type": "object",
+            "properties": {
+                "text": {
+                    "type": "string",
+                    "description": "The policy text or document content to analyze for compliance."
+                },
+                "question": {
+                    "type": "string",
+                    "description": "Specific compliance question to answer about the text."
+                },
+                "framework_id": {
+                    "type": "string",
+                    "enum": ["GDPR", "SOC2", "HIPAA"],
+                    "description": "The compliance framework to check against. Must be one of: GDPR (EU data protection), SOC2 (security controls), or HIPAA (healthcare data privacy)."
+                },
+                "control_id": {
+                    "type": "string",
+                    "description": "Optional. Specific control ID within the framework to check against (e.g., 'GDPR.ART.5.1.a', 'SOC2.CC1.1'). If not provided, analyzes against all relevant controls."
+                }
+            },
+            "required": ["text", "question", "framework_id"]
+        }
+    }
+)
+def phrase_wise_compliance_check(text: str, question: str, framework_id: str, control_id: str = "") -> dict[str, Any]:
+    """
+    Perform targeted compliance analysis on specific text snippets against a compliance framework.
+    
+    This tool analyzes specific text passages or phrases against compliance requirements in GDPR, SOC2, or HIPAA frameworks and returns:
+    - Compliance verdict for the specific text (COMPLIANT/NON_COMPLIANT/UNCLEAR/PARTIAL)
+    - Detailed analysis of how the text addresses the compliance question
+    - Matched controls and their status
+    - Identified gaps and recommendations
+    - Reasoning for the compliance assessment
+    
+    Use this tool when:
+    - User wants to check a specific text snippet or phrase for compliance
+    - User asks "does this text comply with [framework]?"
+    - User wants to analyze a particular section or paragraph
+    - User provides specific text to be evaluated against compliance requirements
+    - User asks targeted questions about specific policy language
+    
+    This is different from comprehensive_check which analyzes entire documents.
+    
+    Args:
+        text: The specific text snippet to analyze.
+        question: The compliance question to answer about the text.
+        framework_id: Compliance framework (GDPR, SOC2, or HIPAA).
+        control_id: Optional specific control ID to check against.
+    
+    Returns:
+        A dictionary containing targeted compliance analysis with verdict, matched controls, gaps, and recommendations.
+    """
+    result = compliance_check_tool(text, question, framework_id, control_id)
+    return result
+
+##############################################################################################################
+@tool(
+    inputSchema={
+        "json": {
+            "type": "object",
+            "properties": {
+                "framework_id": {
+                    "type": "string",
+                    "enum": ["GDPR", "SOC2", "HIPAA"],
+                    "description": "The compliance framework to retrieve controls for. Must be one of: GDPR (EU data protection), SOC2 (security controls), or HIPAA (healthcare data privacy)."
+                }
+            },
+            "required": ["framework_id"]
+        }
+    }
+)
+def list_controls(framework_id: str) -> dict[str, Any]:
+    """
+    Retrieve all compliance controls for a specified framework.
+    
+    This tool returns the complete list of controls for a given compliance framework, including:
+    - Control ID (e.g., 'GDPR.ART.5.1.a', 'SOC2.CC1.1')
+    - Requirement description
+    - Control category
+    - Severity level
+    
+    Use this tool when:
+    - User asks "what are the GDPR controls?"
+    - User wants to see all requirements for a framework
+    - User asks "list all SOC2 controls"
+    - User wants to understand what controls exist before analysis
+    - User asks "show me HIPAA requirements"
+    
+    Args:
+        framework_id: Compliance framework (GDPR, SOC2, or HIPAA).
+    
+    Returns:
+        A dictionary containing the framework ID and a list of all controls with their details.
+    """
+    result = get_all_controls_tool(framework_id)
+    return result
 
 non_streaming_model = BedrockModel(model_id=AGENT_CLAUDE_HAIKU, streaming=False)
 
@@ -194,10 +295,17 @@ TOOLS:
 
 - **list_docs(user_id)**: Get all user documents
 - **doc_status(document_id)**: Get specific document status
+- **list_controls(framework_id)**: Get all compliance controls for a framework (GDPR/SOC2/HIPAA). Use when user asks "what are the controls?", "list requirements", or "show me all GDPR controls"
 - **comprehensive_check(document_id, framework_id, force_reanalysis=False)**: Perform comprehensive compliance analysis on entire document against all controls in framework (GDPR/SOC2/HIPAA)
+- **phrase_wise_compliance_check(text, question, framework_id, control_id=None)**: Analyze specific text snippets or phrases for compliance against a framework. Use when user provides specific text to evaluate or asks about particular passages.
 
 ⚠️ CRITICAL: When users ask for documents or status, you MUST call the tool.
 Never fabricate or use placeholder data. Always use real tool responses.
+
+Tool Selection Guide:
+- Use **list_controls** to show available controls/requirements (e.g., "what are GDPR controls?")
+- Use **comprehensive_check** for full document analysis (e.g., "analyze my entire document")
+- Use **phrase_wise_compliance_check** for specific text evaluation (e.g., "does this text comply?", "check this phrase")
 
 ═══════════════════════════════════════════════════════════
 EXAMPLES:
@@ -258,6 +366,40 @@ Example response:
 
 ⚠️ REMEMBER: Always use \\n for line breaks, NEVER literal newlines!
 
+─────────────────────────────────────────────────────────
+
+User: "What are all the GDPR controls?"
+Actions:
+1. Call list_controls(framework_id="GDPR")
+2. Put exact tool response in tool_payload
+3. Format markdown WITH \\n ESCAPING
+
+Example response:
+{
+  "error_message": "",
+  "tool_payload": {<exact_tool_response>},
+  "summarised_markdown": "## 📋 GDPR Compliance Controls\\n\\n**Framework**: GDPR\\n**Total Controls**: 34\\n\\n| Control ID | Category | Requirement | Severity |\\n|---|---|---|---|\\n| GDPR.ART.5.1.a | Data Processing | Lawfulness, fairness... | HIGH |\\n| GDPR.ART.5.1.b | Data Processing | Purpose limitation | HIGH |",
+  "suggested_next_actions": [
+    {"action": "analyze_document", "description": "Check a document against these controls"}
+  ]
+}
+
+─────────────────────────────────────────────────────────
+
+User: "Does this text comply with GDPR: 'We collect and process user data for analytics'"
+Actions:
+1. Call phrase_wise_compliance_check(text="We collect and process user data for analytics", question="Does this comply with GDPR data processing requirements?", framework_id="GDPR")
+2. Put exact tool response in tool_payload
+3. Format markdown WITH \\n ESCAPING
+
+Example response:
+{
+  "error_message": "",
+  "tool_payload": {<exact_tool_response>},
+  "summarised_markdown": "## 🔍 Text Compliance Check\\n\\n**Text Analyzed**: 'We collect and process...'\\n**Framework**: GDPR\\n\\n**Verdict**: ⚠️ PARTIAL\\n\\n**Issues:**\\n- Missing legal basis\\n- No purpose limitation\\n\\n**Recommendations:**\\n- Add specific purpose\\n- Document legal basis",
+  "suggested_next_actions": [...]
+}
+
 ═══════════════════════════════════════════════════════════
 FINAL CHECK:
 ═══════════════════════════════════════════════════════════
@@ -271,7 +413,7 @@ Before responding:
 
 compliance_agent = Agent(
     model=non_streaming_model,
-    tools=[list_docs, doc_status, comprehensive_check],
+    tools=[list_docs, doc_status, comprehensive_check, phrase_wise_compliance_check, list_controls],
     system_prompt=SYSTEM_PROMPT
 )
 
@@ -412,6 +554,6 @@ def invoke(event: dict[str, Any]) -> dict[str, Any]:
 if __name__ == "__main__":
     print("🤖 Compliance Copilot Agent starting on port 8080...")
     print("📋 System prompt loaded - Agent will intelligently route queries")
-    print("🔧 Available tools: compliance_check, comprehensive_check, doc_status, list_docs")
+    print("🔧 Available tools: list_controls, phrase_wise_compliance_check, comprehensive_check, doc_status, list_docs")
     print("🧠 Agent Mode: Smart parameter extraction from user prompts")
     app.run() # type: ignore[misc]
