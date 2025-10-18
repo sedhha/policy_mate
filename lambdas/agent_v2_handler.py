@@ -5,6 +5,7 @@ from typing import Any
 import json
 import traceback
 from aws_lambda_typing import context as context_
+from src.utils.logger import log_with_context
 from src.utils.decorators.cognito_auth import require_cognito_auth
 from src.utils.compliance_agent import compliance_agent, parse_agent_json
 from uuid6 import uuid7
@@ -39,6 +40,7 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         # TODO: This might be a little insecure if user tries to highjack the prompt
         # But we can address that after hackathon
         prompt = f'{prompt}\n\n{user_meta}'
+        log_with_context("INFO", f"Invoking compliance agent with prompt: {prompt}", context.aws_request_id)
         res = str(compliance_agent(prompt))
         agent_response = str(res)
         parsed = parse_agent_json(agent_response)
@@ -59,6 +61,11 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         print("Error invoking AgentCore runtime:", str(e))
         print(traceback.format_exc())
         return {
+             "headers": {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Headers": "Content-Type,Authorization",
+                "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
+            },
             "statusCode": 500,
             "body": json.dumps({"error": str(e)}),
         }

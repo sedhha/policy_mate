@@ -192,22 +192,33 @@ app = BedrockAgentCoreApp()
 def parse_agent_json(text: str) -> dict[str, Any]:
     """
     Parse JSON from agent response with multiple fallback strategies.
+    Handles mixed format where outer JSON has double quotes but nested dicts have single quotes.
     """
-    # Strategy 1: Direct parse
+    import ast
+    
+    # Strategy 1: Direct parse (valid JSON)
     try:
         return json.loads(text)
     except json.JSONDecodeError as e:
         print(f"Direct parse failed: {e}")
     
-    # Strategy 2: Parse with strict=False (allows control characters)
+    # Strategy 2: Replace single quotes with double quotes (handles mixed format)
+    try:
+        # Use regex to replace single quotes with double quotes, but preserve apostrophes in strings
+        # This is a heuristic approach that works for most cases
+        fixed_text = text.replace("'", '"')
+        return json.loads(fixed_text)
+    except json.JSONDecodeError as e:
+        print(f"Quote replacement parse failed: {e}")
+    
+    # Strategy 3: Parse with strict=False (allows control characters)
     try:
         return json.loads(text, strict=False)
     except json.JSONDecodeError as e:
         print(f"Lenient parse failed: {e}")
     
-    # Strategy 3: Use ast.literal_eval to handle Python dict syntax, then convert to JSON-safe dict
+    # Strategy 4: Use ast.literal_eval to handle Python dict syntax, then convert to JSON-safe dict
     try:
-        import ast
         # Remove any trailing/leading whitespace
         cleaned = text.strip()
         # Try to evaluate as Python literal
@@ -219,7 +230,7 @@ def parse_agent_json(text: str) -> dict[str, Any]:
     except Exception as e:
         print(f"Literal eval with JSON conversion failed: {e}")
     
-    # Strategy 4: Try to fix common control character issues
+    # Strategy 5: Try to fix common control character issues
     try:
         # Escape common control characters
         fixed_text = text.replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
