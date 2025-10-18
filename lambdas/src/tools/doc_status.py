@@ -7,9 +7,7 @@ from src.utils.services.document_extractor import get_status_details
 
 
 def doc_status_tool(
-    document_id: str,
-    user_id: str | None = None,
-    org_id: str | None = None
+    document_id: str
 ) -> dict[str, Any]:
     """
     Core document status retrieval logic - shared between Bedrock and Strands agents.

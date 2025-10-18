@@ -8,10 +8,7 @@ from src.utils.services.document_extractor import format_file_size, format_times
 from boto3.dynamodb.conditions import Attr
 
 
-def show_doc_tool(
-    user_id: str,
-    org_id: str | None = None
-) -> dict[str, Any]:
+def show_doc_tool(user_id: str) -> dict[str, Any]:
     """
     Core document listing logic - shared between Bedrock and Strands agents.
     
