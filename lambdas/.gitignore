@@ -1,0 +1,4 @@
+
+# AgentCore temporary environment file
+.env.container
+*.backup

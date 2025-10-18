@@ -15,6 +15,9 @@ ENV UV_SYSTEM_PYTHON=1 \
 
 
 COPY . .
+
+# Copy environment variables from .env file
+COPY .env.container /app/.env
 # Install from pyproject.toml directory
 RUN cd . && uv pip install .
 
@@ -38,6 +41,16 @@ EXPOSE 8080
 # Copy entire project (respecting .dockerignore)
 COPY . .
 
-# Use the full module path
+# Copy environment variables from .env file
+COPY .env.container /app/.env
 
-CMD ["opentelemetry-instrument", "python", "-m", "agent"]
+# Create entrypoint script to load .env if it exists
+RUN echo '#!/bin/bash' > /app/entrypoint.sh && \
+    echo 'set -a' >> /app/entrypoint.sh && \
+    echo '[ -f /app/.env ] && source /app/.env' >> /app/entrypoint.sh && \
+    echo 'set +a' >> /app/entrypoint.sh && \
+    echo 'exec opentelemetry-instrument python -m agent' >> /app/entrypoint.sh && \
+    chmod +x /app/entrypoint.sh
+
+# Use the entrypoint script
+CMD ["/app/entrypoint.sh"]

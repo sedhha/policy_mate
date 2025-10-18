@@ -19,21 +19,25 @@ bedrock_agent: BedrockAgentCoreDataPlaneFrontingLayerClient = boto3.client("bedr
 def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str, Any]:
     """
     Invokes the Bedrock AgentCore runtime.
-    Assumes @require_cognito_auth verified the JWT and added event["user"].
+    Assumes @require_cognito_auth verified the JWT and added event["validated_token"] and event["user_claims"].
     """
 
     try:
-        user = event.get("user", {})
-        body = json.loads(event.get("body", "{}"))
-        input_text = body.get("input") or "Hello from Lambda"
         
-        # Get or create session_id from body, or generate from user sub
+        body = json.loads(event.get("body", "{}"))
+        prompt = body.get('prompt', '')
+        
+        # Get validated token and user info from decorator
+        access_token = event['validated_token']
+        
+        # Use user_id as default, or generate new UUID7 if not provided
+        session_id = body.get('session_id', str(uuid7()))
+        input_text = f'access_token: {access_token}\n\n{prompt}'
+        
+        
+        # Use user_id as default, or get from body
         # runtimeSessionId must be at least 33 characters
-        session_id = body.get("session_id")
-        if not session_id:
-            user_sub = user.get("sub", "anonymous")
-            # Create a session ID: prefix with user_sub and pad with UUID to ensure min 33 chars
-            session_id = f"{user_sub}-{str(uuid7())}"
+        session_id = body.get("session_id", str(uuid7()))
         
         # Ensure session_id is at least 33 characters
         if len(session_id) < 33:
@@ -63,7 +67,7 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
                 {
                     "output": output_obj,
                     "session_id": session_id,
-                    "user": user.get("email", "unknown"),
+                    "user": event['user_claims'].get("email", "unknown"),
                 }
             ),
         }

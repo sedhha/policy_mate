@@ -1,16 +1,9 @@
-from typing import Any
-from bedrock_agentcore import BedrockAgentCoreApp
 from strands import Agent
+from src.utils.settings import AGENT_CLAUDE_HAIKU
+from strands.models import BedrockModel
 
-app = BedrockAgentCoreApp()
-agent = Agent()
+non_streaming_model = BedrockModel(model_id=AGENT_CLAUDE_HAIKU, streaming=False)
+agent = Agent(model=non_streaming_model)
 
-@app.entrypoint  # type: ignore[misc]
-def invoke(payload: dict[str, Any]) -> dict[str, Any]:
-    """Your AI agent function"""
-    user_message = payload.get("prompt", "Hello! How can I help you today?")
-    result = agent(user_message)
-    return {"result": result.message}
-
-if __name__ == "__main__":
-    app.run()  # type: ignore[misc]
+result = agent("What is the capital of France?")
+print(result)
