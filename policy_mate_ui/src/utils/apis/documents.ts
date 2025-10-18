@@ -138,10 +138,8 @@ export const sendMessage = async <T = any>(
         errorData.error || `Failed to send message: ${response.statusText}`
       );
     }
-    console.log('✅ Message sent successfully');
 
     const agentResponse: AgentResponse<T> = await response.json();
-    console.log('🤖 Agent response received:', agentResponse);
     return agentResponse;
   } catch (error) {
     console.error('❌ Error sending message:', error);

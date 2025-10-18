@@ -30,14 +30,12 @@ export const Router = () => {
 
         // Check if token is missing
         if (!idToken) {
-            console.log('Redirecting to login - no token found after hydration');
             router.push('/login');
             return;
         }
 
         // Check if token has expired
         if (isTokenExpired(idToken)) {
-            console.log('Redirecting to login - token has expired');
             clearAuth(); // Clear expired token from store
             router.push('/login');
             return;
@@ -50,7 +48,6 @@ export const Router = () => {
 
         const intervalId = setInterval(() => {
             if (isTokenExpired(idToken)) {
-                console.log('Token expired during session - redirecting to login');
                 clearAuth();
                 router.push('/login');
             }

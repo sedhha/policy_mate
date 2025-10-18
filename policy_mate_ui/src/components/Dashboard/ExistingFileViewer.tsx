@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { Document } from '@/types';
 import { useAgentStore } from '@/stores/agentStore';
+import { useAuthStore } from '@/stores/authStore';
 
 // Helper to get file type icon color based on file extension
 const getFileIconColor = (fileName: string) => {
@@ -78,6 +79,8 @@ export const ExistingFiles = () => {
     const [selectedFile, setSelectedFile] = useState<string | null>(null);
     const router = useRouter();
 
+    const { idToken } = useAuthStore();
+
     const {
         documents,
         selectedDocument,
@@ -90,8 +93,8 @@ export const ExistingFiles = () => {
     const error = agentStates.listDocs.error;
 
     useEffect(() => {
-        loadDocuments();
-    }, [loadDocuments]);
+        if (idToken) { loadDocuments(); }
+    }, [loadDocuments, idToken]);
 
     const handleRefresh = async () => {
         await loadDocuments();
