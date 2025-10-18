@@ -16,7 +16,7 @@ export interface MessageMetadata {
  * Instructions appended to every message
  * This is stripped from display but sent to the backend
  */
-const FORMAT_INSTRUCTION = ` return response in JSON format`;
+// const FORMAT_INSTRUCTION = ` return response in JSON format`;
 /**
  * Build metadata tag string from metadata object
  * Format: [META:file_id=abc123,another_key=value]
@@ -117,8 +117,9 @@ export const sendMessage = async <T = any>(
     const metadataTag = buildMetadataTag(metadata);
 
     // Append JSON format instruction to every message
-    const promptWithInstruction = `${prompt}${FORMAT_INSTRUCTION}`;
-    const taggedPrompt = `${metadataTag}${promptWithInstruction}`;
+    // const promptWithInstruction = `${prompt}${FORMAT_INSTRUCTION}`;
+    // const taggedPrompt = `${metadataTag}${promptWithInstruction}`;
+    const taggedPrompt = `${metadataTag}${prompt}`;
 
     const requestBody: ChatRequest = {
       prompt: taggedPrompt,
@@ -137,8 +138,10 @@ export const sendMessage = async <T = any>(
         errorData.error || `Failed to send message: ${response.statusText}`
       );
     }
+    console.log('✅ Message sent successfully');
 
     const agentResponse: AgentResponse<T> = await response.json();
+    console.log('🤖 Agent response received:', agentResponse);
     return agentResponse;
   } catch (error) {
     console.error('❌ Error sending message:', error);
@@ -152,7 +155,7 @@ export const sendMessage = async <T = any>(
  */
 export const fetchDocuments = async (
   sessionId?: string,
-  prompt: string = 'Show me my docs in JSON format'
+  prompt: string = 'List all my documents.'
 ): Promise<AgentResponse<DocumentsData>> => {
   return sendMessage<DocumentsData>(prompt, sessionId);
 };

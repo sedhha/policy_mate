@@ -16,7 +16,7 @@ def create_user_metadata_str(claims: dict[str, Any]) -> str:
     """
     user_email = claims["email"]
     user_id = claims["sub"]
-    return f"[UserMetadata - user_email: {user_email}\nuser_id: {user_id}]"
+    return f"[user_email={user_email}] [user_id={user_id}]"
 
 @require_cognito_auth
 def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str, Any]:
@@ -47,6 +47,11 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         # runtimeSessionId must be at least 33 characters
         session_id = body.get("session_id", str(uuid7()))
         return {
+            "headers": {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Headers": "Content-Type,Authorization",
+                "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
+            },
             "statusCode": 200,
             "body": json.dumps(parsed), # TODO: Maybe we can avoid re-parsing later
         }
