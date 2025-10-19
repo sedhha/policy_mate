@@ -1,4 +1,4 @@
-# lambdas/agent_v2_handler.py
+# lambdas/annotations_agent_handler.py
 
 from typing import Any
 import json
@@ -6,7 +6,7 @@ import traceback
 from aws_lambda_typing import context as context_
 from src.utils.logger import log_with_context
 from src.utils.decorators.cognito_auth import require_cognito_auth
-from src.agents.compliance_agent import compliance_agent, parse_agent_json
+from src.agents.annotations_agent import annotations_agent, parse_agent_json
 from uuid6 import uuid7
 
 
@@ -29,22 +29,22 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
     try:
         body = json.loads(event.get("body", "{}"))
         prompt = body.get('prompt', '')
-        user_meta = create_user_metadata_str(event['user_claims'])
+        # user_meta = create_user_metadata_str(event['user_claims'])
         
         # Use user_id as default, or generate new UUID7 if not provided
         session_id = body.get('session_id', str(uuid7()))
         
         # Append user metadata to prompt
-        prompt_with_meta = f'{prompt}\n\n{user_meta}'
+        prompt_with_meta = f'{prompt}'
         
         log_with_context(
             "INFO", 
-            f"Invoking compliance agent. Prompt length: {len(prompt_with_meta)} chars",
+            f"Invoking annotations agent. Prompt length: {len(prompt_with_meta)} chars",
             context.aws_request_id
         )
         
         # Get agent response
-        res = compliance_agent(prompt_with_meta)
+        res = annotations_agent(prompt_with_meta)
         agent_response = str(res)
         
         # Log response size, NOT content (prevents CloudWatch fragmentation)

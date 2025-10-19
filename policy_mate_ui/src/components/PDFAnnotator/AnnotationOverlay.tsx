@@ -25,6 +25,18 @@ export const AnnotationOverlay: React.FC<AnnotationOverlayProps> = ({
     const [isDrawing, setIsDrawing] = React.useState(false);
     const [startPoint, setStartPoint] = React.useState<{ x: number; y: number } | null>(null);
     const [dragRect, setDragRect] = React.useState<DragRect | null>(null);
+    const [overlayWidth, setOverlayWidth] = React.useState(0);
+
+    // 🎛️ Configurable offset for action button positioning (in pixels)
+    // Adjust this value to fine-tune the button placement
+    const ACTION_BUTTON_OFFSET_RIGHT = 10; // Default: 20px to the right of annotation
+
+    // Ensure overlay dimensions are measured before rendering
+    React.useLayoutEffect(() => {
+        if (overlayRef.current) {
+            setOverlayWidth(overlayRef.current.clientWidth);
+        }
+    }, [currentPage, scale]);
 
     // Function to get highlight style classes (unchanged)
     const getHighlightClasses = React.useCallback(
@@ -262,7 +274,6 @@ export const AnnotationOverlay: React.FC<AnnotationOverlayProps> = ({
 
                 // Decide whether to place the action chip to the left of the annotation
                 // to avoid being clipped by the pdf-viewer's horizontal overflow.
-                const overlayWidth = overlayRef.current?.clientWidth ?? 0;
                 const anchorX = (annotation.x + annotation.width) * scale;
                 // If less than 180px remains to the right edge, flip the chip to the left
                 const flipLeft = overlayWidth > 0 && overlayWidth - anchorX < 180;
@@ -285,10 +296,12 @@ export const AnnotationOverlay: React.FC<AnnotationOverlayProps> = ({
                             className="absolute"
                             style={{
                                 top: -2,
-                                left: `calc(100% - 4px)`,
+                                left: `calc(100% + 40px)`,
                                 zIndex: 5,
-                                // Push right a bit normally; if near right edge, move entirely to the left of the annotation
-                                transform: flipLeft ? 'translateX(calc(-100% - 8px))' : 'translateX(8px)',
+                                // Push right normally; if near right edge, move entirely to the left of the annotation
+                                transform: flipLeft
+                                    ? 'translateX(calc(-100% - 8px))'
+                                    : `translateX(${ACTION_BUTTON_OFFSET_RIGHT}px)`,
                             }}
                             onClick={e => e.stopPropagation()}
                         >

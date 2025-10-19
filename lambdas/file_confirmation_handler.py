@@ -10,6 +10,24 @@ from src.utils.services.s3 import s3_client
 from src.utils.settings import S3_BUCKET_NAME as BUCKET_NAME
 from src.utils.response import response
 from botocore.exceptions import ClientError
+import fitz  # PyMuPDF
+
+def get_pdf_page_count(s3_key: str) -> int:
+    """Get page count from PDF in S3 using PyMuPDF (fitz) for faster processing"""
+    log_with_context("INFO", f"Generating pdf pages for {s3_key}")
+    try:
+        response = s3_client.get_object(Bucket=BUCKET_NAME, Key=s3_key)
+        pdf_content = response['Body'].read()
+        
+        # Open PDF with fitz - much faster than pypdf
+        pdf_document = fitz.open(stream=pdf_content, filetype="pdf")
+        page_count = pdf_document.page_count
+        pdf_document.close()
+        
+        return page_count
+    except Exception as e:
+        log_with_context("ERROR", f"Error reading PDF page count: {str(e)}")
+        return 0
 
 
 @require_fe_auth
@@ -87,18 +105,22 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
             s3_client.head_object(Bucket=BUCKET_NAME, Key=s3_key)
             log_with_context("INFO", f"S3 object verified: {s3_key}", 
                            request_id=context.aws_request_id)
+            page_count = get_pdf_page_count(s3_key)
             
             # File exists - mark as completed
             timestamp = datetime.now(timezone.utc).isoformat()
+            
             files_table.update_item(
                 Key={'file_id': file_id},
-                UpdateExpression='SET #status = :status, updated_at = :timestamp',
+                UpdateExpression='SET #status = :status, updated_at = :timestamp, page_count = :pages',
                 ExpressionAttributeNames={'#status': 'status'},
                 ExpressionAttributeValues={
                     ':status': DocumentStatus.UPLOAD_SUCCESS.value,
-                    ':timestamp': timestamp
+                    ':timestamp': timestamp,
+                    ':pages': page_count
                 }
             )
+            
             log_with_context("INFO", f"Updated file status to completed: {file_id}", 
                             request_id=context.aws_request_id)
             

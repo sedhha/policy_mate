@@ -12,6 +12,9 @@ export interface Document {
   status_emoji: string;
   timestamp: number;
   formatted_date: string;
+  pages: number;
+  s3_key: string;
+  s3_bucket: string;
 }
 
 export interface DocumentsData {

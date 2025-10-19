@@ -18,13 +18,11 @@ import {
     MessageSquare,
     Zap,
     Search,
-    Filter
+    X
 } from 'lucide-react';
-import { Document } from '@/types';
 import { useAgentStore } from '@/stores/agentStore';
 import { useAuthStore } from '@/stores/authStore';
 
-// Helper to get file type icon color based on file extension
 const getFileIconColor = (fileName: string) => {
     const ext = fileName.split('.').pop()?.toLowerCase();
     switch (ext) {
@@ -43,34 +41,45 @@ const getFileIconColor = (fileName: string) => {
     }
 };
 
-// Helper to get compliance status badge styles
 const getComplianceStyles = (status: number) => {
     switch (status) {
         case 51:
             return {
-                bg: 'bg-emerald-50',
+                bg: 'bg-emerald-500',
                 text: 'text-emerald-700',
+                lightBg: 'bg-emerald-50',
                 border: 'border-emerald-200',
                 icon: CheckCircle,
             };
         case 52:
             return {
-                bg: 'bg-red-50',
+                bg: 'bg-red-500',
                 text: 'text-red-700',
+                lightBg: 'bg-red-50',
                 border: 'border-red-200',
                 icon: XCircle,
             };
         case 1:
             return {
-                bg: 'bg-amber-50',
+                bg: 'bg-amber-500',
                 text: 'text-amber-700',
+                lightBg: 'bg-amber-50',
                 border: 'border-amber-200',
                 icon: Clock,
             };
+        case 12:
+            return {
+                bg: 'bg-blue-500',
+                text: 'text-blue-700',
+                lightBg: 'bg-blue-50',
+                border: 'border-blue-200',
+                icon: Loader2,
+            };
         default:
             return {
-                bg: 'bg-slate-50',
+                bg: 'bg-slate-500',
                 text: 'text-slate-700',
+                lightBg: 'bg-slate-50',
                 border: 'border-slate-200',
                 icon: HelpCircle,
             };
@@ -104,12 +113,10 @@ export const ExistingFiles = () => {
     };
 
     const handleDelete = async (documentId: string) => {
-        // TODO: Implement delete functionality
         console.log('Delete document:', documentId);
     };
 
     const handleView = async (documentId: string) => {
-        // TODO: Implement view functionality
         console.log('View document:', documentId);
     };
 
@@ -121,8 +128,14 @@ export const ExistingFiles = () => {
 
     const handleStartAnalysis = () => {
         if (selectedDocument) {
-            // TODO: Navigate to analysis page or trigger analysis
-            console.log('Start analysis for:', selectedDocument.document_id);
+            const payload = {
+                document_id: selectedDocument.document_id,
+                totalPages: selectedDocument.pages || 0,
+                s3_key: selectedDocument.s3_key,
+                s3_bucket: selectedDocument.s3_bucket,
+            };
+            const base64Payload = btoa(JSON.stringify(payload));
+            router.push(`/analyse?payload=${base64Payload}`);
         }
     };
 
@@ -130,24 +143,27 @@ export const ExistingFiles = () => {
         doc.file_name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    // Calculate stats
+    const stats = {
+        total: documents.length,
+        compliant: documents.filter(d => d.compliance_status === 51).length,
+        pending: documents.filter(d => d.compliance_status === 1).length,
+        nonCompliant: documents.filter(d => d.compliance_status === 52).length
+    };
+
     if (loading) {
         return (
             <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
                 <div className="flex items-center justify-center py-16">
                     <div className="text-center">
-                        {/* Modern animated loader */}
                         <div className="relative w-20 h-20 mx-auto mb-6">
-                            {/* Outer rotating ring */}
                             <div className="absolute inset-0 rounded-full border-4 border-blue-100"></div>
-                            {/* Animated gradient ring */}
                             <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-500 border-r-blue-400 animate-spin"></div>
-                            {/* Inner pulsing circle */}
                             <div className="absolute inset-3 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 animate-pulse flex items-center justify-center">
                                 <FileText className="w-6 h-6 text-white" />
                             </div>
                         </div>
 
-                        {/* Loading text with fade animation */}
                         <div className="space-y-2">
                             <p className="text-lg font-semibold text-slate-800 animate-pulse">
                                 Loading documents
@@ -157,7 +173,6 @@ export const ExistingFiles = () => {
                             </p>
                         </div>
 
-                        {/* Optional: Animated dots */}
                         <div className="flex items-center justify-center gap-1.5 mt-4">
                             <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '0ms' }}></div>
                             <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '150ms' }}></div>
@@ -174,12 +189,14 @@ export const ExistingFiles = () => {
             <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
                 <div className="flex items-center justify-center py-12">
                     <div className="text-center">
-                        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
-                        <p className="text-slate-800 font-semibold mb-2">Failed to load documents</p>
+                        <div className="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <AlertCircle className="w-8 h-8 text-red-500" />
+                        </div>
+                        <p className="text-slate-800 font-semibold text-lg mb-2">Failed to load documents</p>
                         <p className="text-sm text-slate-600 mb-4">{error}</p>
                         <button
                             onClick={handleRefresh}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
+                            className="px-6 py-3 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-semibold"
                         >
                             <RefreshCw className="w-4 h-4" />
                             Try Again
@@ -192,36 +209,54 @@ export const ExistingFiles = () => {
 
     return (
         <div className="space-y-6">
-            {/* Action Banner - Shows when a document is selected */}
-            {selectedDocument && (
-                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="flex items-center justify-between gap-6 flex-wrap">
-                        <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                                <FileText className="w-8 h-8 text-white" />
-                            </div>
+            {/* Stats Bar */}
+            {documents.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div className="bg-white rounded-2xl p-5 shadow-md border border-slate-200 hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
+                        <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-white/80 text-sm font-medium mb-1">Selected Document</p>
-                                <p className="text-white text-xl font-bold truncate max-w-md">{selectedDocument.file_name}</p>
-                                <p className="text-white/70 text-sm mt-1">Ready for analysis</p>
+                                <p className="text-sm text-slate-600 font-medium mb-1">Total Documents</p>
+                                <p className="text-3xl font-bold text-slate-800">{stats.total}</p>
+                            </div>
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                                <FileText className="w-6 h-6 text-white" />
                             </div>
                         </div>
+                    </div>
 
-                        <div className="flex gap-3 flex-wrap">
-                            <button
-                                onClick={handleStartChat}
-                                className="px-6 py-3 bg-white text-blue-600 rounded-xl font-semibold hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 group"
-                            >
-                                <MessageSquare className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                                Start Chat
-                            </button>
-                            <button
-                                onClick={handleStartAnalysis}
-                                className="px-6 py-3 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-xl font-semibold hover:from-amber-500 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 group"
-                            >
-                                <Zap className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                                Start Live Analysis
-                            </button>
+                    <div className="bg-white rounded-2xl p-5 shadow-md border border-emerald-200 hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-emerald-600 font-medium mb-1">Compliant</p>
+                                <p className="text-3xl font-bold text-emerald-700">{stats.compliant}</p>
+                            </div>
+                            <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                                <CheckCircle className="w-6 h-6 text-white" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-2xl p-5 shadow-md border border-amber-200 hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-amber-600 font-medium mb-1">Pending</p>
+                                <p className="text-3xl font-bold text-amber-700">{stats.pending}</p>
+                            </div>
+                            <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg">
+                                <Clock className="w-6 h-6 text-white" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-2xl p-5 shadow-md border border-red-200 hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-red-600 font-medium mb-1">Non-Compliant</p>
+                                <p className="text-3xl font-bold text-red-700">{stats.nonCompliant}</p>
+                            </div>
+                            <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                                <XCircle className="w-6 h-6 text-white" />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -229,8 +264,8 @@ export const ExistingFiles = () => {
 
             {/* Documents List */}
             <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-6">
+                {/* Header with Action Buttons */}
+                <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
                     <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
                             <FileText className="w-6 h-6 text-white" />
@@ -243,7 +278,26 @@ export const ExistingFiles = () => {
                         </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-3">
+                        {selectedDocument && (
+                            <>
+                                <button
+                                    onClick={handleStartChat}
+                                    className="px-5 py-2.5 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 group hover:scale-[1.02] animate-in fade-in slide-in-from-right-4 duration-300"
+                                >
+                                    <MessageSquare className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                    Start Chat
+                                </button>
+                                <button
+                                    onClick={handleStartAnalysis}
+                                    className="px-5 py-2.5 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-xl font-semibold hover:from-amber-500 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 group hover:scale-[1.02] animate-in fade-in slide-in-from-right-4 duration-300"
+                                    style={{ animationDelay: '50ms' }}
+                                >
+                                    <Zap className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                    Start Live Analysis
+                                </button>
+                            </>
+                        )}
                         <button
                             onClick={handleRefresh}
                             disabled={loading}
@@ -251,7 +305,7 @@ export const ExistingFiles = () => {
                             title="Refresh documents"
                         >
                             <RefreshCw
-                                className={`w-5 h-5 text-slate-600 group-hover:text-blue-600 ${loading ? 'animate-spin' : ''}`}
+                                className={`w-5 h-5 text-slate-600 group-hover:text-blue-600 transition-colors ${loading ? 'animate-spin' : ''}`}
                             />
                         </button>
                     </div>
@@ -268,25 +322,37 @@ export const ExistingFiles = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                         />
+                        {searchTerm && (
+                            <button
+                                onClick={() => setSearchTerm('')}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-200 rounded-lg transition-colors"
+                            >
+                                <X className="w-4 h-4 text-slate-600" />
+                            </button>
+                        )}
                     </div>
                 )}
 
                 {/* Documents Grid */}
                 {documents.length === 0 ? (
                     <div className="text-center py-12">
-                        <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                            <FileText className="w-8 h-8 text-slate-400" />
+                        <div className="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <FileText className="w-10 h-10 text-slate-400" />
                         </div>
-                        <p className="text-slate-600 mb-2">No documents yet</p>
+                        <p className="text-slate-600 text-lg mb-2">No documents yet</p>
                         <p className="text-sm text-slate-500">Upload your first document to get started</p>
                     </div>
                 ) : filteredDocuments.length === 0 ? (
                     <div className="text-center py-12">
-                        <p className="text-slate-600">No documents match your search</p>
+                        <div className="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <Search className="w-10 h-10 text-slate-400" />
+                        </div>
+                        <p className="text-slate-600 text-lg mb-2">No documents match your search</p>
+                        <p className="text-sm text-slate-500">Try a different search term</p>
                     </div>
                 ) : (
-                    <div className="space-y-3">
-                        {filteredDocuments.map((doc) => {
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {filteredDocuments.map((doc, index) => {
                             const fileColors = getFileIconColor(doc.file_name);
                             const complianceStyles = getComplianceStyles(doc.compliance_status);
                             const ComplianceIcon = complianceStyles.icon;
@@ -296,86 +362,79 @@ export const ExistingFiles = () => {
                             return (
                                 <div
                                     key={doc.document_id}
-                                    onClick={() => setSelectedDocument(doc)}
-                                    className={`group cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 ${isSelected
-                                        ? 'border-blue-500 bg-blue-50 shadow-lg'
-                                        : 'border-slate-200 hover:border-blue-300 hover:shadow-md bg-white'
+                                    onClick={() => setSelectedDocument(isSelected ? undefined : doc)}
+                                    style={{ animationDelay: `${index * 50}ms` }}
+                                    className={`group cursor-pointer bg-white rounded-2xl p-5 border-2 transition-all duration-300 hover:shadow-xl animate-in fade-in slide-in-from-bottom-4 ${isSelected
+                                        ? 'border-blue-500 shadow-xl scale-[1.02] ring-4 ring-blue-100'
+                                        : 'border-slate-200 hover:border-blue-300 shadow-md hover:scale-[1.02]'
                                         }`}
                                 >
-                                    <div className="flex items-start justify-between gap-4">
-                                        {/* File Icon & Info */}
-                                        <div className="flex items-start gap-4 flex-1 min-w-0">
-                                            <div className={`w-14 h-14 ${fileColors.bg} rounded-xl flex items-center justify-center flex-shrink-0 border ${fileColors.border}`}>
-                                                <FileText className={`w-7 h-7 ${fileColors.icon}`} />
+                                    {/* Document Icon & Status */}
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-12 h-12 ${fileColors.bg} rounded-xl flex items-center justify-center border ${fileColors.border} transition-transform group-hover:scale-110`}>
+                                                <FileText className={`w-6 h-6 ${fileColors.icon}`} />
                                             </div>
-
-                                            <div className="flex-1 min-w-0">
-                                                {/* File Name & Status */}
-                                                <div className="flex items-start gap-2 mb-2">
-                                                    <h4 className="font-semibold text-slate-800 truncate flex-1">
-                                                        {doc.file_name}
-                                                    </h4>
-                                                    <span className="text-xl flex-shrink-0" title={doc.status_label}>
-                                                        {doc.status_emoji}
-                                                    </span>
-                                                </div>
-
-                                                {/* Compliance Badge */}
-                                                <div className="mb-3">
-                                                    <span
-                                                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${complianceStyles.bg} ${complianceStyles.text} ${complianceStyles.border}`}
-                                                    >
-                                                        <ComplianceIcon className="w-3.5 h-3.5" />
-                                                        {doc.status_label}
-                                                    </span>
-                                                </div>
-
-                                                {/* File Metadata */}
-                                                <div className="flex items-center gap-3 text-sm text-slate-600">
-                                                    <span className="font-medium">{doc.formatted_size}</span>
-                                                    <span className="text-slate-400">•</span>
-                                                    <span>{doc.formatted_date}</span>
-                                                </div>
-                                            </div>
+                                            <div className={`w-3 h-3 rounded-full ${complianceStyles.bg} animate-pulse`}></div>
                                         </div>
+                                        <span className="text-2xl" title={doc.status_label}>{doc.status_emoji}</span>
+                                    </div>
 
-                                        {/* Action Buttons */}
-                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleView(doc.document_id);
-                                                }}
-                                                className="p-2 hover:bg-blue-50 rounded-lg transition-colors group/btn"
-                                                title="View Document"
-                                            >
-                                                <Eye className="w-4 h-4 text-slate-600 group-hover/btn:text-blue-600" />
-                                            </button>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setSelectedFile(isExpanded ? null : doc.document_id);
-                                                }}
-                                                className="p-2 hover:bg-indigo-50 rounded-lg transition-colors group/btn"
-                                                title={isExpanded ? "Hide Details" : "Show Details"}
-                                            >
-                                                {isExpanded ? (
-                                                    <ChevronUp className="w-4 h-4 text-slate-600 group-hover/btn:text-indigo-600" />
-                                                ) : (
-                                                    <ChevronDown className="w-4 h-4 text-slate-600 group-hover/btn:text-indigo-600" />
-                                                )}
-                                            </button>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDelete(doc.document_id);
-                                                }}
-                                                className="p-2 hover:bg-red-50 rounded-lg transition-colors group/btn"
-                                                title="Delete Document"
-                                            >
-                                                <Trash2 className="w-4 h-4 text-slate-600 group-hover/btn:text-red-600" />
-                                            </button>
-                                        </div>
+                                    {/* Document Name */}
+                                    <h4 className="font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                                        {doc.file_name}
+                                    </h4>
+
+                                    {/* Status Badge */}
+                                    <div className="mb-4">
+                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${complianceStyles.lightBg} ${complianceStyles.text} ${complianceStyles.border}`}>
+                                            <ComplianceIcon className="w-3.5 h-3.5" />
+                                            {doc.status_label}
+                                        </span>
+                                    </div>
+
+                                    {/* Metadata */}
+                                    <div className="flex items-center justify-between text-sm text-slate-600 mb-4">
+                                        <span className="font-medium">{doc.formatted_size}</span>
+                                        <span>{doc.formatted_date}</span>
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleView(doc.document_id);
+                                            }}
+                                            className="flex-1 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-all text-sm font-medium flex items-center justify-center gap-1 hover:scale-105"
+                                        >
+                                            <Eye className="w-4 h-4" />
+                                            View
+                                        </button>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedFile(isExpanded ? null : doc.document_id);
+                                            }}
+                                            className="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition-all hover:scale-105"
+                                            title={isExpanded ? "Hide Details" : "Show Details"}
+                                        >
+                                            {isExpanded ? (
+                                                <ChevronUp className="w-4 h-4" />
+                                            ) : (
+                                                <ChevronDown className="w-4 h-4" />
+                                            )}
+                                        </button>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDelete(doc.document_id);
+                                            }}
+                                            className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg transition-all hover:scale-105"
+                                            title="Delete Document"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
                                     </div>
 
                                     {/* Expanded Details */}
@@ -407,7 +466,7 @@ export const ExistingFiles = () => {
                                                         <p className="text-xs font-medium text-slate-500 mb-1">Compliance Status</p>
                                                         <div className="flex items-center gap-2">
                                                             <span
-                                                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border ${complianceStyles.bg} ${complianceStyles.text} ${complianceStyles.border}`}
+                                                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border ${complianceStyles.lightBg} ${complianceStyles.text} ${complianceStyles.border}`}
                                                             >
                                                                 <ComplianceIcon className="w-4 h-4" />
                                                                 {doc.status_label}
