@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field
 from strands import Agent
 from uuid6 import uuid7
 from src.tools.compliance_check import compliance_check_tool, get_all_controls_tool
-from src.utils.services.cached_response import cached_response
 from src.tools.comprehensive_check import comprehensive_check_tool
 from src.tools.doc_status import doc_status_tool
 from src.utils.settings import AGENT_CLAUDE_HAIKU
@@ -147,8 +146,7 @@ def comprehensive_check(document_id: str, framework_id: str, force_reanalysis: b
         A dictionary containing detailed compliance analysis results or reference to cached analysis in DynamoDB.
     """
     result = comprehensive_check_tool(document_id, framework_id, force_reanalysis)
-    updated_response = cached_response(result)
-    return updated_response
+    return result
 ##############################################################################################################
 
 @tool(

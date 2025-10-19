@@ -13,28 +13,28 @@ interface HeaderConfig {
 
 const routeConfigs: Record<string, HeaderConfig> = {
     "/": {
-        title: "PolicyMate",
+        title: "Policy Mate",
         description: "Enterprise Compliance Management Dashboard",
         showBackButton: false,
         showViewResultsButton: false,
         backRoute: "/",
     },
     "/analyse": {
-        title: "Compliance CoPilot",
+        title: "Compliance Copilot",
         description: "Advanced Compliance Analysis & Annotation Platform",
         showBackButton: true,
         showViewResultsButton: true,
         backRoute: "/",
     },
     "/chat": {
-        title: "Compliance CoPilot",
+        title: "Compliance Copilot",
         description: "AI-Powered Compliance Analysis",
         showBackButton: true,
         showViewResultsButton: false,
         backRoute: "/",
     },
     "/login": {
-        title: "Compliance CoPilot",
+        title: "Compliance Copilot",
         description: "Secure Access Portal",
         showBackButton: false,
         showViewResultsButton: false,
@@ -49,7 +49,7 @@ export function UniversalHeader() {
 
     // Get config for current route or use default
     const config = routeConfigs[pathname] || {
-        title: "Compliance Co-Pilot",
+        title: "Compliance Copilot",
         description: "Enterprise Compliance Management",
         showBackButton: false,
         showViewResultsButton: false,

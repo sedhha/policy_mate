@@ -196,3 +196,19 @@ Response payload for:
 ## TODO:
 
 - enable CORS of S3 for global URL
+
+## Analysis
+
+- file id (required) - document on which analysis is done
+- analysis id (required) - analysis number - representing which analysis it is
+- annotation id (required) - unique id for each annotation
+- resolved (required)
+- page number (required)
+- policy_mate_coverage (required)
+- x (required)
+- y (required)
+- height (required)
+- width (required)
+- review comments (required)
+- bookmark_type (optional)
+- conversation_id (optional)

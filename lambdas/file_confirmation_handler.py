@@ -15,6 +15,7 @@ from io import BytesIO
 
 def get_pdf_page_count(s3_key: str) -> int:
     """Get page count from PDF in S3"""
+    log_with_context("INFO", f"Generating pdf pages for {s3_key}")
     try:
         response = s3_client.get_object(Bucket=BUCKET_NAME, Key=s3_key)
         pdf_content = response['Body'].read()
