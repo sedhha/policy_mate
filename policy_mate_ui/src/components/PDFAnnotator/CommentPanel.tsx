@@ -4,7 +4,6 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import { CommentComposer } from '@/components/PDFAnnotator/CommentComposer';
-import { VibrantLoader } from '@/components/PDFAnnotator/hoc/LazyLoader/VibrantLoader';
 import type { CommentPannelProps } from '@/components/PDFAnnotator/types';
 import { usePDFStore } from '@/components/PDFAnnotator/stores/pdfStore';
 
@@ -101,16 +100,7 @@ export const CommentPanel: React.FC<CommentPannelProps> = ({
 
             {/* Chat Messages Area */}
             <div className="flex-1 overflow-y-auto p-3 bg-gray-50 space-y-3 chat-scroll">
-                {chatLoading ? (
-                    <div className="flex flex-col items-center justify-center h-full">
-                        <VibrantLoader
-                            variant="dots"
-                            size="md"
-                            message="Loading conversation..."
-                            className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50"
-                        />
-                    </div>
-                ) : (commentConversation ?? []).length === 0 ? (
+                {(commentConversation ?? []).length === 0 && !chatLoading ? (
                     <div className="flex flex-col items-center justify-center h-full text-center">
                         <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-2">
                             <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -183,19 +173,28 @@ export const CommentPanel: React.FC<CommentPannelProps> = ({
             {/* Input Area */}
             <div className="border-t border-gray-200 bg-white p-3">
                 {!ann.resolved && (
-                    <CommentComposer
-                        onSubmit={async (text) => {
-                            await sendAnnotationMessage(ann, text, { includeReference: true });
-                        }}
-                        placeholder={
-                            (!commentConversation || commentConversation.length === 0) && ann.highlightedText
-                                ? `Ask about: "${ann.highlightedText.length > 50
-                                    ? ann.highlightedText.slice(0, 50) + '...'
-                                    : ann.highlightedText
-                                }"`
-                                : 'Type your message... (Press Enter to send, Shift+Enter for new line)'
-                        }
-                    />
+                    <>
+                        {chatLoading && (
+                            <div className="mb-2 flex items-center justify-center text-xs text-blue-600">
+                                <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+                                <span>Waiting for Agent...</span>
+                            </div>
+                        )}
+                        <CommentComposer
+                            disabled={chatLoading}
+                            onSubmit={async (text) => {
+                                await sendAnnotationMessage(ann, text, { includeReference: true });
+                            }}
+                            placeholder={
+                                (!commentConversation || commentConversation.length === 0) && ann.highlightedText
+                                    ? `Ask about: "${ann.highlightedText.length > 50
+                                        ? ann.highlightedText.slice(0, 50) + '...'
+                                        : ann.highlightedText
+                                    }"`
+                                    : 'Type your message... (Press Enter to send, Shift+Enter for new line)'
+                            }
+                        />
+                    </>
                 )}
 
                 <div className="flex items-center justify-between mt-2">

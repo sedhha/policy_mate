@@ -21,10 +21,95 @@ interface AnnotationsApiResponse {
   };
 }
 
-// Conversation history storage per document_id (persisted)
-interface ConversationHistory {
-  [document_id: string]: Comment[];
+// Local storage structure:
+// 1. Annotations with comment_session_id per document (max 10 per document)
+// 2. Comments mapped by comment_session_id
+interface LocalAnnotationStorage {
+  [document_id: string]: SimpleAnnotation[];
 }
+
+interface LocalCommentsStorage {
+  [comment_session_id: string]: Comment[];
+}
+
+// Helper functions for localStorage operations
+const getLocalAnnotations = (document_id: string): SimpleAnnotation[] => {
+  try {
+    const stored = localStorage.getItem('pdf-local-annotations');
+    if (!stored) return [];
+
+    const storage: LocalAnnotationStorage = JSON.parse(stored);
+    return storage[document_id] || [];
+  } catch (e) {
+    console.error('Failed to parse local annotations:', e);
+    return [];
+  }
+};
+
+const getLocalComments = (comment_session_id: string): Comment[] => {
+  try {
+    const stored = localStorage.getItem('pdf-local-comments');
+    if (!stored) return [];
+
+    const storage: LocalCommentsStorage = JSON.parse(stored);
+    return storage[comment_session_id] || [];
+  } catch (e) {
+    console.error('Failed to parse local comments:', e);
+    return [];
+  }
+};
+
+const saveLocalAnnotation = (
+  document_id: string,
+  annotation: SimpleAnnotation
+) => {
+  try {
+    const stored = localStorage.getItem('pdf-local-annotations');
+    const storage: LocalAnnotationStorage = stored ? JSON.parse(stored) : {};
+
+    // Get existing annotations for this document
+    let docAnnotations = storage[document_id] || [];
+
+    // Find and update existing annotation or add new one
+    const existingIndex = docAnnotations.findIndex(
+      (a) => a.id === annotation.id
+    );
+    if (existingIndex >= 0) {
+      docAnnotations[existingIndex] = annotation;
+    } else {
+      docAnnotations.push(annotation);
+    }
+
+    // Keep only last 10 annotations
+    docAnnotations = docAnnotations.slice(-10);
+
+    storage[document_id] = docAnnotations;
+    localStorage.setItem('pdf-local-annotations', JSON.stringify(storage));
+  } catch (e) {
+    console.error('Failed to save local annotation:', e);
+  }
+};
+
+const saveLocalComments = (comment_session_id: string, comments: Comment[]) => {
+  try {
+    const stored = localStorage.getItem('pdf-local-comments');
+    const storage: LocalCommentsStorage = stored ? JSON.parse(stored) : {};
+
+    // Keep only last 10 comments per session
+    storage[comment_session_id] = comments.slice(-10);
+
+    localStorage.setItem('pdf-local-comments', JSON.stringify(storage));
+  } catch (e) {
+    console.error('Failed to save local comments:', e);
+  }
+};
+
+const generateUUID = (): string => {
+  return (
+    crypto.randomUUID() ??
+    new Date().getTime().toString() + Math.random().toString(16).slice(2)
+  );
+};
 
 interface PDFState {
   pdfLoadErrror?: string;
@@ -67,7 +152,6 @@ interface PDFState {
   setS3Key: (s3Key: string) => void;
   setS3Bucket: (s3Bucket: string) => void;
 
-  // NOTE: now async and returns server id
   addAnnotation: (annotation: NewAnnotationInput) => Promise<string>;
 
   updateAnnotation: (
@@ -75,7 +159,6 @@ interface PDFState {
     updated: Partial<SimpleAnnotation>
   ) => Promise<void>;
 
-  // NOTE: now async (hits backend)
   removeAnnotation: (id: string) => Promise<void>;
 
   setCommentConversation: (comments: Comment[]) => void;
@@ -296,9 +379,31 @@ export const usePDFStore = create<PDFState>()(
 
         const data: AnnotationsApiResponse = await response.json();
 
-        // Data is already in the correct format, no transformation needed!
+        // Load local annotations from localStorage
+        const localAnnotations = getLocalAnnotations(documentId);
+
+        // Merge: API annotations first, then overlay with local annotations (which have comment_session_id)
+        const apiAnnotationsMap = new Map(
+          data.annotations.map((a) => [a.id, a])
+        );
+
+        // Update API annotations with local data if exists (specifically comment_session_id)
+        localAnnotations.forEach((localAnn) => {
+          if (apiAnnotationsMap.has(localAnn.id)) {
+            // Merge: keep API data but use comment_session_id from local if exists
+            const apiAnn = apiAnnotationsMap.get(localAnn.id)!;
+            apiAnnotationsMap.set(localAnn.id, {
+              ...apiAnn,
+              comment_session_id:
+                localAnn.comment_session_id || apiAnn.comment_session_id,
+            });
+          }
+        });
+
+        const mergedAnnotations = Array.from(apiAnnotationsMap.values());
+
         set({
-          annotations: data.annotations,
+          annotations: mergedAnnotations,
           isLoading: false,
         });
       } catch (error) {
@@ -320,29 +425,16 @@ export const usePDFStore = create<PDFState>()(
     loadAnnotationChat: async (ann, opts) => {
       const document_id = ann.session_id;
 
-      // Load conversation from persisted localStorage
-      const persistedData = localStorage.getItem(
-        'pdf-annotation-conversations'
-      );
-      let conversationHistory: ConversationHistory = {};
-
-      if (persistedData) {
-        try {
-          conversationHistory = JSON.parse(persistedData);
-        } catch (e) {
-          console.error('Failed to parse conversation history:', e);
-        }
-      }
-
-      // Load conversation if it exists for this document_id
-      if (conversationHistory[document_id]) {
+      // If annotation has comment_session_id, load its comments
+      if (ann.comment_session_id) {
+        const comments = getLocalComments(ann.comment_session_id);
         set({
-          commentConversation: conversationHistory[document_id],
+          commentConversation: comments,
           chatLoading: false,
           chatError: undefined,
         });
       } else {
-        // No saved conversation for this document
+        // No comments for this annotation yet
         set({
           commentConversation: [],
           chatLoading: false,
@@ -393,42 +485,47 @@ export const usePDFStore = create<PDFState>()(
           timestamp: new Date().toISOString(),
         };
 
-        // Get current persisted conversation history
-        const persistedData = localStorage.getItem(
-          'pdf-annotation-conversations'
-        );
-        let conversationHistory: ConversationHistory = {};
-
-        if (persistedData) {
-          try {
-            conversationHistory = JSON.parse(persistedData);
-          } catch (e) {
-            console.error('Failed to parse conversation history:', e);
-          }
+        // Generate comment_session_id if doesn't exist
+        let comment_session_id = ann.comment_session_id;
+        if (!comment_session_id) {
+          comment_session_id = generateUUID();
         }
 
-        const currentDocHistory = conversationHistory[document_id] || [];
+        // Get existing comments for this comment_session_id
+        const existingComments = getLocalComments(comment_session_id);
 
-        // Append new messages and keep only last 10 messages (5 pairs)
-        const updatedConversation = [
-          ...currentDocHistory,
+        // Append new messages and keep only last 10 messages
+        const updatedComments = [
+          ...existingComments,
           userMessage,
           assistantMessage,
         ].slice(-10);
 
         // Update the active conversation
         set({
-          commentConversation: updatedConversation,
+          commentConversation: updatedComments,
           chatLoading: false,
           chatError: undefined,
         });
 
-        // Persist to localStorage
-        conversationHistory[document_id] = updatedConversation;
-        localStorage.setItem(
-          'pdf-annotation-conversations',
-          JSON.stringify(conversationHistory)
-        );
+        // Save comments to localStorage
+        saveLocalComments(comment_session_id, updatedComments);
+
+        // Update annotation with comment_session_id and save to localStorage
+        const updatedAnnotation: SimpleAnnotation = {
+          ...ann,
+          comment_session_id,
+        };
+
+        // Update in store
+        set((state) => ({
+          annotations: state.annotations.map((a) =>
+            a.id === ann.id ? updatedAnnotation : a
+          ),
+        }));
+
+        // Save annotation to localStorage
+        saveLocalAnnotation(document_id, updatedAnnotation);
 
         // Store the session_id if provided
         if (response.session_id && ann.id) {
