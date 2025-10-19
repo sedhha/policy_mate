@@ -195,7 +195,7 @@ Response payload for:
 
 ## TODO:
 
-- enable CORS of S3 for global URL
+- redirection in case of unauthorized access
 
 ## Analysis
 

@@ -10,18 +10,21 @@ from src.utils.services.s3 import s3_client
 from src.utils.settings import S3_BUCKET_NAME as BUCKET_NAME
 from src.utils.response import response
 from botocore.exceptions import ClientError
-from pypdf import PdfReader
-from io import BytesIO
+import fitz  # PyMuPDF
 
 def get_pdf_page_count(s3_key: str) -> int:
-    """Get page count from PDF in S3"""
+    """Get page count from PDF in S3 using PyMuPDF (fitz) for faster processing"""
     log_with_context("INFO", f"Generating pdf pages for {s3_key}")
     try:
         response = s3_client.get_object(Bucket=BUCKET_NAME, Key=s3_key)
         pdf_content = response['Body'].read()
         
-        pdf_reader = PdfReader(BytesIO(pdf_content))
-        return len(pdf_reader.pages)
+        # Open PDF with fitz - much faster than pypdf
+        pdf_document = fitz.open(stream=pdf_content, filetype="pdf")
+        page_count = pdf_document.page_count
+        pdf_document.close()
+        
+        return page_count
     except Exception as e:
         log_with_context("ERROR", f"Error reading PDF page count: {str(e)}")
         return 0

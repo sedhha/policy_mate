@@ -128,7 +128,12 @@ export const ExistingFiles = () => {
 
     const handleStartAnalysis = () => {
         if (selectedDocument) {
-            console.log('Start analysis for:', selectedDocument.document_id);
+            const payload = {
+                document_id: selectedDocument.document_id,
+                totalPages: selectedDocument.pages || 0
+            };
+            const base64Payload = btoa(JSON.stringify(payload));
+            router.push(`/analyse?payload=${base64Payload}`);
         }
     };
 

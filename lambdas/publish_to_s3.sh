@@ -1,11 +1,22 @@
 # Set your AWS profile and S3 bucket
 export AWS_PROFILE=policy-mate
 S3_BUCKET="policy-mate"  # Replace with your S3 bucket name
-HANDLER_NAME="annotations_agent"
+
+# Set the handler file (change this to deploy different handlers)
+HANDLER_FILE="annotations_agent_handler.py"
+
+# Extract handler name from filename (removes _handler.py suffix)
+HANDLER_NAME=$(basename "$HANDLER_FILE" _handler.py)
 BUILD_DIR="build"
 
+# Validate handler file exists
+if [ ! -f "$HANDLER_FILE" ]; then
+    echo "❌ Error: Handler file '$HANDLER_FILE' not found!"
+    exit 1
+fi
+
 # Build the package
-echo "Building package..."
+echo "Building package for: $HANDLER_NAME"
 rm -rf $BUILD_DIR lambda.zip
 mkdir -p $BUILD_DIR
 
@@ -13,7 +24,7 @@ mkdir -p $BUILD_DIR
 uv pip install --python 3.12 --target $BUILD_DIR .
 
 # Copy the handler file
-cp annotations_agent_handler.py $BUILD_DIR/
+cp "$HANDLER_FILE" $BUILD_DIR/
 
 # Copy the src directory (contains agents, utils, etc.)
 cp -r src $BUILD_DIR/

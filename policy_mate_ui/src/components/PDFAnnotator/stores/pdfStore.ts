@@ -2,17 +2,12 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import type {
-  AnnotationAction,
-  AddAnnotationResponse,
-  BookmarkType,
-  ChatResponse,
   Comment,
   HighlightStyle,
   SimpleAnnotation,
-  TranscriptResponse,
-  AnnotationOutDTO,
   NewAnnotationInput,
 } from '@/components/PDFAnnotator/types';
+import { useAuthStore } from '@/stores/authStore';
 
 interface AnnotationsApiResponse {
   annotations: SimpleAnnotation[];
@@ -172,15 +167,25 @@ export const usePDFStore = create<PDFState>()(
       const type = blob.type || 'application/pdf';
       return new File([blob], name, { type });
     },
-    loadAnnotations: async (sessionId: string) => {
+    loadAnnotations: async (documentId: string) => {
       try {
         set({ isLoading: true, pdfLoadErrror: undefined });
+        // Get ID token from authStore
+        const idToken = useAuthStore.getState().idToken;
+        if (!idToken) {
+          throw new Error('User is not authenticated');
+        }
 
         // Fetch annotations from backend (already transformed to frontend format)
-        const response = await fetch(`/api/annotations/${sessionId}`);
+        const response = await fetch(`/api/annotations/${documentId}`, {
+          headers: {
+            Authorization: `Bearer ${idToken}`,
+          },
+        });
 
         if (!response.ok) {
-          throw new Error(`Failed to load annotations: ${response.statusText}`);
+          console.error(`Failed to load annotations: ${response.statusText}`);
+          return;
         }
 
         const data: AnnotationsApiResponse = await response.json();

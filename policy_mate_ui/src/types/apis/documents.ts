@@ -12,6 +12,7 @@ export interface Document {
   status_emoji: string;
   timestamp: number;
   formatted_date: string;
+  pages: number;
 }
 
 export interface DocumentsData {

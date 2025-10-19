@@ -29,13 +29,13 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
     try:
         body = json.loads(event.get("body", "{}"))
         prompt = body.get('prompt', '')
-        user_meta = create_user_metadata_str(event['user_claims'])
+        # user_meta = create_user_metadata_str(event['user_claims'])
         
         # Use user_id as default, or generate new UUID7 if not provided
         session_id = body.get('session_id', str(uuid7()))
         
         # Append user metadata to prompt
-        prompt_with_meta = f'{prompt}\n\n{user_meta}'
+        prompt_with_meta = f'{prompt}'
         
         log_with_context(
             "INFO", 

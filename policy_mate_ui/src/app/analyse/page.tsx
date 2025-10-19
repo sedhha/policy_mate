@@ -32,12 +32,12 @@ export default function PDFAnnotatorScreen() {
         if (payload && !sessionId) {
             try {
                 const decodedJson = JSON.parse(b64UrlDecode(payload));
-                const decodedSessionId: string | undefined = decodedJson?.sessionId;
+                const decodedDocumentId: string | undefined = decodedJson?.document_id;
                 const totalPagesRaw = decodedJson?.totalPages;
                 const totalPages = Number.isFinite(+totalPagesRaw) ? +totalPagesRaw : undefined;
 
-                if (!decodedSessionId) throw new Error("Missing sessionId in payload");
-                setSessionId(decodedSessionId);
+                if (!decodedDocumentId) throw new Error("Missing documentId in payload");
+                setSessionId(decodedDocumentId);
                 if (typeof totalPages === "number") setNumPages(totalPages);
             } catch (err) {
                 console.error("Failed to parse payload:", err);

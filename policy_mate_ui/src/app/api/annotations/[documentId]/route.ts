@@ -95,15 +95,15 @@ function mapBookmarkType(backendType: string): BookmarkType {
 }
 
 /**
- * GET /api/annotations/[sessionId]
+ * GET /api/annotations/[documentId]
  * Fetches annotations for a given analysis session and transforms them
  * to the format expected by the frontend
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { sessionId: string } }
+  { params }: { params: Promise<{ documentId: string }> }
 ) {
-  const { sessionId } = params;
+  const { documentId } = await params;
 
   try {
     // Extract bearer token from Authorization header
@@ -117,29 +117,29 @@ export async function GET(
         { status: 401 }
       );
     }
-
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-
     // Call the Lambda API
     const lambdaUrl = process.env.NEXT_PUBLIC_API_BASE_URL + '/annotations';
 
     const lambdaResponse = await fetch(lambdaUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `${authHeader}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        prompt: `load_annotations for [document_id=${sessionId}]`,
+        prompt: `load_annotations for [document_id=${documentId}]`,
       }),
     });
 
     if (!lambdaResponse.ok) {
+      console.log('Lambda response status:', lambdaResponse.status);
+      const statusText = await lambdaResponse.text();
+      console.log('Lambda response text:', statusText);
       throw new Error(
         `Lambda API returned ${lambdaResponse.status}: ${lambdaResponse.statusText}`
       );
     }
-
+    console.log('Lambda response status:', lambdaResponse.status);
     const backendData: BackendResponse = await lambdaResponse.json();
     const payload = backendData.tool_payload;
 

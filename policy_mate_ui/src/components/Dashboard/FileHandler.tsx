@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { uploadFile } from '@/utils/apis/upload';
 import { ErrorModal } from "@/components/Modal/ErrorModal";
 import { SuccessModal } from "@/components/Modal/SuccessModal";
+import { useAgentStore } from '@/stores/agentStore';
 
 export const FileHandler = () => {
     const [fileName, setFileName] = useState<string | null>(null);
@@ -26,6 +27,7 @@ export const FileHandler = () => {
         fileName: '',
         isDuplicate: false
     });
+    const { loadDocuments } = useAgentStore();
 
     const showError = (title: string, message: string) => {
         setErrorModal({ isOpen: true, title, message });
@@ -136,6 +138,7 @@ export const FileHandler = () => {
 
             if (result.success) {
                 showSuccess(result.fileName, result.isDuplicate);
+                loadDocuments();
             } else {
                 showError('Upload Failed', result.error || 'An unknown error occurred during upload');
             }
