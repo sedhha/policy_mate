@@ -4,7 +4,7 @@
 import json
 from typing import Any
 import boto3
-from src.utils.services.dynamoDB import get_table, DynamoDBTable, replace_decimals
+from src.utils.services.dynamoDB import get_table, DynamoDBTable
 from src.utils.settings import OPEN_SEARCH_REGION
 
 bedrock = boto3.client('bedrock-runtime', region_name=OPEN_SEARCH_REGION)  # type: ignore
@@ -139,7 +139,7 @@ def compliance_check_tool(
     analysis = analyze_compliance(text, question, controls)
     
     # Ensure all Decimal objects are converted for JSON serialization
-    return replace_decimals({
+    return {
         'analysis': analysis,
         'controls_analyzed': [
             {
@@ -148,7 +148,7 @@ def compliance_check_tool(
                 'category': c['category']
             } for c in controls
         ]
-    })
+    }
     
 # List All Controls Tool
 def get_all_controls_tool(framework_id: str) -> dict[str, Any]:
@@ -171,7 +171,7 @@ def get_all_controls_tool(framework_id: str) -> dict[str, Any]:
     controls = response.get('Items', [])
     
     # Ensure all Decimal objects are converted for JSON serialization
-    return replace_decimals({
+    return {
         'framework_id': framework_id,
         'controls': [
             {
@@ -181,4 +181,4 @@ def get_all_controls_tool(framework_id: str) -> dict[str, Any]:
                 'severity': c['severity']
             } for c in controls
         ]
-    })
+    }

@@ -67,6 +67,14 @@ const getComplianceStyles = (status: number) => {
                 border: 'border-amber-200',
                 icon: Clock,
             };
+        case 12:
+            return {
+                bg: 'bg-blue-500',
+                text: 'text-blue-700',
+                lightBg: 'bg-blue-50',
+                border: 'border-blue-200',
+                icon: Loader2,
+            };
         default:
             return {
                 bg: 'bg-slate-500',

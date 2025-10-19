@@ -1,10 +1,9 @@
 # src/tools/comprehensive_check.py
 # Shared business logic for comprehensive document analysis
 
-from typing import Any, cast
-from decimal import Decimal
+from typing import Any
 from src.utils.services.inference import comprehensive_file_analysis
-from src.utils.services.dynamoDB import DocumentStatus, get_table, DynamoDBTable, replace_decimals
+from src.utils.services.dynamoDB import DocumentStatus, get_table, DynamoDBTable
 
 
 def comprehensive_check_tool(
@@ -41,13 +40,7 @@ def comprehensive_check_tool(
         raise ValueError(f'Document {document_id} not found')
     
     document = doc_response['Item']
-    status_raw = document.get('status', DocumentStatus.UNKNOWN.value)
-    
-    # Cast to int for comparison (DynamoDB returns int or Decimal)
-    if isinstance(status_raw, Decimal):
-        status = int(status_raw)
-    else:
-        status = cast(int, status_raw)
+    status = int(str(document.get('status', str(DocumentStatus.UNKNOWN.value))))
     
     # Check if document is ready for analysis
     if status < DocumentStatus.UPLOAD_SUCCESS.value:
@@ -104,8 +97,6 @@ def comprehensive_check_tool(
     # Run comprehensive analysis with inference
     analysis_result = comprehensive_file_analysis(raw_result)
     
-    # Convert Decimals to native Python types
-    analysis_result = replace_decimals(analysis_result)
     
     return {
         'status': 200,

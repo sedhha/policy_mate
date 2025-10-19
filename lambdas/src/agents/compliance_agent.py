@@ -62,7 +62,6 @@ def list_docs(user_id: str) -> dict[str, Any]:
     the results into a beautiful markdown summary.
     """
     result = show_doc_tool(user_id)
-    # Ensure result is JSON-serializable (show_doc_tool already uses replace_decimals)
     return result
 ##################################################################################################
 @tool(
