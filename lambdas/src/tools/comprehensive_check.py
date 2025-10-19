@@ -10,6 +10,7 @@ from decimal import Decimal
 
 from src.utils.settings import AGENT_CLAUDE_HAIKU
 from src.utils.services.dynamoDB import DocumentStatus, DynamoDBTable, get_table
+from src.utils.services.annotations import save_annotations_to_dynamodb, serialize_for_dynamodb
 
 from src.utils.services.llm_models import get_bedrock_model
 from src.utils.settings import AGENT_REGION
@@ -81,27 +82,6 @@ def deserialize_dynamodb_item(item: Dict[str, Any]) -> Dict[str, Any]:
     else:
         return item
 
-
-def serialize_for_dynamodb(item: Any) -> Any:
-    """
-    Recursively convert Python types to DynamoDB-compatible types
-    Converts float to Decimal for DynamoDB compatibility
-    
-    Args:
-        item: Python object with potential float values
-    
-    Returns:
-        DynamoDB-compatible object
-    """
-    if isinstance(item, dict):
-        return {k: serialize_for_dynamodb(v) for k, v in item.items()} # pyright: ignore[reportUnknownVariableType]
-    elif isinstance(item, list):
-        return [serialize_for_dynamodb(v) for v in item] # pyright: ignore[reportUnknownVariableType]
-    elif isinstance(item, float):
-        # Convert float to Decimal for DynamoDB
-        return Decimal(str(item))
-    else:
-        return item
 
 def generate_compliance_verdict(
     analysis_result: Dict[str, Any]
@@ -222,6 +202,7 @@ def generate_compliance_verdict(
     print(f"✅ Compliance verdict generated and added to result")
     
     return analysis_result
+
 
 class ImprovedComplianceAnalyzer:
     """Improved analyzer with smarter batch creation and caching"""
@@ -834,6 +815,17 @@ class ImprovedComplianceAnalyzer:
         )
         
         print(f"✅ Generated {len(annotations)} annotations")
+        
+        # Step 8: Save annotations to DynamoDB
+        save_stats = save_annotations_to_dynamodb(
+            annotations=annotations,
+            document_id=file_id,
+            framework_id=compliance_framework,
+            analysis_id=analysis_id
+        )
+        
+        print(f"💾 Annotation persistence: {save_stats}")
+        
         return annotations
     
     def _load_pdf_from_s3(self, s3_path: str) -> bytes:

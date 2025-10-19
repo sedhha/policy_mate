@@ -190,12 +190,6 @@ export const usePDFStore = create<PDFState>()(
           annotations: data.annotations,
           isLoading: false,
         });
-
-        console.log(
-          `✅ Loaded ${data.annotations.length} annotations for session ${sessionId}`
-        );
-        console.log(`📊 Compliance Score: ${data.metadata.compliance_score}%`);
-        console.log(`⚖️ Verdict: ${data.metadata.verdict}`);
       } catch (error) {
         console.error('❌ Failed to load annotations:', error);
         set({

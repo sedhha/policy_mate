@@ -1,8 +1,6 @@
 from typing import Any
-from bedrock_agentcore import BedrockAgentCoreApp
 from pydantic import BaseModel, Field
 from strands import Agent
-from uuid6 import uuid7
 from src.tools.compliance_check import compliance_check_tool, get_all_controls_tool
 from src.tools.comprehensive_check import comprehensive_check_tool
 from src.tools.doc_status import doc_status_tool
@@ -10,7 +8,6 @@ from src.utils.settings import AGENT_CLAUDE_HAIKU
 from strands.models import BedrockModel
 from strands import tool  # type: ignore[attr-defined]
 from src.tools.show_doc import show_doc_tool
-import traceback
 import json
 
 
@@ -358,9 +355,6 @@ compliance_agent = Agent(
     system_prompt=SYSTEM_PROMPT
 )
 
-app = BedrockAgentCoreApp()
-
-
 def parse_agent_json(text: str) -> dict[str, Any]:
     """
     Parse JSON from agent response with comprehensive error handling.
@@ -488,40 +482,3 @@ def parse_agent_json(text: str) -> dict[str, Any]:
             error_details.append(f"Ends with: {sanitized[-200:]}")
         
         raise ValueError("\n".join(error_details))
-
-
-
-@app.entrypoint  # type: ignore[misc]
-def invoke(event: dict[str, Any]) -> dict[str, Any]:
-    """Entrypoint for Bedrock AgentCoreApp to invoke the agent."""
-    try:
-        user_message = event.get("inputText") or event.get("prompt", "")
-        session_id = event.get("session_id", str(uuid7()))
-        res = str(compliance_agent(user_message))
-        agent_response = str(res)
-        # Clean the response: remove code blocks and control characters
-        print("##############################################################")
-        print(agent_response)
-        with open("./agent_response.txt", "w") as f:
-            f.write(agent_response)
-        print("##############################################################")
-        parsed = parse_agent_json(agent_response)
-        parsed["session_id"] = session_id
-        return parsed
-    
-    except Exception as e:
-        error_traceback = traceback.format_exc()
-        print(f"Agent invocation failed: {str(e)}\nTraceback:\n{error_traceback}")
-        return {
-            "error_message": f"Agent invocation failed: {str(e)}",
-            "tool_payload": {},
-            "summarised_markdown": "",
-            "suggested_next_actions": []
-        }
-        
-if __name__ == "__main__":
-    print("🤖 Compliance Copilot Agent starting on port 8080...")
-    print("📋 System prompt loaded - Agent will intelligently route queries")
-    print("🔧 Available tools: list_controls, phrase_wise_compliance_check, comprehensive_check, doc_status, list_docs")
-    print("🧠 Agent Mode: Smart parameter extraction from user prompts")
-    app.run() # type: ignore[misc]
