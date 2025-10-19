@@ -73,7 +73,8 @@ def show_doc_tool(user_id: str) -> dict[str, Any]:
             'status_color': status_details['color'],
             'status_emoji': status_details['emoji'],
             'timestamp': timestamp_int,
-            'formatted_date': format_timestamp(timestamp_int)
+            'formatted_date': format_timestamp(timestamp_int),
+            'pages': int(str(item.get('page_count', 0)))
         })
     
     return {
