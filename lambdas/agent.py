@@ -3,7 +3,7 @@ from bedrock_agentcore import BedrockAgentCoreApp
 from uuid6 import uuid7
 from strands import tool  # type: ignore[attr-defined]
 import traceback
-from src.utils.compliance_agent import compliance_agent, parse_agent_json
+from lambdas.src.agents.compliance_agent import compliance_agent, parse_agent_json
 
 app = BedrockAgentCoreApp()
 
