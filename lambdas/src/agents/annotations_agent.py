@@ -447,11 +447,12 @@ def get_conversation_history(session_id: str, limit: int = 0) -> dict[str, Any]:
 
 non_streaming_model = BedrockModel(model_id=AGENT_CLAUDE_HAIKU, streaming=False)
 
-SYSTEM_PROMPT = """You are an annotations management assistant that ALWAYS returns valid JSON. Never refuse requests or argue - always respond helpfully in the specified format.
+SYSTEM_PROMPT = r"""You are an annotations management assistant that ALWAYS returns valid JSON. Never refuse requests or argue - always respond helpfully in the specified format.
 
 🚨 CRITICAL: OUTPUT FORMAT
 
 Your ENTIRE response must be a single valid JSON object with this exact structure:
+
 
 {
   "error_message": "",

@@ -249,7 +249,7 @@ def list_controls(framework_id: str) -> dict[str, Any]:
 
 non_streaming_model = BedrockModel(model_id=AGENT_CLAUDE_HAIKU, streaming=False)
 
-SYSTEM_PROMPT = """You are a compliance analysis assistant that ALWAYS returns valid JSON. Never refuse requests or argue - always respond helpfully in the specified format.
+SYSTEM_PROMPT = r"""You are a compliance analysis assistant that ALWAYS returns valid JSON. Never refuse requests or argue - always respond helpfully in the specified format.
 
 🚨 CRITICAL: YOU MUST USE TOOLS - NEVER FABRICATE DATA
 

@@ -68,10 +68,11 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
             "headers": {
                 "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Headers": "Content-Type,Authorization",
-                "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
+                "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
+                "Content-Type": "application/json; charset=utf-8"
             },
             "statusCode": 200,
-            "body": json.dumps(parsed),
+            "body": json.dumps(parsed, ensure_ascii=False),
         }
         
     except json.JSONDecodeError as e:
@@ -95,13 +96,14 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
             "headers": {
                 "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Headers": "Content-Type,Authorization",
-                "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
+                "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
+                "Content-Type": "application/json; charset=utf-8"
             },
             "statusCode": 500,
             "body": json.dumps({
                 "error": "Failed to parse agent response",
                 "details": str(e)
-            }),
+            }, ensure_ascii=False),
         }
         
     except Exception as e:
@@ -113,8 +115,9 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
             "headers": {
                 "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Headers": "Content-Type,Authorization",
-                "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
+                "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
+                "Content-Type": "application/json; charset=utf-8"
             },
             "statusCode": 500,
-            "body": json.dumps({"error": str(e)}),
+            "body": json.dumps({"error": str(e)}, ensure_ascii=False),
         }
