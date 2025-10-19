@@ -130,7 +130,9 @@ export const ExistingFiles = () => {
         if (selectedDocument) {
             const payload = {
                 document_id: selectedDocument.document_id,
-                totalPages: selectedDocument.pages || 0
+                totalPages: selectedDocument.pages || 0,
+                s3_key: selectedDocument.s3_key,
+                s3_bucket: selectedDocument.s3_bucket,
             };
             const base64Payload = btoa(JSON.stringify(payload));
             router.push(`/analyse?payload=${base64Payload}`);

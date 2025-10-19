@@ -3,6 +3,7 @@
 
 from typing import Any
 from datetime import datetime
+from src.utils.settings import S3_BUCKET_NAME
 from src.utils.services.dynamoDB import DocumentStatus, get_table, DynamoDBTable
 from src.utils.services.document_extractor import format_file_size, format_timestamp, get_status_details
 from boto3.dynamodb.conditions import Attr
@@ -74,7 +75,9 @@ def show_doc_tool(user_id: str) -> dict[str, Any]:
             'status_emoji': status_details['emoji'],
             'timestamp': timestamp_int,
             'formatted_date': format_timestamp(timestamp_int),
-            'pages': int(str(item.get('page_count', 0)))
+            'pages': int(str(item.get('page_count', 0))),
+            's3_key': item.get('s3_key', ''),
+            's3_bucket': S3_BUCKET_NAME
         })
     
     return {

@@ -41,6 +41,8 @@ interface PDFState {
   expandedChipForId?: string;
   uiActionByAnnotation: Record<string, 'comment' | 'bookmark' | undefined>;
   maxPageCovered: number;
+  s3Key?: string;
+  s3Bucket?: string;
 
   // actions
   setPdfLoadError: (error?: string) => void;
@@ -48,7 +50,7 @@ interface PDFState {
   setSessionId: (sessionId: string) => void;
   setCurrentPage: (page: number) => void;
   setScale: (scale: number) => void;
-  fetchPdf: (fileId: string, fileNameFallback?: string) => Promise<File>;
+  fetchPdf: (payload: Record<string, string>) => Promise<File>;
   setHighlightStyle: (style: HighlightStyle) => void;
   setAnnotations: (annotations: SimpleAnnotation[]) => void;
   setOpenCommentForId: (id?: string) => void;
@@ -56,6 +58,8 @@ interface PDFState {
   setOpenCreationForId: (id?: string) => void;
   setExpandedChipForId: (id?: string) => void;
   setUiActionFor: (id: string, v?: 'comment' | 'bookmark') => void;
+  setS3Key: (s3Key: string) => void;
+  setS3Bucket: (s3Bucket: string) => void;
 
   // NOTE: now async and returns server id
   addAnnotation: (annotation: NewAnnotationInput) => Promise<string>;
@@ -153,19 +157,84 @@ export const usePDFStore = create<PDFState>()(
       }));
     },
 
-    fetchPdf: async (
-      analysisId: string,
-      fileNameFallback = 'document.pdf'
-    ): Promise<File> => {
-      // fetch sample_compliance_document.pdf hardcoded from public directory
-      const blob = await fetch(`/sample_compliance_document.pdf`).then((res) =>
-        res.blob()
-      );
-      const name = fileNameFallback.toLowerCase().endsWith('.pdf')
-        ? fileNameFallback
-        : `${fileNameFallback}.pdf`;
-      const type = blob.type || 'application/pdf';
-      return new File([blob], name, { type });
+    fetchPdf: async (params: Record<string, string> = {}): Promise<File> => {
+      const fileName = 'document.pdf';
+      try {
+        // Get ID token from authStore
+        const idToken = useAuthStore.getState().idToken;
+        if (!idToken) {
+          throw new Error('User is not authenticated');
+        }
+
+        const s3KeyFromPayload = params?.s3_key;
+        const s3BucketFromPayload = params?.s3_bucket;
+
+        const { s3Bucket = s3BucketFromPayload, s3Key = s3KeyFromPayload } =
+          get();
+
+        if (!s3Bucket || !s3Key) {
+          throw new Error('S3 bucket or key is not set in the store');
+        }
+
+        // Step 1: Get pre-signed URL from our API
+        const urlResponse = await fetch(
+          `/api/pdf?bucket=${encodeURIComponent(
+            s3Bucket
+          )}&key=${encodeURIComponent(s3Key)}`,
+          {
+            headers: {
+              Authorization: `Bearer ${idToken}`,
+            },
+          }
+        );
+
+        if (!urlResponse.ok) {
+          console.warn(
+            'Failed to get pre-signed URL, falling back to sample PDF'
+          );
+          // Fallback to sample PDF if S3 fetch fails
+          const blob = await fetch(`/sample_compliance_document.pdf`).then(
+            (res) => res.blob()
+          );
+          const name = fileName.toLowerCase().endsWith('.pdf')
+            ? fileName
+            : `${fileName}.pdf`;
+          const type = blob.type || 'application/pdf';
+          return new File([blob], name, { type });
+        }
+
+        const { url, filename } = await urlResponse.json();
+
+        // Step 2: Fetch PDF directly from S3 using pre-signed URL
+        const pdfResponse = await fetch(url);
+
+        if (!pdfResponse.ok) {
+          throw new Error(
+            `Failed to fetch PDF from S3: ${pdfResponse.statusText}`
+          );
+        }
+
+        const blob = await pdfResponse.blob();
+        const name =
+          filename ||
+          (fileName.toLowerCase().endsWith('.pdf')
+            ? fileName
+            : `${fileName}.pdf`);
+        const type = blob.type || 'application/pdf';
+
+        return new File([blob], name, { type });
+      } catch (error) {
+        console.error('❌ Error fetching PDF:', error);
+        // Fallback to sample PDF on any error
+        const blob = await fetch(`/sample_compliance_document.pdf`).then(
+          (res) => res.blob()
+        );
+        const name = fileName.toLowerCase().endsWith('.pdf')
+          ? fileName
+          : `${fileName}.pdf`;
+        const type = blob.type || 'application/pdf';
+        return new File([blob], name, { type });
+      }
     },
     loadAnnotations: async (documentId: string) => {
       try {

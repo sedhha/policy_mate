@@ -17,6 +17,7 @@ import type { CommentPannelProps, BookmarkPopoverProps } from "@/components/PDFA
 import { setupPdfWorker } from "@/components/PDFAnnotator/setupPdfWorker";
 import { Toolbar } from "./Toolbar";
 import { AnnotationOverlay } from "./AnnotationOverlay";
+import { useSearchParams } from "next/navigation";
 
 const CommentPanel = withLazyLoader<CommentPannelProps>(
     () => import("@/components/PDFAnnotator/CommentPanel"),
@@ -31,9 +32,21 @@ const BookmarkPopover = withLazyLoader<BookmarkPopoverProps>(
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3.0;
 
+const b64UrlDecode = (input: string) => {
+    const normalized = input
+        .replace(/-/g, '+')
+        .replace(/_/g, '/')
+        .padEnd(Math.ceil(input.length / 4) * 4, '=');
+    const bin = atob(normalized);
+    const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+    const decoder = new TextDecoder('utf-8');
+    return decoder.decode(bytes);
+};
+
 export const SimplePDFAnnotator: React.FC = () => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [pages, setPages] = useState(0);
+    const searchParams = useSearchParams();
 
     const {
         pdfLoadErrror: error,
@@ -85,8 +98,13 @@ export const SimplePDFAnnotator: React.FC = () => {
         let cancelled = false;
         (async () => {
             try {
-                const file = await fetchPdf(sessionId);
-                if (!cancelled && sessionId) await loadAnnotations(sessionId);
+                const params = searchParams.get("payload");
+                const parsed = JSON.parse(b64UrlDecode(params ?? '{}'));
+                const documentId = parsed?.document_id;
+                const numPages = parsed?.totalPages;
+                if (typeof numPages === "number") setPages(numPages);
+                const file = await fetchPdf(parsed);
+                if (!cancelled && sessionId) await loadAnnotations(documentId ?? sessionId);
                 if (!cancelled) {
                     setPages(0);
                     setSelectedFile(file);

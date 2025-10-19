@@ -35,10 +35,14 @@ export default function PDFAnnotatorScreen() {
                 const decodedDocumentId: string | undefined = decodedJson?.document_id;
                 const totalPagesRaw = decodedJson?.totalPages;
                 const totalPages = Number.isFinite(+totalPagesRaw) ? +totalPagesRaw : undefined;
+                const s3Key = decodedJson?.s3_key;
+                const s3Bucket = decodedJson?.s3_bucket;
 
-                if (!decodedDocumentId) throw new Error("Missing documentId in payload");
+                if (!decodedDocumentId || !s3Key || !s3Bucket) throw new Error("Missing documentId or s3Key or s3Bucket in payload");
                 setSessionId(decodedDocumentId);
                 if (typeof totalPages === "number") setNumPages(totalPages);
+                if (s3Key) usePDFStore.getState().setS3Key(s3Key);
+                if (s3Bucket) usePDFStore.getState().setS3Bucket(s3Bucket);
             } catch (err) {
                 console.error("Failed to parse payload:", err);
             }
