@@ -8,6 +8,7 @@ import type {
   NewAnnotationInput,
 } from '@/components/PDFAnnotator/types';
 import { useAuthStore } from '@/stores/authStore';
+import { sendMessage } from '@/utils/apis/documents';
 
 interface AnnotationsApiResponse {
   annotations: SimpleAnnotation[];
@@ -20,6 +21,11 @@ interface AnnotationsApiResponse {
   };
 }
 
+// Conversation history storage per document_id (persisted)
+interface ConversationHistory {
+  [document_id: string]: Comment[];
+}
+
 interface PDFState {
   pdfLoadErrror?: string;
   isLoading: boolean;
@@ -30,8 +36,8 @@ interface PDFState {
   highlightStyle: HighlightStyle;
   annotations: SimpleAnnotation[];
 
-  commentConversation: Comment[];
-  chatLoading?: boolean;
+  commentConversation: Comment[]; // Active conversation for currently open annotation
+  chatLoading: boolean;
   chatError?: string;
   chatSessionByAnnotation: Record<string, string | undefined>;
 
@@ -99,7 +105,11 @@ export const usePDFStore = create<PDFState>()(
     highlightStyle: 'classic',
     annotations: [],
     commentConversation: [],
+    chatLoading: false,
     chatSessionByAnnotation: {},
+    uiActionByAnnotation: {},
+    s3Key: undefined,
+    s3Bucket: undefined,
 
     setPdfLoadError: (error?: string) => set({ pdfLoadErrror: error }),
     setNumPages: (num: number) => set({ numPages: num }),
@@ -123,8 +133,24 @@ export const usePDFStore = create<PDFState>()(
       })),
 
     // ---------- CREATE (server authority) ----------
-    addAnnotation: async (annotation) => {
-      console.log('Adding annotation:', annotation);
+    addAnnotation: async (annotation: NewAnnotationInput) => {
+      const newAnnotationTemplate: SimpleAnnotation = {
+        id: 'temp-id-' + Date.now(),
+        session_id: get().sessionId,
+        page: annotation.page,
+        x: annotation.x,
+        y: annotation.y,
+        width: annotation.width,
+        height: annotation.height,
+        timestamp: Date.now(),
+        resolved: false,
+        highlightedText: annotation.highlightedText || '',
+      };
+      set((state) => ({
+        annotations: [...state.annotations, newAnnotationTemplate],
+      }));
+      // For now, return the temp id
+      return newAnnotationTemplate.id;
     },
 
     setCommentConversation: (comments: Comment[]) =>
@@ -160,6 +186,7 @@ export const usePDFStore = create<PDFState>()(
     fetchPdf: async (params: Record<string, string> = {}): Promise<File> => {
       const fileName = 'document.pdf';
       try {
+        set({ isLoading: true, pdfLoadErrror: undefined });
         // Get ID token from authStore
         const idToken = useAuthStore.getState().idToken;
         if (!idToken) {
@@ -200,6 +227,7 @@ export const usePDFStore = create<PDFState>()(
             ? fileName
             : `${fileName}.pdf`;
           const type = blob.type || 'application/pdf';
+          set({ isLoading: false });
           return new File([blob], name, { type });
         }
 
@@ -222,9 +250,13 @@ export const usePDFStore = create<PDFState>()(
             : `${fileName}.pdf`);
         const type = blob.type || 'application/pdf';
 
+        set({ isLoading: false });
         return new File([blob], name, { type });
       } catch (error) {
         console.error('❌ Error fetching PDF:', error);
+        const errorMsg =
+          error instanceof Error ? error.message : 'Failed to fetch PDF';
+        set({ pdfLoadErrror: errorMsg, isLoading: false });
         // Fallback to sample PDF on any error
         const blob = await fetch(`/sample_compliance_document.pdf`).then(
           (res) => res.blob()
@@ -253,7 +285,12 @@ export const usePDFStore = create<PDFState>()(
         });
 
         if (!response.ok) {
-          console.error(`Failed to load annotations: ${response.statusText}`);
+          const errorMsg = `Failed to load annotations: ${response.statusText}`;
+          console.error(errorMsg);
+          set({
+            pdfLoadErrror: errorMsg,
+            isLoading: false,
+          });
           return;
         }
 
@@ -276,16 +313,142 @@ export const usePDFStore = create<PDFState>()(
       }
     },
 
+    setS3Key: (s3Key: string) => set({ s3Key }),
+    setS3Bucket: (s3Bucket: string) => set({ s3Bucket }),
+
     // ---------- CHAT OPS ----------
     loadAnnotationChat: async (ann, opts) => {
-      console.log('Loading chat for annotation:', ann.id);
-      console.log('With options:', opts);
+      const document_id = ann.session_id;
+
+      // Load conversation from persisted localStorage
+      const persistedData = localStorage.getItem(
+        'pdf-annotation-conversations'
+      );
+      let conversationHistory: ConversationHistory = {};
+
+      if (persistedData) {
+        try {
+          conversationHistory = JSON.parse(persistedData);
+        } catch (e) {
+          console.error('Failed to parse conversation history:', e);
+        }
+      }
+
+      // Load conversation if it exists for this document_id
+      if (conversationHistory[document_id]) {
+        set({
+          commentConversation: conversationHistory[document_id],
+          chatLoading: false,
+          chatError: undefined,
+        });
+      } else {
+        // No saved conversation for this document
+        set({
+          commentConversation: [],
+          chatLoading: false,
+          chatError: undefined,
+        });
+      }
     },
 
     sendAnnotationMessage: async (ann, text, opts) => {
-      console.log('Sending message to annotation:', ann.id);
-      console.log('Message text:', text);
-      console.log('With options:', opts);
+      const document_id = ann.session_id;
+
+      try {
+        // Set loading state
+        set({ chatLoading: true, chatError: undefined });
+
+        // Defaulting to gdpr
+        let framework = 'GDPR';
+        if (text.toLowerCase().includes('hipaa')) {
+          framework = 'HIPAA';
+        } else if (text.toLowerCase().includes('soc2')) {
+          framework = 'SOC2';
+        }
+
+        const question = `[required_analysis=phrase_wise_compliance_check] [framework=${framework}] [analyse_text=${text}] [reference=${
+          ann.highlightedText || 'N/A'
+        }]`;
+
+        const response = await sendMessage<{ summarised_markdown: string }>(
+          question,
+          opts?.sessionId
+        );
+
+        // Create user message
+        const userMessage: Comment = {
+          id: `user-${Date.now()}`,
+          text,
+          timestamp: new Date().toISOString(),
+        };
+
+        // Create assistant message based on response
+        const assistantText = response.error_message
+          ? response.error_message
+          : response.summarised_markdown || 'No response';
+
+        const assistantMessage: Comment = {
+          id: `assistant-${Date.now()}`,
+          text: assistantText,
+          timestamp: new Date().toISOString(),
+        };
+
+        // Get current persisted conversation history
+        const persistedData = localStorage.getItem(
+          'pdf-annotation-conversations'
+        );
+        let conversationHistory: ConversationHistory = {};
+
+        if (persistedData) {
+          try {
+            conversationHistory = JSON.parse(persistedData);
+          } catch (e) {
+            console.error('Failed to parse conversation history:', e);
+          }
+        }
+
+        const currentDocHistory = conversationHistory[document_id] || [];
+
+        // Append new messages and keep only last 10 messages (5 pairs)
+        const updatedConversation = [
+          ...currentDocHistory,
+          userMessage,
+          assistantMessage,
+        ].slice(-10);
+
+        // Update the active conversation
+        set({
+          commentConversation: updatedConversation,
+          chatLoading: false,
+          chatError: undefined,
+        });
+
+        // Persist to localStorage
+        conversationHistory[document_id] = updatedConversation;
+        localStorage.setItem(
+          'pdf-annotation-conversations',
+          JSON.stringify(conversationHistory)
+        );
+
+        // Store the session_id if provided
+        if (response.session_id && ann.id) {
+          set((state) => ({
+            chatSessionByAnnotation: {
+              ...state.chatSessionByAnnotation,
+              [ann.id]: response.session_id,
+            },
+          }));
+        }
+      } catch (error) {
+        console.error('❌ Error sending annotation message:', error);
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to send message';
+
+        set({
+          chatLoading: false,
+          chatError: errorMessage,
+        });
+      }
     },
   }))
 );

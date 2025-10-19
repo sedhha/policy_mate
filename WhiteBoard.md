@@ -198,6 +198,8 @@ Response payload for:
 - redirection in case of unauthorized access
 - chat window to chat with agent and get responses (continue chat etc.)
 - Explore results in chat window - view detailed analysis, download report, mark as reviewed etc.
+- Add annotation and begin chatting
+- From annotations move to chat window with context
 
 ## Analysis
 
