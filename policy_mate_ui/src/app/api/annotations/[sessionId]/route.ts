@@ -2,6 +2,57 @@ import { NextRequest, NextResponse } from 'next/server';
 
 type BookmarkType = 'review-later' | 'verify' | 'important' | 'question';
 
+interface BackendAnnotation {
+  annotation_id: string;
+  page_number: number;
+  file_id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  review_comments: string;
+  bookmark_type: string;
+  analysis_id: string;
+  resolved: boolean;
+}
+
+interface BackendToolPayload {
+  status: number;
+  message: string;
+  document_id: string;
+  framework_id: string | null;
+  total_annotations: number;
+  annotations: BackendAnnotation[];
+  final_verdict?: {
+    summary: string;
+    high_severity_count: number;
+    total_annotations: number;
+    document_status: number;
+    verdict: string;
+    critical_issues: string[];
+    low_severity_count: number;
+    medium_severity_count: number;
+    compliance_score: number;
+  };
+  cached?: boolean;
+  cached_at?: string;
+  cache_metadata?: {
+    pages_analyzed: number;
+    blocks_processed: number;
+  };
+}
+
+interface BackendResponse {
+  error_message: string;
+  tool_payload: BackendToolPayload;
+  summarised_markdown: string;
+  suggested_next_actions: Array<{
+    action: string;
+    description: string;
+  }>;
+  session_id: string;
+}
+
 interface FrontendAnnotation {
   id: string;
   session_id: string;
@@ -55,121 +106,52 @@ export async function GET(
   const { sessionId } = params;
 
   try {
-    // TODO: Replace this with actual backend API call
-    // const response = await fetch(`${process.env.BACKEND_URL}/api/analysis/${sessionId}`);
-    // const backendData = await response.json();
-    // TODO: Replace this with actual backend API call
-    // const response = await fetch(`${process.env.BACKEND_URL}/api/analysis/${sessionId}`);
-    // const backendData = await response.json();
+    // Extract bearer token from Authorization header
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        {
+          status: 'error',
+          message: 'Missing or invalid authorization header',
+        },
+        { status: 401 }
+      );
+    }
 
-    // Simulated backend response (your actual backend structure)
-    const backendData = {
-      status: 200,
-      message: 'Comprehensive analysis completed',
-      success: true,
-      document_id: 'ed9dbabf-517f-4a77-b3f4-dc5b8c44be9c',
-      analysis_id: sessionId,
-      framework: 'GDPR',
-      annotations_count: 5,
-      annotations: [
-        {
-          annotation_id: '0199fbd0-981a-7f92-8851-ab87ef9caeac',
-          page_number: 1,
-          file_id: 'ed9dbabf-517f-4a77-b3f4-dc5b8c44be9c',
-          x: 74,
-          width: 453,
-          y: 317,
-          review_comments:
-            '🔴 **GDPR-12.1** - HIGH\n\n**Issue:**\nThe policy does not specify how individuals can withdraw consent as easily as it was given.\n\n**Recommended Action:**\nProvide details on the process for individuals to withdraw consent, such as the methods available and the timeframe for honoring such requests.\n\n---\n*AI-generated compliance analysis*',
-          bookmark_type: 'action_required',
-          analysis_id: sessionId,
-          resolved: false,
-          height: 57,
-        },
-        {
-          annotation_id: '0199fbd0-981b-7a87-bbae-cc1a58a58762',
-          page_number: 1,
-          file_id: 'ed9dbabf-517f-4a77-b3f4-dc5b8c44be9c',
-          x: 74,
-          width: 458,
-          y: 413,
-          review_comments:
-            '🔴 **GDPR-13.1** - HIGH\n\n**Issue:**\nThe policy does not specify the data retention periods for different categories of personal data.\n\n**Recommended Action:**\nClearly define the retention periods for each type of personal data collected and processed, and ensure they are in line with the data minimization principle.\n\n---\n*AI-generated compliance analysis*',
-          bookmark_type: 'action_required',
-          analysis_id: sessionId,
-          resolved: false,
-          height: 57,
-        },
-        {
-          annotation_id: '0199fbd0-981c-7cab-9219-577e280209b1',
-          page_number: 1,
-          file_id: 'ed9dbabf-517f-4a77-b3f4-dc5b8c44be9c',
-          x: 74,
-          width: 465,
-          y: 509,
-          review_comments:
-            '🔴 **GDPR-15.1** - HIGH\n\n**Issue:**\nThe policy does not provide details on the process for individuals to exercise their right of access to their personal data.\n\n**Recommended Action:**\nDescribe the specific steps individuals must take to submit a request to access their personal data, including the information they must provide and the timeframe for the company to respond.\n\n---\n*AI-generated compliance analysis*',
-          bookmark_type: 'action_required',
-          analysis_id: sessionId,
-          resolved: false,
-          height: 57,
-        },
-        {
-          annotation_id: '0199fbd0-981d-74b5-a67f-9c4b1609115a',
-          page_number: 2,
-          file_id: 'ed9dbabf-517f-4a77-b3f4-dc5b8c44be9c',
-          x: 74,
-          width: 468,
-          y: 73,
-          review_comments:
-            '⚪ **GDPR-28.1** - CRITICAL\n\n**Issue:**\nThe policy does not specify the requirements for Data Processing Agreements (DPAs) with vendors and third parties, such as the mandatory clauses that must be included.\n\n**Recommended Action:**\nProvide details on the mandatory components of the DPAs, including the specific contractual clauses required to ensure GDPR compliance by vendors and third parties.\n\n---\n*AI-generated compliance analysis*',
-          bookmark_type: 'action_required',
-          analysis_id: sessionId,
-          resolved: false,
-          height: 45,
-        },
-        {
-          annotation_id: '0199fbd0-981e-7f12-94d1-5f6c5d1ec016',
-          page_number: 2,
-          file_id: 'ed9dbabf-517f-4a77-b3f4-dc5b8c44be9c',
-          x: 74,
-          width: 465,
-          y: 157,
-          review_comments:
-            '⚪ **GDPR-32.1** - CRITICAL\n\n**Issue:**\nThe policy does not describe the specific technical and organizational measures used to secure personal data transferred outside the EEA, such as the encryption methods and other safeguards employed.\n\n**Recommended Action:**\nClearly document the technical and organizational measures used to secure personal data transferred outside the EEA, including the specific encryption methods, access controls, and other safeguards implemented.\n\n---\n*AI-generated compliance analysis*',
-          bookmark_type: 'action_required',
-          analysis_id: sessionId,
-          resolved: false,
-          height: 45,
-        },
-      ],
-      final_verdict: {
-        summary:
-          'Document has significant compliance gaps with GDPR. 3 critical issues require immediate attention.',
-        high_severity_count: 3,
-        total_annotations: 5,
-        document_status: 52,
-        verdict: 'NON_COMPLIANT',
-        critical_issues: [
-          'The policy does not specify how individuals can withdraw consent as easily as it was given.',
-          'The policy does not specify the data retention periods for different categories of personal data.',
-          'The policy does not provide details on the process for individuals to exercise their right of access to their personal data.',
-        ],
-        low_severity_count: 0,
-        medium_severity_count: 0,
-        compliance_score: 70,
-      },
-      cached: true,
-      cached_at: '2025-10-19T09:32:56.045947+00:00',
-      cache_metadata: {
-        pages_analyzed: 15,
-        blocks_processed: 5,
-      },
-    };
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
+    // Call the Lambda API
+    const lambdaUrl = process.env.NEXT_PUBLIC_API_BASE_URL + '/annotations';
+
+    const lambdaResponse = await fetch(lambdaUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        prompt: `load_annotations for [document_id=${sessionId}]`,
+      }),
+    });
+
+    if (!lambdaResponse.ok) {
+      throw new Error(
+        `Lambda API returned ${lambdaResponse.status}: ${lambdaResponse.statusText}`
+      );
+    }
+
+    const backendData: BackendResponse = await lambdaResponse.json();
+    const payload = backendData.tool_payload;
+
+    // Check for errors
+    if (backendData.error_message) {
+      throw new Error(backendData.error_message);
+    }
+
+    const { annotations = [] } = payload;
     // Transform backend response to frontend format
-    const frontendAnnotations: FrontendAnnotation[] =
-      backendData.annotations.map((ann) => ({
+    const frontendAnnotations: FrontendAnnotation[] = annotations.map(
+      (ann: BackendAnnotation) => ({
         id: ann.annotation_id,
         session_id: ann.analysis_id,
         page: ann.page_number,
@@ -182,16 +164,18 @@ export async function GET(
         bookmarkType: mapBookmarkType(ann.bookmark_type),
         bookmarkNote: ann.review_comments,
         resolved: ann.resolved,
-      }));
+      })
+    );
 
     const response: FrontendResponse = {
       annotations: frontendAnnotations,
       metadata: {
-        framework: backendData.framework,
-        compliance_score: backendData.final_verdict.compliance_score,
-        verdict: backendData.final_verdict.verdict,
-        summary: backendData.final_verdict.summary,
-        cached: backendData.cached,
+        framework: payload.framework_id || 'Unknown',
+        compliance_score: payload.final_verdict?.compliance_score || 0,
+        verdict: payload.final_verdict?.verdict || 'PENDING',
+        summary:
+          payload.final_verdict?.summary || backendData.summarised_markdown,
+        cached: payload.cached || false,
       },
     };
 
