@@ -14,6 +14,17 @@ import type {
   NewAnnotationInput,
 } from '@/components/PDFAnnotator/types';
 
+interface AnnotationsApiResponse {
+  annotations: SimpleAnnotation[];
+  metadata: {
+    framework: string;
+    compliance_score: number;
+    verdict: string;
+    summary: string;
+    cached: boolean;
+  };
+}
+
 interface PDFState {
   pdfLoadErrror?: string;
   isLoading: boolean;
@@ -162,7 +173,39 @@ export const usePDFStore = create<PDFState>()(
       return new File([blob], name, { type });
     },
     loadAnnotations: async (sessionId: string) => {
-      console.log('Loading annotations for session:', sessionId);
+      try {
+        set({ isLoading: true, pdfLoadErrror: undefined });
+
+        // Fetch annotations from backend (already transformed to frontend format)
+        const response = await fetch(`/api/annotations/${sessionId}`);
+
+        if (!response.ok) {
+          throw new Error(`Failed to load annotations: ${response.statusText}`);
+        }
+
+        const data: AnnotationsApiResponse = await response.json();
+
+        // Data is already in the correct format, no transformation needed!
+        set({
+          annotations: data.annotations,
+          isLoading: false,
+        });
+
+        console.log(
+          `✅ Loaded ${data.annotations.length} annotations for session ${sessionId}`
+        );
+        console.log(`📊 Compliance Score: ${data.metadata.compliance_score}%`);
+        console.log(`⚖️ Verdict: ${data.metadata.verdict}`);
+      } catch (error) {
+        console.error('❌ Failed to load annotations:', error);
+        set({
+          pdfLoadErrror:
+            error instanceof Error
+              ? error.message
+              : 'Failed to load annotations',
+          isLoading: false,
+        });
+      }
     },
 
     // ---------- CHAT OPS ----------
