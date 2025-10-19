@@ -1,0 +1,80 @@
+%%{init: {'theme': 'base', 'flowchart': {'curve': 'basis', 'padding': 20}}}%%
+flowchart TD
+    %% Data & Storage Layer
+    subgraph dataLayer["💾 Data & Storage Architecture"]
+        direction TB
+        
+        subgraph fileStorage["📦 File Storage"]
+            S3["📦<br/>Amazon S3<br/><i>Document Repository</i>"]
+            S3Policies["📋<br/>Policy Documents<br/><i>PDF, DOCX, TXT</i>"]
+            S3Reports["📊<br/>Generated Reports<br/><i>Analysis Results</i>"]
+            S3Backups["💾<br/>Backup Storage<br/><i>Versioned Files</i>"]
+        end
+        
+        subgraph database["🗄️ Database Services"]
+            DynamoDB["🗄️<br/>Amazon DynamoDB<br/><i>NoSQL Database</i>"]
+            UserProfiles["👤<br/>User Profiles<br/><i>Authentication Data</i>"]
+            ComplianceJobs["⚙️<br/>Compliance Jobs<br/><i>Processing Status</i>"]
+            PolicyMetadata["📝<br/>Policy Metadata<br/><i>Document Properties</i>"]
+            AuditLogs["📋<br/>Audit Logs<br/><i>User Activities</i>"]
+        end
+        
+        subgraph searchEngine["🔍 Search & Analytics"]
+            OpenSearch["🔍<br/>Amazon OpenSearch<br/><i>Vector & Text Search</i>"]
+            VectorIndex["🎯<br/>Vector Embeddings<br/><i>Semantic Search</i>"]
+            TextIndex["📄<br/>Full-Text Index<br/><i>Keyword Search</i>"]
+            Analytics["📈<br/>Search Analytics<br/><i>Usage Metrics</i>"]
+        end
+    end
+
+    %% Data Flow
+    AIProcessing["🧠 AI Processing"] -->|Stores Files| S3
+    AIProcessing -->|Saves Metadata| DynamoDB
+    AIProcessing -->|Indexes Content| OpenSearch
+    
+    S3 -->|Organizes| S3Policies
+    S3 -->|Stores| S3Reports
+    S3 -->|Maintains| S3Backups
+    
+    DynamoDB -->|Manages| UserProfiles
+    DynamoDB -->|Tracks| ComplianceJobs
+    DynamoDB -->|Stores| PolicyMetadata
+    DynamoDB -->|Records| AuditLogs
+    
+    OpenSearch -->|Creates| VectorIndex
+    OpenSearch -->|Maintains| TextIndex
+    OpenSearch -->|Provides| Analytics
+    
+    %% RAG Workflow
+    VectorIndex -.->|Semantic Queries| AIProcessing
+    TextIndex -.->|Keyword Queries| AIProcessing
+    PolicyMetadata -.->|Context Data| AIProcessing
+
+    %% External Access
+    UserInterface["💻 User Interface"] -->|Queries Data| OpenSearch
+    UserInterface -->|Retrieves Files| S3
+    UserInterface -->|Fetches Metadata| DynamoDB
+
+    %% Styling
+    classDef awsService fill:#ff9900,stroke:#232f3e,stroke-width:3px,color:#ffffff,font-weight:bold
+    classDef storageNode fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1,font-weight:bold
+    classDef databaseNode fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px,color:#1b5e20,font-weight:bold
+    classDef searchNode fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#880e4f,font-weight:bold
+    classDef externalNode fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#4a148c,font-weight:bold
+    classDef layerBox fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#bf360c
+
+    class S3,DynamoDB,OpenSearch awsService
+    class S3Policies,S3Reports,S3Backups storageNode
+    class UserProfiles,ComplianceJobs,PolicyMetadata,AuditLogs databaseNode
+    class VectorIndex,TextIndex,Analytics searchNode
+    class AIProcessing,UserInterface externalNode
+    class dataLayer,fileStorage,database,searchEngine layerBox
+
+    %% Caption
+    subgraph caption[" "]
+        figureTitle["<b>Figure 4: Policy Mate Data & Storage Architecture</b>"]
+        figureDesc["Comprehensive data architecture with S3 file storage, DynamoDB metadata management,<br/>and OpenSearch for advanced vector and text search capabilities supporting RAG workflows."]
+    end
+
+    classDef captionStyle fill:#f8f9fa,stroke:#dee2e6,stroke-width:1px,color:#495057,font-size:11px
+    class caption,figureTitle,figureDesc captionStyle

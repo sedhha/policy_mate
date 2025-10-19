@@ -1,0 +1,62 @@
+%%{init: {'theme': 'base', 'flowchart': {'curve': 'basis', 'padding': 20}}}%%
+flowchart TD
+    %% Security & API Layer
+    subgraph securityLayer["🔐 Security & API Gateway Layer"]
+        direction TB
+        
+        subgraph auth["🛡️ Authentication & Authorization"]
+            Cognito["🔑<br/>Amazon Cognito<br/><i>User Pool & Identity</i>"]
+            UserAuth["👤<br/>User Authentication<br/><i>JWT Tokens</i>"]
+            RoleAuth["🎭<br/>Role-Based Access<br/><i>Admin/Viewer Roles</i>"]
+        end
+        
+        subgraph apiGateway["🌐 API Management"]
+            APIGateway["🚪<br/>Amazon API Gateway<br/><i>REST & WebSocket APIs</i>"]
+            Throttling["⚡<br/>Rate Limiting<br/><i>Request Throttling</i>"]
+            Validation["✅<br/>Request Validation<br/><i>Schema Validation</i>"]
+            CORS["🌍<br/>CORS Configuration<br/><i>Cross-Origin Requests</i>"]
+        end
+        
+        subgraph security["🔒 Security Controls"]
+            WAF["🛡️<br/>AWS WAF<br/><i>Web Application Firewall</i>"]
+            SSL["🔐<br/>SSL/TLS<br/><i>End-to-End Encryption</i>"]
+            APIKeys["🗝️<br/>API Key Management<br/><i>Service Authentication</i>"]
+        end
+    end
+
+    %% Flow within Security Layer
+    UserAuth -->|Validates| Cognito
+    Cognito -->|Issues Tokens| RoleAuth
+    RoleAuth -->|Authorizes| APIGateway
+    APIGateway -->|Applies| Throttling
+    APIGateway -->|Validates| Validation
+    APIGateway -->|Configures| CORS
+    WAF -->|Protects| APIGateway
+    SSL -->|Secures| APIGateway
+    APIKeys -->|Authenticates| APIGateway
+
+    %% External connections
+    Frontend["💻 Frontend Layer"] -->|HTTPS Requests| WAF
+    APIGateway -->|Authorized Requests| Backend["⚡ Processing Layer"]
+
+    %% Styling
+    classDef awsService fill:#ff9900,stroke:#232f3e,stroke-width:3px,color:#ffffff,font-weight:bold
+    classDef authNode fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px,color:#1b5e20,font-weight:bold
+    classDef securityNode fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#b71c1c,font-weight:bold
+    classDef externalNode fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#4a148c,font-weight:bold
+    classDef layerBox fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#bf360c
+
+    class Cognito,APIGateway,WAF awsService
+    class UserAuth,RoleAuth,Throttling,Validation,CORS authNode
+    class SSL,APIKeys securityNode
+    class Frontend,Backend externalNode
+    class securityLayer,auth,apiGateway,security layerBox
+
+    %% Caption
+    subgraph caption[" "]
+        figureTitle["<b>Figure 2: Policy Mate Security & API Gateway Layer</b>"]
+        figureDesc["Comprehensive security architecture with Cognito authentication, API Gateway routing,<br/>WAF protection, and role-based access controls for enterprise compliance requirements."]
+    end
+
+    classDef captionStyle fill:#f8f9fa,stroke:#dee2e6,stroke-width:1px,color:#495057,font-size:11px
+    class caption,figureTitle,figureDesc captionStyle
