@@ -1,0 +1,70 @@
+%%{init: {'theme': 'base', 'flowchart': {'curve': 'basis', 'padding': 20}}}%%
+flowchart TD
+    %% AI Processing Layer
+    subgraph aiLayer["🧠 AI Processing & Orchestration Layer"]
+        direction TB
+        
+        subgraph compute["⚡ Compute Services"]
+            Lambda["⚡<br/>AWS Lambda<br/><i>Serverless Functions</i>"]
+            LambdaUpload["📄<br/>Document Processor<br/><i>File Upload Handler</i>"]
+            LambdaChat["💬<br/>Chat Handler<br/><i>User Query Processor</i>"]
+            LambdaAnalysis["🔍<br/>Analysis Engine<br/><i>Gap Analysis Logic</i>"]
+        end
+        
+        subgraph aiOrchestration["🤖 AI Orchestration"]
+            AgentOrchestrator["🎯<br/>Policy Mate Agent<br/>Orchestrator<br/><i>(Bedrock Agent)</i>"]
+            Bedrock["🤖<br/>Amazon Bedrock<br/><i>Claude AI Models</i>"]
+            PromptEngine["📝<br/>Prompt Engineering<br/><i>Context Templates</i>"]
+        end
+        
+        subgraph aiWorkflows["🔄 AI Workflows"]
+            DocumentAnalysis["📋<br/>Document Analysis<br/><i>Policy Parsing</i>"]
+            ComplianceCheck["✅<br/>Compliance Checking<br/><i>Gap Detection</i>"]
+            RecommendationEngine["💡<br/>Recommendation Engine<br/><i>Improvement Suggestions</i>"]
+            ReportGeneration["📊<br/>Report Generation<br/><i>Executive Summaries</i>"]
+        end
+    end
+
+    %% Flow within AI Layer
+    APIRequests["🌐 API Requests"] -->|Routes to| Lambda
+    Lambda -->|Delegates| LambdaUpload
+    Lambda -->|Delegates| LambdaChat
+    Lambda -->|Delegates| LambdaAnalysis
+    
+    LambdaUpload -->|Triggers| AgentOrchestrator
+    LambdaChat -->|Invokes| AgentOrchestrator
+    LambdaAnalysis -->|Orchestrates| AgentOrchestrator
+    
+    AgentOrchestrator -->|Uses| Bedrock
+    AgentOrchestrator -->|Applies| PromptEngine
+    
+    Bedrock -->|Performs| DocumentAnalysis
+    Bedrock -->|Executes| ComplianceCheck
+    Bedrock -->|Generates| RecommendationEngine
+    Bedrock -->|Creates| ReportGeneration
+    
+    ReportGeneration -->|Returns Results| DataStorage["💾 Data Storage"]
+
+    %% Styling
+    classDef awsService fill:#ff9900,stroke:#232f3e,stroke-width:3px,color:#ffffff,font-weight:bold
+    classDef computeNode fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1,font-weight:bold
+    classDef aiNode fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px,color:#1b5e20,font-weight:bold
+    classDef workflowNode fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#880e4f,font-weight:bold
+    classDef externalNode fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#4a148c,font-weight:bold
+    classDef layerBox fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#bf360c
+
+    class Lambda,Bedrock,AgentOrchestrator awsService
+    class LambdaUpload,LambdaChat,LambdaAnalysis computeNode
+    class PromptEngine aiNode
+    class DocumentAnalysis,ComplianceCheck,RecommendationEngine,ReportGeneration workflowNode
+    class APIRequests,DataStorage externalNode
+    class aiLayer,compute,aiOrchestration,aiWorkflows layerBox
+
+    %% Caption
+    subgraph caption[" "]
+        figureTitle["<b>Figure 3: Policy Mate AI Processing & Orchestration Layer</b>"]
+        figureDesc["Serverless AI processing architecture with specialized Lambda functions,<br/>Bedrock Agent orchestration, and intelligent compliance workflows for automated policy analysis."]
+    end
+
+    classDef captionStyle fill:#f8f9fa,stroke:#dee2e6,stroke-width:1px,color:#495057,font-size:11px
+    class caption,figureTitle,figureDesc captionStyle

@@ -1,0 +1,49 @@
+%%{init: {'theme': 'base', 'flowchart': {'curve': 'basis', 'padding': 20}}}%%
+flowchart TD
+    %% User Experience Layer - Clean and Simple
+    subgraph userExperience["👤 User Experience Layer"]
+        direction TB
+        
+        subgraph frontend["💻 Frontend Interface"]
+            User["🧑‍💼<br/>End User<br/><i>Compliance Officer</i>"]
+            WebApp["💬<br/>Next.js Web App<br/><i>Policy Chat Interface</i>"]
+            Dashboard["📊<br/>Compliance Dashboard<br/><i>Reports & Analytics</i>"]
+        end
+        
+        subgraph interactions["🔄 User Interactions"]
+            Upload["📄<br/>Upload Policy<br/>Documents"]
+            Query["❓<br/>Ask Compliance<br/>Questions"]
+            Review["📋<br/>Review Gap<br/>Analysis"]
+            Export["⬇️<br/>Export<br/>Reports"]
+        end
+    end
+
+    %% Flow within User Experience
+    User -->|Accesses| WebApp
+    User -->|Performs| Upload
+    User -->|Performs| Query
+    WebApp -->|Displays Results| Dashboard
+    Dashboard -->|Enables| Review
+    Dashboard -->|Enables| Export
+    Review -->|Feedback Loop| User
+    Export -->|Downloads| User
+
+    %% Styling
+    classDef userNode fill:#e3f2fd,stroke:#1565c0,stroke-width:3px,color:#0d47a1,font-weight:bold
+    classDef frontendNode fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#4a148c,font-weight:bold
+    classDef interactionNode fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px,color:#1b5e20,font-weight:bold
+    classDef layerBox fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#bf360c
+
+    class User userNode
+    class WebApp,Dashboard frontendNode
+    class Upload,Query,Review,Export interactionNode
+    class userExperience,frontend,interactions layerBox
+
+    %% Caption
+    subgraph caption[" "]
+        figureTitle["<b>Figure 1: Policy Mate User Experience Layer</b>"]
+        figureDesc["Clean, intuitive interface for compliance officers to upload policies,<br/>ask compliance questions, and review automated gap analysis reports."]
+    end
+
+    classDef captionStyle fill:#f8f9fa,stroke:#dee2e6,stroke-width:1px,color:#495057,font-size:11px
+    class caption,figureTitle,figureDesc captionStyle
