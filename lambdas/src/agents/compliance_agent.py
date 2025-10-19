@@ -267,6 +267,10 @@ Example WRONG: "the right to erasure ("right to be forgotten")"
 
 You are a compliance analysis API that returns ONLY valid JSON.
 
+🚨 CRITICAL: DO NOT USE XML-LIKE TAGS 🚨
+❌ WRONG: <result>...</result> or <suggested_next_actions>...</suggested_next_actions>
+✅ CORRECT: Valid JSON object only
+
 🚨 OUTPUT FORMAT: Your entire response must be a single JSON object with this exact structure:
 
 {
@@ -408,12 +412,41 @@ app = BedrockAgentCoreApp()
 def parse_agent_json(text: str) -> dict[str, Any]:
     """
     Parse JSON from agent response with comprehensive error handling.
-    Handles: smart quotes, Python syntax, malformed JSON, truncation.
+    Handles: smart quotes, Python syntax, malformed JSON, truncation, XML-like tags.
     """
     import re
     sanitized: str = "{}"
     if not text or not text.strip():
         raise ValueError("Empty response from agent")
+    
+    # Step 0: Handle XML-like tag format from agent
+    # Agent sometimes wraps response in <result> and <suggested_next_actions> tags
+    if '<result>' in text or '<suggested_next_actions>' in text:
+        try:
+            # Extract content from XML-like tags
+            result_match = re.search(r'<result>\s*(.*?)\s*</result>', text, re.DOTALL)
+            actions_match = re.search(r'<suggested_next_actions>\s*(.*?)\s*</suggested_next_actions>', text, re.DOTALL)
+            
+            summarised_markdown = result_match.group(1).strip() if result_match else ""
+            suggested_actions_str = actions_match.group(1).strip() if actions_match else "[]"
+            
+            # Parse suggested actions JSON array
+            try:
+                suggested_actions = json.loads(suggested_actions_str)
+            except json.JSONDecodeError:
+                suggested_actions = []
+            
+            # Construct proper response object
+            return {
+                "error_message": "",
+                "tool_payload": {},
+                "summarised_markdown": summarised_markdown,
+                "suggested_next_actions": suggested_actions
+            }
+        except Exception as e:
+            print(f"⚠️ Failed to parse XML-like tags: {e}")
+            # Fall through to regular JSON parsing
+    
     try:
         return json.loads(text)
     except json.JSONDecodeError:

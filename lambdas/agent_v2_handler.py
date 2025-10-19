@@ -6,7 +6,7 @@ import traceback
 from aws_lambda_typing import context as context_
 from src.utils.logger import log_with_context
 from src.utils.decorators.cognito_auth import require_cognito_auth
-from lambdas.src.agents.compliance_agent import compliance_agent, parse_agent_json
+from src.agents.compliance_agent import compliance_agent, parse_agent_json
 from uuid6 import uuid7
 
 
