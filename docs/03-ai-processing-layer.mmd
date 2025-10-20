@@ -6,41 +6,46 @@ flowchart TD
         
         subgraph compute["⚡ Compute Services"]
             Lambda["⚡<br/>AWS Lambda<br/><i>Serverless Functions</i>"]
-            LambdaUpload["📄<br/>Document Processor<br/><i>File Upload Handler</i>"]
-            LambdaChat["💬<br/>Chat Handler<br/><i>User Query Processor</i>"]
-            LambdaAnalysis["🔍<br/>Analysis Engine<br/><i>Gap Analysis Logic</i>"]
+            LambdaUpload["📄<br/>File Upload Handler<br/><i>file_upload_handler.py</i>"]
+            LambdaAgent["🤖<br/>Agent Handler<br/><i>agent_handler.py</i>"]
+            LambdaCompliance["✅<br/>Compliance Check<br/><i>compliance_check_handler.py</i>"]
+            LambdaComprehensive["📋<br/>Comprehensive Analysis<br/><i>comprehensive_check_handler.py</i>"]
+            LambdaDocStatus["📊<br/>Document Status<br/><i>doc_status_handler.py</i>"]
         end
         
         subgraph aiOrchestration["🤖 AI Orchestration"]
-            AgentOrchestrator["🎯<br/>Policy Mate Agent<br/>Orchestrator<br/><i>(Bedrock Agent)</i>"]
-            Bedrock["🤖<br/>Amazon Bedrock<br/><i>Claude AI Models</i>"]
-            PromptEngine["📝<br/>Prompt Engineering<br/><i>Context Templates</i>"]
+            Bedrock["🤖<br/>Amazon Bedrock<br/><i>Claude 3.5 Sonnet/Haiku</i>"]
+            BedrockAgent["🎯<br/>Bedrock Agent<br/><i>Policy Mate Agent</i>"]
+            ToolCalling["🔧<br/>Tool Calling<br/><i>Lambda Function Tools</i>"]
         end
         
         subgraph aiWorkflows["🔄 AI Workflows"]
-            DocumentAnalysis["📋<br/>Document Analysis<br/><i>Policy Parsing</i>"]
-            ComplianceCheck["✅<br/>Compliance Checking<br/><i>Gap Detection</i>"]
-            RecommendationEngine["💡<br/>Recommendation Engine<br/><i>Improvement Suggestions</i>"]
-            ReportGeneration["📊<br/>Report Generation<br/><i>Executive Summaries</i>"]
+            DocumentAnalysis["📋<br/>Document Analysis<br/><i>Text Extraction & Parsing</i>"]
+            ComplianceCheck["✅<br/>Compliance Checking<br/><i>GDPR, SOC2, HIPAA</i>"]
+            GapAnalysis["🔍<br/>Gap Analysis<br/><i>Control Matching</i>"]
+            ReportGeneration["📊<br/>Report Generation<br/><i>Findings & Recommendations</i>"]
         end
     end
 
     %% Flow within AI Layer
     APIRequests["🌐 API Requests"] -->|Routes to| Lambda
     Lambda -->|Delegates| LambdaUpload
-    Lambda -->|Delegates| LambdaChat
-    Lambda -->|Delegates| LambdaAnalysis
+    Lambda -->|Delegates| LambdaAgent
+    Lambda -->|Delegates| LambdaCompliance
+    Lambda -->|Delegates| LambdaComprehensive
+    Lambda -->|Delegates| LambdaDocStatus
     
-    LambdaUpload -->|Triggers| AgentOrchestrator
-    LambdaChat -->|Invokes| AgentOrchestrator
-    LambdaAnalysis -->|Orchestrates| AgentOrchestrator
+    LambdaAgent -->|Invokes| BedrockAgent
+    BedrockAgent -->|Uses| Bedrock
+    BedrockAgent -->|Executes| ToolCalling
     
-    AgentOrchestrator -->|Uses| Bedrock
-    AgentOrchestrator -->|Applies| PromptEngine
+    ToolCalling -->|Calls| LambdaCompliance
+    ToolCalling -->|Calls| LambdaComprehensive
+    ToolCalling -->|Calls| LambdaDocStatus
     
     Bedrock -->|Performs| DocumentAnalysis
     Bedrock -->|Executes| ComplianceCheck
-    Bedrock -->|Generates| RecommendationEngine
+    Bedrock -->|Conducts| GapAnalysis
     Bedrock -->|Creates| ReportGeneration
     
     ReportGeneration -->|Returns Results| DataStorage["💾 Data Storage"]
@@ -53,17 +58,17 @@ flowchart TD
     classDef externalNode fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#4a148c,font-weight:bold
     classDef layerBox fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#bf360c
 
-    class Lambda,Bedrock,AgentOrchestrator awsService
-    class LambdaUpload,LambdaChat,LambdaAnalysis computeNode
-    class PromptEngine aiNode
-    class DocumentAnalysis,ComplianceCheck,RecommendationEngine,ReportGeneration workflowNode
+    class Lambda,Bedrock,BedrockAgent awsService
+    class LambdaUpload,LambdaAgent,LambdaCompliance,LambdaComprehensive,LambdaDocStatus computeNode
+    class ToolCalling aiNode
+    class DocumentAnalysis,ComplianceCheck,GapAnalysis,ReportGeneration workflowNode
     class APIRequests,DataStorage externalNode
     class aiLayer,compute,aiOrchestration,aiWorkflows layerBox
 
     %% Caption
     subgraph caption[" "]
         figureTitle["<b>Figure 3: Policy Mate AI Processing & Orchestration Layer</b>"]
-        figureDesc["Serverless AI processing architecture with specialized Lambda functions,<br/>Bedrock Agent orchestration, and intelligent compliance workflows for automated policy analysis."]
+        figureDesc["Serverless AI processing architecture with specialized Lambda handlers,<br/>Bedrock Agent orchestration, and intelligent compliance workflows for automated policy analysis."]
     end
 
     classDef captionStyle fill:#f8f9fa,stroke:#dee2e6,stroke-width:1px,color:#495057,font-size:11px

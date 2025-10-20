@@ -1,0 +1,65 @@
+%%{init: {'theme': 'base', 'sequence': {'actorMargin': 50, 'width': 150, 'height': 65, 'boxMargin': 10, 'boxTextMargin': 5, 'noteMargin': 10, 'messageMargin': 35}}}%%
+sequenceDiagram
+    participant User as 👤 User
+    participant UI as 💻 Next.js UI
+    participant Cognito as 🔐 Amazon Cognito
+    participant API as 🚪 API Gateway
+    participant UploadLambda as 📄 Upload Handler
+    participant AgentLambda as 🤖 Agent Handler
+    participant Bedrock as 🧠 Amazon Bedrock
+    participant ComplianceLambda as ✅ Compliance Check
+    participant S3 as 📦 Amazon S3
+    participant DynamoDB as 🗄️ DynamoDB
+    participant OpenSearch as 🔍 OpenSearch
+
+    %% Authentication Flow
+    Note over User,Cognito: 🔐 Authentication Phase
+    User->>+UI: Login request
+    UI->>+Cognito: Authenticate user
+    Cognito-->>-UI: JWT Token
+    UI-->>-User: Login successful
+
+    %% Document Upload Flow
+    Note over User,DynamoDB: 📄 Document Upload Phase
+    User->>+UI: Upload policy document
+    UI->>+API: POST /upload (with JWT)
+    API->>+UploadLambda: Process file upload
+    UploadLambda->>+S3: Store document
+    S3-->>-UploadLambda: Storage confirmed
+    UploadLambda->>+DynamoDB: Save metadata<br/>(PolicyMateFiles table)
+    DynamoDB-->>-UploadLambda: Metadata saved
+    UploadLambda-->>-API: Upload complete
+    API-->>-UI: Success response
+    UI-->>User: Upload confirmation
+
+    %% Compliance Analysis Flow
+    Note over User,OpenSearch: 🔍 Compliance Analysis Phase
+    User->>+UI: Request compliance analysis
+    UI->>+API: POST /chat_session
+    API->>+AgentLambda: Initialize analysis
+    AgentLambda->>+Bedrock: Invoke Policy Mate Agent
+    
+    Note over Bedrock,ComplianceLambda: 🤖 AI Orchestration
+    Bedrock->>+ComplianceLambda: Tool call: compliance_check
+    ComplianceLambda->>+DynamoDB: Query controls<br/>(PolicyMateComplianceControls)
+    DynamoDB-->>-ComplianceLambda: Control data
+    ComplianceLambda->>+OpenSearch: Vector search for context
+    OpenSearch-->>-ComplianceLambda: Relevant documents
+    ComplianceLambda->>+S3: Extract document text
+    S3-->>-ComplianceLambda: Document content
+    ComplianceLambda-->>-Bedrock: Compliance analysis results
+    
+    Bedrock-->>-AgentLambda: Final analysis & recommendations
+    
+    Note over AgentLambda,DynamoDB: 💾 Results Storage
+    AgentLambda->>+DynamoDB: Store compliance report<br/>(PolicyMateComplianceReports)
+    DynamoDB-->>-AgentLambda: Report saved
+    AgentLambda->>+DynamoDB: Save conversation<br/>(PolicyMateConversationHistory)
+    DynamoDB-->>-AgentLambda: Conversation saved
+    
+    AgentLambda-->>-API: Analysis complete
+    API-->>-UI: Compliance findings
+    UI-->>User: Display compliance report
+
+    %% Styling
+    Note over User,OpenSearch: 📊 End-to-End Policy Compliance Workflow
