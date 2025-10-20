@@ -5,7 +5,7 @@ import { UniversalHeader } from "@/components/Header/UniversalHeader";
 import type { ReactNode } from "react";
 
 // Routes that should NOT show the header (full-screen pages)
-const routesWithoutHeader: string[] = ["/login"];
+const routesWithoutHeader: string[] = ["/login", "/register", "/architecture"];
 
 interface LayoutWrapperProps {
     children: ReactNode;

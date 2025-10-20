@@ -270,7 +270,7 @@ const LoginPage = () => {
                 {/* Footer */}
                 <div className="text-center mt-6 text-sm text-gray-600 animate-fade-in-delay">
                     Don't have an account?{' '}
-                    <a href="#" className="text-blue-600 hover:text-blue-700 font-medium transition-colors hover:underline">
+                    <a href="/register" className="text-blue-600 hover:text-blue-700 font-medium transition-colors hover:underline">
                         Sign up
                     </a>
                 </div>

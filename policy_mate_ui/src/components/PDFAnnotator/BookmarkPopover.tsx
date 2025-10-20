@@ -79,7 +79,7 @@ const Header: React.FC<{
             <div className="w-2 h-2 bg-orange-200 rounded-full animate-pulse" />
             <div className="font-semibold text-sm">Bookmark Manager</div>
             <span className="text-xs text-orange-100">
-                #{ann.session_id.slice(-6)}
+                #{(ann.session_id || '019a016c-3ba3-7ad5-b1c4-35d53b8046c5').slice(-6)}
             </span>
         </div>
         <div className="flex items-center space-x-1">

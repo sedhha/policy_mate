@@ -195,9 +195,8 @@ Response payload for:
 
 ## TODO:
 
-- redirection in case of unauthorized access
-- Explore results in chat window - view detailed analysis, download report, mark as reviewed etc.
-- Why newly annotated comments are not showing up on UI?
+- Sit with Saurabh to set up base instructions for running app.
+- Add existing work in README
 
 ## Analysis
 

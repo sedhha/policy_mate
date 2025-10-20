@@ -37,10 +37,15 @@ const b64UrlDecode = (input: string) => {
         .replace(/-/g, '+')
         .replace(/_/g, '/')
         .padEnd(Math.ceil(input.length / 4) * 4, '=');
-    const bin = atob(normalized);
-    const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
-    const decoder = new TextDecoder('utf-8');
-    return decoder.decode(bytes);
+    try {
+        const bin = atob(normalized);
+        const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+        const decoder = new TextDecoder('utf-8');
+        return decoder.decode(bytes);
+    } catch (error) {
+        console.error("Base64 URL decode error:", error);
+        return '{}';
+    }
 };
 
 export const SimplePDFAnnotator: React.FC = () => {
