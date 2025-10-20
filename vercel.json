@@ -1,11 +1,7 @@
 {
   "buildCommand": "cd policy_mate_ui && pnpm build",
   "devCommand": "cd policy_mate_ui && pnpm dev",
-<<<<<<< HEAD
   "installCommand": "corepack enable && corepack prepare pnpm@9.15.0 --activate && cd policy_mate_ui && pnpm install --no-frozen-lockfile",
-=======
-  "installCommand": "cd policy_mate_ui && pnpm install --no-frozen-lockfile",
->>>>>>> 4ab667a724c00a340aa8d3cf5a0182f1698d5df6
   "framework": "nextjs",
   "outputDirectory": "policy_mate_ui/.next"
 }
