@@ -1,7 +1,0 @@
-{
-  "installCommand": "corepack enable && corepack prepare pnpm@10.18.3 --activate && cd policy_mate_ui && pnpm install",
-  "buildCommand": "cd policy_mate_ui && pnpm build",
-  "devCommand": "cd policy_mate_ui && pnpm dev",
-  "framework": "nextjs",
-  "outputDirectory": "policy_mate_ui/.next"
-}
