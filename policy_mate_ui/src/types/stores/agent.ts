@@ -16,7 +16,7 @@ export interface IAgentState {
   agentStates: IndividualAgentState;
 
   // actions
-  setSelectedDocument: (document: Document) => void;
+  setSelectedDocument: (document?: Document) => void;
   setSessionId: (sessionId: string) => void;
   setDocuments: (documents: Document[]) => void;
   setAgentState: (

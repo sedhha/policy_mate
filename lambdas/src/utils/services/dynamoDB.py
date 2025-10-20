@@ -20,6 +20,7 @@ class DynamoDBTable(Enum):
     ORGANIZATIONS = "PolicyMateOrganizations"
     USERS = "PolicyMateUserFiles"
     INFERRED_FILES = "PolicyMateInferredFiles"
+    ANNOTATIONS = "PolicyMateAnnotations"
     
 # We're trying to create a processing workflow simple enough for Hack
 # Once our idea looks great -> we can move to step functions or 
@@ -35,6 +36,7 @@ class DocumentStatus(Enum):
     REPORT_GENERATED = 41
     COMPLIANT = 51
     NON_COMPLIANT = 52
+    PARTIALLY_COMPLIANT = 53
 
 def get_table(table_name: DynamoDBTable | str) -> Table:
     """Get DynamoDB table by enum or string name"""

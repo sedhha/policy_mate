@@ -15,3 +15,5 @@ lambdas/src/policy_mate_lambda.egg-info/*
 lambdas/pre/compliance.json
 backup/*
 lambdas/agent_response.txt
+lambdas/tests/analysis_result.json
+lambdas/zips/

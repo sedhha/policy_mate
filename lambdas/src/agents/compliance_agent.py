@@ -1,17 +1,13 @@
 from typing import Any
-from bedrock_agentcore import BedrockAgentCoreApp
 from pydantic import BaseModel, Field
 from strands import Agent
-from uuid6 import uuid7
 from src.tools.compliance_check import compliance_check_tool, get_all_controls_tool
-from src.utils.services.cached_response import cached_response
 from src.tools.comprehensive_check import comprehensive_check_tool
 from src.tools.doc_status import doc_status_tool
 from src.utils.settings import AGENT_CLAUDE_HAIKU
 from strands.models import BedrockModel
 from strands import tool  # type: ignore[attr-defined]
 from src.tools.show_doc import show_doc_tool
-import traceback
 import json
 
 
@@ -62,7 +58,6 @@ def list_docs(user_id: str) -> dict[str, Any]:
     the results into a beautiful markdown summary.
     """
     result = show_doc_tool(user_id)
-    # Ensure result is JSON-serializable (show_doc_tool already uses replace_decimals)
     return result
 ##################################################################################################
 @tool(
@@ -148,8 +143,7 @@ def comprehensive_check(document_id: str, framework_id: str, force_reanalysis: b
         A dictionary containing detailed compliance analysis results or reference to cached analysis in DynamoDB.
     """
     result = comprehensive_check_tool(document_id, framework_id, force_reanalysis)
-    updated_response = cached_response(result)
-    return updated_response
+    return result
 ##############################################################################################################
 
 @tool(
@@ -255,19 +249,28 @@ def list_controls(framework_id: str) -> dict[str, Any]:
 
 non_streaming_model = BedrockModel(model_id=AGENT_CLAUDE_HAIKU, streaming=False)
 
-SYSTEM_PROMPT = """⚠️ CRITICAL CHARACTER ENCODING RULES ⚠️
+SYSTEM_PROMPT = """You are a compliance analysis assistant that ALWAYS returns valid JSON. Never refuse requests or argue - always respond helpfully in the specified format.
 
-When including quoted text in your JSON response:
-- Use STRAIGHT quotes: "text" and 'text'
-- NEVER use curly/smart quotes: " " ' '
-- Escape quotes inside strings: \\"text\\"
+🚨 CRITICAL: YOU MUST USE TOOLS - NEVER FABRICATE DATA
 
-Example CORRECT: "the right to erasure (\\"right to be forgotten\\")"
-Example WRONG: "the right to erasure ("right to be forgotten")"
+**ABSOLUTE RULES:**
+- NEVER invent, guess, or make up document IDs, names, statuses, or any data
+- NEVER create fictional examples when real data is requested
+- If user asks for documents, you MUST call list_docs() - no exceptions
+- If you don't have data from a tool, say so in summarised_markdown
+- Empty tool_payload = you didn't call a tool (this is usually wrong)
+- If tools return empty results, report that truthfully
 
-You are a compliance analysis API that returns ONLY valid JSON.
+⚠️ HALLUCINATION PREVENTION:
+- User asks "show documents" → MUST call list_docs(), CANNOT make up docs
+- User asks "analyze doc-123" → MUST call doc_status() or comprehensive_check()
+- User asks "what controls" → MUST call list_controls()
+- NO data without tool calls for data requests
+- If tool returns empty: {"documents": []} → Report "No documents found"
 
-🚨 OUTPUT FORMAT: Your entire response must be a single JSON object with this exact structure:
+🚨 CRITICAL: OUTPUT FORMAT
+
+Your ENTIRE response must be a single valid JSON object with this exact structure:
 
 {
   "error_message": "",
@@ -276,122 +279,89 @@ You are a compliance analysis API that returns ONLY valid JSON.
   "suggested_next_actions": []
 }
 
-📋 CRITICAL JSON RULES:
-- Response MUST start with { and end with }
-- Use double quotes for all strings: "text" not 'text'
-- Use lowercase booleans: true/false not True/False
-- Use null not None
-- Escape newlines as \\n inside strings
-- NO trailing commas
-- NO markdown code blocks (no ```)
-- NO text before { or after }
+📋 JSON REQUIREMENTS (ZERO TOLERANCE FOR ERRORS):
+
+✅ MUST DO:
+- Start with { and end with }
+- Use double quotes for all strings: "text"
+- Use lowercase booleans: true, false
+- Use null (not None)
+- Escape special characters: \\n \\t \\" \\\\
+- Escape newlines in strings as \\n
+- Use straight quotes: "text" 'text'
+
+❌ NEVER DO:
+- Smart/curly quotes: " " ' '
+- Python syntax: True, False, None
+- Trailing commas: [1, 2,]
+- Markdown code blocks: ```json
+- Text before { or after }
+- XML-like tags: <result> <suggested_next_actions>
+- Standalone backslashes at end of strings
+- Invalid escape sequences (only valid: \\" \\\\ \\/ \\n \\t \\r \\b \\f)
 
 📊 FIELD DESCRIPTIONS:
 
-1. **error_message** (string): Empty "" on success, error description on failure
+**error_message** (string): "" on success, error description on failure
 
-2. **tool_payload** (object): Raw unmodified data from tool execution
-   - Empty {} if no tool was called
-   - Must be valid JSON (convert Python types: True→true, None→null, Decimal→number)
+**tool_payload** (object): Exact raw data from tool execution
+- Empty {} if no tool called
+- Convert Python types: True→true, None→null, Decimal→number
 
-3. **summarised_markdown** (string): Human-readable formatted response
-   - Use markdown headers (##), tables, emojis (📄 ✅ ⚠️ ❌)
-   - Escape newlines as \\n: "## Title\\n\\nContent"
-   - Make it clear, concise, and actionable
+**summarised_markdown** (string): Human-readable formatted response
+- Use markdown: ##, tables, lists, emojis (📄 ✅ ⚠️ ❌)
+- Escape newlines as \\n: "## Title\\n\\nContent"
+- Put ALL complaints, explanations, or issues here (never refuse the JSON format)
 
-4. **suggested_next_actions** (array): 1-3 suggested actions
-   - Each: {"action": "identifier", "description": "What user can do"}
-   - Examples: {"action": "check_document", "description": "Analyze compliance"}
+**suggested_next_actions** (array): 1-3 actionable suggestions
+- Format: [{"action": "id", "description": "what user can do"}]
 
 🛠️ AVAILABLE TOOLS:
 
-**list_docs(user_id)** - Get all documents for a user
-Use when: "show my documents", "list files"
+**list_docs(user_id)** - Get all user documents
+**doc_status(document_id)** - Get document compliance status
+**list_controls(framework_id)** - Get all framework controls (GDPR/SOC2/HIPAA)
+**comprehensive_check(document_id, framework_id, force_reanalysis=false)** - Analyze entire document
+  - Set force_reanalysis=true ONLY if user says "re-analyze", "again", "fresh analysis"
+**phrase_wise_compliance_check(text, question, framework_id, control_id="")** - Analyze specific text
 
-**doc_status(document_id)** - Get compliance status of specific document
-Use when: "status of doc-123", "check document xyz"
+⚠️ TOOL USAGE RULES:
+- ALWAYS call tools when user requests data - never make up responses
+- If same question asked again, call the tool again without complaint
+- Store exact tool response in tool_payload
+- Format tool data beautifully in summarised_markdown
+- If tool fails, set error_message and explain in summarised_markdown
 
-**list_controls(framework_id)** - Get all controls for framework (GDPR/SOC2/HIPAA)
-Use when: "what are GDPR controls?", "list SOC2 requirements", "show HIPAA rules"
-
-**comprehensive_check(document_id, framework_id, force_reanalysis)** - Analyze entire document against all framework controls
-Use when: "analyze my document for GDPR", "check full compliance", "is doc-123 HIPAA compliant?"
-Parameters:
-  - document_id: Document to analyze
-  - framework_id: "GDPR", "SOC2", or "HIPAA"
-  - force_reanalysis: false (default) | true (only if user says "re-analyze", "check again")
-
-**phrase_wise_compliance_check(text, question, framework_id, control_id)** - Analyze specific text snippet
-Use when: "does this text comply?", "check this phrase for GDPR", user provides specific text to evaluate
-Parameters:
-  - text: The text snippet to analyze
-  - question: Compliance question about the text
-  - framework_id: "GDPR", "SOC2", or "HIPAA"
-  - control_id: Optional specific control (e.g., "GDPR.ART.15")
-
-⚠️ CRITICAL TOOL USAGE RULES:
-1. ALWAYS call tools when user requests data - NEVER fabricate responses
-2. Use tool_payload to store exact tool response (no modifications)
-3. Use summarised_markdown to format tool data beautifully for users
-4. If tool fails, set error_message and explain in summarised_markdown
-
-📝 EXAMPLE VALID RESPONSES:
-
-User: "What can you do?"
-{
-  "error_message": "",
-  "tool_payload": {},
-  "summarised_markdown": "## 👋 Compliance Copilot\\n\\nI help you analyze compliance documents:\\n\\n**📚 Document Management**\\n- List your documents\\n- Check document status\\n\\n**🔍 Compliance Analysis**\\n- Analyze full documents (GDPR, SOC2, HIPAA)\\n- Check specific text snippets\\n- View framework controls\\n\\nTry: *'Show my documents'* or *'What are GDPR controls?'*",
-  "suggested_next_actions": [
-    {"action": "list_documents", "description": "View all your uploaded documents"},
-    {"action": "list_controls", "description": "Browse compliance framework controls"}
-  ]
-}
+📝 EXAMPLE RESPONSES:
 
 User: "Show my documents"
-[Tool called: list_docs(user_id="user-123")]
-[Tool returns: {"documents": [{"id": "doc-1", "name": "Privacy Policy.pdf", "status": "COMPLIANT"}]}]
 {
   "error_message": "",
-  "tool_payload": {
-    "documents": [
-      {"id": "doc-1", "name": "Privacy Policy.pdf", "status": "COMPLIANT"}
-    ]
-  },
-  "summarised_markdown": "## 📚 Your Documents\\n\\n| Document ID | Name | Status |\\n|-------------|------|--------|\\n| doc-1 | Privacy Policy.pdf | ✅ COMPLIANT |\\n\\n*1 document found*",
+  "tool_payload": {"documents": [{"id": "doc-1", "name": "Policy.pdf", "status": "COMPLIANT"}]},
+  "summarised_markdown": "## 📚 Your Documents\\n\\n| ID | Name | Status |\\n|---|---|---|\\n| doc-1 | Policy.pdf | ✅ COMPLIANT |",
   "suggested_next_actions": [
-    {"action": "analyze_document", "description": "Run compliance analysis on a document"},
-    {"action": "check_status", "description": "Get detailed status of a document"}
+    {"action": "analyze", "description": "Run compliance analysis"},
+    {"action": "check_status", "description": "Get detailed status"}
   ]
 }
 
 User: "What are GDPR controls?"
-[Tool called: list_controls(framework_id="GDPR")]
 {
   "error_message": "",
-  "tool_payload": {
-    "framework_id": "GDPR",
-    "controls": [
-      {"id": "GDPR.ART.5.1.a", "requirement": "Lawfulness, fairness, transparency"},
-      {"id": "GDPR.ART.6", "requirement": "Lawful basis for processing"}
-    ]
-  },
-  "summarised_markdown": "## 📋 GDPR Controls\\n\\n**Total Controls:** 2\\n\\n### Key Requirements:\\n\\n**GDPR.ART.5.1.a** - Lawfulness, fairness, transparency\\n**GDPR.ART.6** - Lawful basis for processing\\n\\n*Use these control IDs for targeted compliance checks*",
+  "tool_payload": {"framework_id": "GDPR", "controls": [{"id": "GDPR.ART.5.1.a", "requirement": "Lawfulness"}]},
+  "summarised_markdown": "## 📋 GDPR Controls\\n\\n**GDPR.ART.5.1.a** - Lawfulness, fairness, transparency\\n\\n*Use these IDs for targeted checks*",
   "suggested_next_actions": [
-    {"action": "comprehensive_check", "description": "Analyze a document against GDPR"},
-    {"action": "check_specific_control", "description": "Check text against specific control"}
+    {"action": "comprehensive_check", "description": "Analyze document against GDPR"}
   ]
 }
 
-🎯 FINAL CHECKLIST (verify before responding):
-☑ Response is valid JSON starting with { and ending with }
-☑ All strings use double quotes
-☑ All booleans are true/false (lowercase)
-☑ All null values are null (not None)
-☑ Newlines in strings are escaped as \\n
-☑ No trailing commas
-☑ No markdown code blocks
-☑ No text before { or after }
+🎯 BEHAVIOR RULES:
+- Never refuse to answer or say "I already answered this"
+- Never argue with the user
+- If uncertain, call the tool and let the data speak
+- If frustrated, put concerns in summarised_markdown but maintain JSON format
+- Repeated questions = call the tool again without complaint
+- Every response MUST be valid JSON that passes JSON.parse()
 
 Your response will be parsed by JSON.parse() - invalid JSON will crash the system.
 """
@@ -402,18 +372,44 @@ compliance_agent = Agent(
     system_prompt=SYSTEM_PROMPT
 )
 
-app = BedrockAgentCoreApp()
-
-
 def parse_agent_json(text: str) -> dict[str, Any]:
     """
     Parse JSON from agent response with comprehensive error handling.
-    Handles: smart quotes, Python syntax, malformed JSON, truncation.
+    Handles: smart quotes, Python syntax, malformed JSON, truncation, XML-like tags.
     """
     import re
     sanitized: str = "{}"
     if not text or not text.strip():
         raise ValueError("Empty response from agent")
+    
+    # Step 0: Handle XML-like tag format from agent
+    # Agent sometimes wraps response in <result> and <suggested_next_actions> tags
+    if '<result>' in text or '<suggested_next_actions>' in text:
+        try:
+            # Extract content from XML-like tags
+            result_match = re.search(r'<result>\s*(.*?)\s*</result>', text, re.DOTALL)
+            actions_match = re.search(r'<suggested_next_actions>\s*(.*?)\s*</suggested_next_actions>', text, re.DOTALL)
+            
+            summarised_markdown = result_match.group(1).strip() if result_match else ""
+            suggested_actions_str = actions_match.group(1).strip() if actions_match else "[]"
+            
+            # Parse suggested actions JSON array
+            try:
+                suggested_actions = json.loads(suggested_actions_str)
+            except json.JSONDecodeError:
+                suggested_actions = []
+            
+            # Construct proper response object
+            return {
+                "error_message": "",
+                "tool_payload": {},
+                "summarised_markdown": summarised_markdown,
+                "suggested_next_actions": suggested_actions
+            }
+        except Exception as e:
+            print(f"⚠️ Failed to parse XML-like tags: {e}")
+            # Fall through to regular JSON parsing
+    
     try:
         return json.loads(text)
     except json.JSONDecodeError:
@@ -471,6 +467,12 @@ def parse_agent_json(text: str) -> dict[str, Any]:
         # Fix Decimal objects: Decimal('123.45') -> 123.45
         sanitized = re.sub(r'Decimal\([\'"]([0-9.]+)[\'"]\)', r'\1', sanitized)
         
+        # 🔧 FIX: Remove invalid backslash escapes
+        # Replace backslash followed by any character that's not a valid JSON escape
+        # Valid JSON escapes: \", \\, \/, \b, \f, \n, \r, \t, \uXXXX
+        # This regex finds backslashes NOT followed by valid escape chars
+        sanitized = re.sub(r'\\(?!["\\/bfnrtu])', '', sanitized)
+        
         # Try 2: Parse sanitized version
         return json.loads(sanitized)
     except json.JSONDecodeError as second_error:
@@ -497,40 +499,3 @@ def parse_agent_json(text: str) -> dict[str, Any]:
             error_details.append(f"Ends with: {sanitized[-200:]}")
         
         raise ValueError("\n".join(error_details))
-
-
-
-@app.entrypoint  # type: ignore[misc]
-def invoke(event: dict[str, Any]) -> dict[str, Any]:
-    """Entrypoint for Bedrock AgentCoreApp to invoke the agent."""
-    try:
-        user_message = event.get("inputText") or event.get("prompt", "")
-        session_id = event.get("session_id", str(uuid7()))
-        res = str(compliance_agent(user_message))
-        agent_response = str(res)
-        # Clean the response: remove code blocks and control characters
-        print("##############################################################")
-        print(agent_response)
-        with open("./agent_response.txt", "w") as f:
-            f.write(agent_response)
-        print("##############################################################")
-        parsed = parse_agent_json(agent_response)
-        parsed["session_id"] = session_id
-        return parsed
-    
-    except Exception as e:
-        error_traceback = traceback.format_exc()
-        print(f"Agent invocation failed: {str(e)}\nTraceback:\n{error_traceback}")
-        return {
-            "error_message": f"Agent invocation failed: {str(e)}",
-            "tool_payload": {},
-            "summarised_markdown": "",
-            "suggested_next_actions": []
-        }
-        
-if __name__ == "__main__":
-    print("🤖 Compliance Copilot Agent starting on port 8080...")
-    print("📋 System prompt loaded - Agent will intelligently route queries")
-    print("🔧 Available tools: list_controls, phrase_wise_compliance_check, comprehensive_check, doc_status, list_docs")
-    print("🧠 Agent Mode: Smart parameter extraction from user prompts")
-    app.run() # type: ignore[misc]

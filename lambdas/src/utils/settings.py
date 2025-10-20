@@ -22,6 +22,7 @@ AGENT_ALIAS_ID = os.environ['AGENT_ALIAS_ID']
 AGENT_REGION = os.environ.get('AGENT_REGION', 'us-east-1')
 AGENT_CLAUDE_HAIKU = os.environ.get('AGENT_CLAUDE_HAIKU', 'anthropic.claude-3-haiku-20240307-v1:0')
 AGENT_CLAUDE_SONNET = os.environ.get('AGENT_CLAUDE_SONNET', 'anthropic.claude-3-5-sonnet-20240620-v1:0')
+AGENT_CLAUDE_SONNET_4_5 = os.environ.get('AGENT_CLAUDE_SONNET_4_5', 'us.anthropic.claude-sonnet-4-5-20250929-v1:0')
 
 # S3
 S3_REGION = os.environ.get('S3_REGION', 'us-east-1')

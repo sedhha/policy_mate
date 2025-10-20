@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PolicyMate - Compliance CoPilot",
+  title: "PolicyMate - Compliance Copilot",
   description: "Advanced Compliance Analysis & Annotation Platform",
 };
 

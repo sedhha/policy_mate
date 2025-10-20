@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { IAgentState, Document } from '@/types';
+import type { IAgentState } from '@/types';
 import { fetchDocuments, sendMessage } from '@/utils/apis/documents';
 
 export const useAgentStore = create<IAgentState>()((set, get) => ({

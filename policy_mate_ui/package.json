@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.907.0",
+    "@aws-sdk/client-s3": "^3.913.0",
+    "@aws-sdk/s3-request-presigner": "^3.913.0",
     "highlight.js": "^11.11.1",
     "jwt-decode": "^4.0.0",
     "katex": "^0.16.25",

@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { VibrantLoader } from "@/components/PDFAnnotator/hoc/LazyLoader/VibrantLoader";
 import { usePDFStore } from "@/components/PDFAnnotator/stores/pdfStore";
@@ -25,6 +25,7 @@ const description = "Advanced Compliance Analysis & Annotation Platform";
 
 export default function PDFAnnotatorScreen() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const { sessionId, setSessionId, setNumPages } = usePDFStore();
 
     useEffect(() => {
@@ -32,18 +33,25 @@ export default function PDFAnnotatorScreen() {
         if (payload && !sessionId) {
             try {
                 const decodedJson = JSON.parse(b64UrlDecode(payload));
-                const decodedSessionId: string | undefined = decodedJson?.sessionId;
+                const decodedDocumentId: string | undefined = decodedJson?.document_id;
                 const totalPagesRaw = decodedJson?.totalPages;
                 const totalPages = Number.isFinite(+totalPagesRaw) ? +totalPagesRaw : undefined;
+                const s3Key = decodedJson?.s3_key;
+                const s3Bucket = decodedJson?.s3_bucket;
 
-                if (!decodedSessionId) throw new Error("Missing sessionId in payload");
-                setSessionId(decodedSessionId);
+                if (!decodedDocumentId || !s3Key || !s3Bucket) throw new Error("Missing documentId or s3Key or s3Bucket in payload");
+                setSessionId(decodedDocumentId);
                 if (typeof totalPages === "number") setNumPages(totalPages);
+                if (s3Key) usePDFStore.getState().setS3Key(s3Key);
+                if (s3Bucket) usePDFStore.getState().setS3Bucket(s3Bucket);
+
+                // Clear search parameters after processing
+                router.replace("/analyse", { scroll: false });
             } catch (err) {
                 console.error("Failed to parse payload:", err);
             }
         }
-    }, [searchParams, sessionId, setSessionId, setNumPages]);
+    }, [searchParams, sessionId, setSessionId, setNumPages, router]);
 
     return (
         <div className="h-full bg-gray-100">

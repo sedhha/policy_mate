@@ -3,7 +3,8 @@
 
 from typing import Any
 from datetime import datetime
-from src.utils.services.dynamoDB import DocumentStatus, get_table, DynamoDBTable, replace_decimals
+from src.utils.settings import S3_BUCKET_NAME
+from src.utils.services.dynamoDB import DocumentStatus, get_table, DynamoDBTable
 from src.utils.services.document_extractor import format_file_size, format_timestamp, get_status_details
 from boto3.dynamodb.conditions import Attr
 
@@ -54,32 +55,33 @@ def show_doc_tool(user_id: str) -> dict[str, Any]:
     
     for item in response.get('Items', []):
         status: int = item.get('status', DocumentStatus.UNKNOWN.value)  # pyright: ignore[reportAssignmentType]
-        status_details = get_status_details(status)
+        status_details = get_status_details(str(status))
         
         doc_size = item.get('file_size')
-        timestamp = item.get('created_at')
+        timestamp_int = int(str(item.get('created_at')))
         
         # Convert DynamoDB types to Python types
-        size_int = int(doc_size) if doc_size is not None else None  # type: ignore
-        timestamp_int = int(timestamp) if timestamp is not None else None  # type: ignore
+        size_int = int(str(doc_size))
         
         documents.append({
             'document_id': item.get('file_id'),
             'file_name': str(item.get('s3_key', '')).split('/')[-1] if item.get('s3_key') else 'Unknown',
-            'file_type': item.get('mime_type', 'Unknown'),
+            'file_type': item.get('file_type', 'Unknown'),
             'document_size': size_int,
             'formatted_size': format_file_size(size_int),
-            'compliance_status': status,
+            'compliance_status': int(str(status)),
             'status_label': status_details['label'],
             'status_color': status_details['color'],
             'status_emoji': status_details['emoji'],
             'timestamp': timestamp_int,
-            'formatted_date': format_timestamp(timestamp_int)
+            'formatted_date': format_timestamp(timestamp_int),
+            'pages': int(str(item.get('page_count', 0))),
+            's3_key': item.get('s3_key', ''),
+            's3_bucket': S3_BUCKET_NAME
         })
     
-    # Ensure all Decimal objects are converted to int/float for JSON serialization
-    return replace_decimals({
+    return {
         'documents': documents,
         'count': len(documents),
         'timestamp': datetime.now().isoformat()
-    })
+    }
