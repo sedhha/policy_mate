@@ -13,10 +13,12 @@ flowchart TD
         
         subgraph database["🗄️ Database Services"]
             DynamoDB["🗄️<br/>Amazon DynamoDB<br/><i>NoSQL Database</i>"]
-            UserProfiles["👤<br/>User Profiles<br/><i>Authentication Data</i>"]
-            ComplianceJobs["⚙️<br/>Compliance Jobs<br/><i>Processing Status</i>"]
-            PolicyMetadata["📝<br/>Policy Metadata<br/><i>Document Properties</i>"]
-            AuditLogs["📋<br/>Audit Logs<br/><i>User Activities</i>"]
+            ComplianceControls["📋<br/>Compliance Controls<br/><i>PolicyMateComplianceControls</i>"]
+            ConversationHistory["💬<br/>Conversation History<br/><i>PolicyMateConversationHistory</i>"]
+            ComplianceReports["📊<br/>Compliance Reports<br/><i>PolicyMateComplianceReports</i>"]
+            Files["📄<br/>Files Metadata<br/><i>PolicyMateFiles</i>"]
+            Organizations["🏢<br/>Organizations<br/><i>PolicyMateOrganizations</i>"]
+            InferredFiles["🔍<br/>Inferred Files<br/><i>PolicyMateInferredFiles</i>"]
         end
         
         subgraph searchEngine["🔍 Search & Analytics"]
@@ -36,10 +38,12 @@ flowchart TD
     S3 -->|Stores| S3Reports
     S3 -->|Maintains| S3Backups
     
-    DynamoDB -->|Manages| UserProfiles
-    DynamoDB -->|Tracks| ComplianceJobs
-    DynamoDB -->|Stores| PolicyMetadata
-    DynamoDB -->|Records| AuditLogs
+    DynamoDB -->|Manages| ComplianceControls
+    DynamoDB -->|Tracks| ConversationHistory
+    DynamoDB -->|Stores| ComplianceReports
+    DynamoDB -->|Records| Files
+    DynamoDB -->|Maintains| Organizations
+    DynamoDB -->|Stores| InferredFiles
     
     OpenSearch -->|Creates| VectorIndex
     OpenSearch -->|Maintains| TextIndex
@@ -48,7 +52,7 @@ flowchart TD
     %% RAG Workflow
     VectorIndex -.->|Semantic Queries| AIProcessing
     TextIndex -.->|Keyword Queries| AIProcessing
-    PolicyMetadata -.->|Context Data| AIProcessing
+    Files -.->|Context Data| AIProcessing
 
     %% External Access
     UserInterface["💻 User Interface"] -->|Queries Data| OpenSearch
@@ -65,7 +69,7 @@ flowchart TD
 
     class S3,DynamoDB,OpenSearch awsService
     class S3Policies,S3Reports,S3Backups storageNode
-    class UserProfiles,ComplianceJobs,PolicyMetadata,AuditLogs databaseNode
+    class ComplianceControls,ConversationHistory,ComplianceReports,Files,Organizations,InferredFiles databaseNode
     class VectorIndex,TextIndex,Analytics searchNode
     class AIProcessing,UserInterface externalNode
     class dataLayer,fileStorage,database,searchEngine layerBox

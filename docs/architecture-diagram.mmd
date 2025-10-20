@@ -1,0 +1,72 @@
+%% Policy Mate — End-to-End Compliance Workflow
+
+flowchart LR
+    %% User Experience
+    subgraph FRONTEND ["💻 User Experience"]
+        USER[👤 User]
+        UI[💬 Next.js Chat UI]
+        INSIGHTS[📊 Compliance Dashboard]
+    end
+    
+    %% Authentication
+    subgraph AUTH ["🔐 Authentication"]
+        COGNITO[Amazon Cognito]
+    end
+    
+    %% API Layer
+    subgraph API ["🌐 API Gateway"]
+        APIGW[REST API]
+    end
+    
+    %% AI Processing
+    subgraph AIPROCESS ["🧠 AI Processing"]
+        LAMBDA[AWS Lambda]
+        BEDROCK[🧠 Amazon Bedrock]
+    end
+    
+    %% Storage & Data
+    subgraph STORAGE ["💾 Storage & Search"]
+        S3[📄 Amazon S3]
+        DYNAMODB[📋 DynamoDB Tables<br/>files, compliance_jobs, reports]
+        OPENSEARCH[🔍 OpenSearch]
+    end
+    
+    %% Document Lifecycle
+    subgraph LIFECYCLE ["📄 Document Lifecycle"]
+        UPLOAD[Upload Policy]
+        STORE[Store File]
+        TRIGGER[Trigger Analysis]
+    end
+    
+    %% User Flow
+    USER -->|Upload Policy| UI
+    USER -->|Ask Questions| UI
+    UI -->|Authenticate| COGNITO
+    UI -->|Send Request| APIGW
+    
+    %% Document Lifecycle Flow
+    UI -->|Store File| S3
+    S3 -->|Trigger| LAMBDA
+    
+    %% Processing Flow
+    APIGW -->|Invoke| LAMBDA
+    LAMBDA -->|Save Metadata| DYNAMODB
+    LAMBDA -->|Analyze| BEDROCK
+    BEDROCK -->|Query Controls| DYNAMODB
+    BEDROCK -->|Search Text| OPENSEARCH
+    BEDROCK -->|Gap Analysis + Recommendations| LAMBDA
+    
+    %% Response Flow
+    LAMBDA -->|Return Results| APIGW
+    APIGW -->|Display| UI
+    UI -->|Show Insights| INSIGHTS
+    INSIGHTS -->|View Reports| USER
+    
+    %% Styling
+    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:2px,color:#fff
+    classDef user fill:#4CAF50,stroke:#2E7D32,stroke-width:2px,color:#fff
+    classDef ui fill:#2196F3,stroke:#1565C0,stroke-width:2px,color:#fff
+    
+    class COGNITO,APIGW,LAMBDA,BEDROCK,S3,DYNAMODB,OPENSEARCH aws
+    class USER,INSIGHTS user
+    class UI ui
