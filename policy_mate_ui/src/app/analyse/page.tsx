@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { VibrantLoader } from "@/components/PDFAnnotator/hoc/LazyLoader/VibrantLoader";
 import { usePDFStore } from "@/components/PDFAnnotator/stores/pdfStore";
 
@@ -23,7 +23,7 @@ const b64UrlDecode = (input: string) => {
 
 const description = "Advanced Compliance Analysis & Annotation Platform";
 
-export default function PDFAnnotatorScreen() {
+function PDFAnnotatorContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const { sessionId, setSessionId, setNumPages } = usePDFStore();
@@ -65,5 +65,13 @@ export default function PDFAnnotatorScreen() {
                 )}
             </main>
         </div>
+    );
+}
+
+export default function PDFAnnotatorScreen() {
+    return (
+        <Suspense fallback={<VibrantLoader variant="pulse" size="lg" message={description} className="py-16" />}>
+            <PDFAnnotatorContent />
+        </Suspense>
     );
 }
