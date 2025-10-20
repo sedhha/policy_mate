@@ -1,7 +1,7 @@
 {
   "buildCommand": "cd policy_mate_ui && pnpm build",
   "devCommand": "cd policy_mate_ui && pnpm dev",
-  "installCommand": "cd policy_mate_ui && pnpm install",
+  "installCommand": "cd policy_mate_ui && pnpm install --no-frozen-lockfile",
   "framework": "nextjs",
   "outputDirectory": "policy_mate_ui/.next"
 }
