@@ -153,7 +153,7 @@ export async function GET(
     const frontendAnnotations: FrontendAnnotation[] = annotations.map(
       (ann: BackendAnnotation) => ({
         id: ann.annotation_id,
-        session_id: ann.analysis_id,
+        session_id: ann.file_id,
         page: ann.page_number,
         x: ann.x,
         y: ann.y,

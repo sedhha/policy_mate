@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useAgentStore } from '@/stores/agentStore';
 import { useAuthStore } from '@/stores/authStore';
+import { usePDFStore } from '@/components/PDFAnnotator/stores/pdfStore';
 
 const getFileIconColor = (fileName: string) => {
     const ext = fileName.split('.').pop()?.toLowerCase();
@@ -90,6 +91,7 @@ export const ExistingFiles = () => {
     const [selectedFile, setSelectedFile] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const router = useRouter();
+    const { setS3Bucket, setNumPages, setS3Key, setSessionId } = usePDFStore();
 
     const { idToken } = useAuthStore();
 
@@ -135,6 +137,10 @@ export const ExistingFiles = () => {
                 s3_bucket: selectedDocument.s3_bucket,
             };
             const base64Payload = btoa(JSON.stringify(payload));
+            setS3Bucket(selectedDocument.s3_bucket);
+            setS3Key(selectedDocument.s3_key);
+            setSessionId(selectedDocument.document_id);
+            setNumPages(selectedDocument.pages || 0);
             router.push(`/analyse?payload=${base64Payload}`);
         }
     };

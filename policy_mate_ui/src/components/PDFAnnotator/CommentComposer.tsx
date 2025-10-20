@@ -4,7 +4,8 @@ import React from 'react';
 export const CommentComposer: React.FC<{
     onSubmit: (text: string) => void;
     placeholder?: string;
-}> = ({ onSubmit, placeholder = "Type your message... (Press Enter to send, Shift+Enter for new line)" }) => {
+    disabled?: boolean;
+}> = ({ onSubmit, placeholder = "Type your message... (Press Enter to send, Shift+Enter for new line)", disabled = false }) => {
     const [value, setValue] = React.useState('');
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const textAreaRef = React.useRef<HTMLTextAreaElement>(null);
@@ -23,7 +24,7 @@ export const CommentComposer: React.FC<{
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!value.trim() || isSubmitting) return;
+        if (!value.trim() || isSubmitting || disabled) return;
 
         setIsSubmitting(true);
         await onSubmit(value.trim());
@@ -38,9 +39,11 @@ export const CommentComposer: React.FC<{
         }
     };
 
+    const isDisabled = disabled || isSubmitting;
+
     return (
         <form onSubmit={handleSubmit} className="relative">
-            <div className="relative flex items-center space-x-3 p-3 bg-gray-50 rounded-2xl border border-gray-200 focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+            <div className={`relative flex items-center space-x-3 p-3 bg-gray-50 rounded-2xl border border-gray-200 focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-100 transition-all ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
                 <textarea
                     ref={textAreaRef}
                     className="flex-1 resize-none bg-transparent border-none outline-none text-sm placeholder-gray-500 min-h-[20px] max-h-[120px] py-1 overflow-y-auto scrollbar-none leading-snug"
@@ -49,11 +52,11 @@ export const CommentComposer: React.FC<{
                     onChange={(e) => setValue(e.target.value)}
                     onKeyDown={handleKeyDown}
                     rows={1}
-                    disabled={isSubmitting}
+                    disabled={isDisabled}
                 />
                 <button
                     type="submit"
-                    disabled={!value.trim() || isSubmitting}
+                    disabled={!value.trim() || isDisabled}
                     className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer transition-all duration-200 hover:shadow-lg hover:shadow-blue-200"
                 >
                     {isSubmitting ? (

@@ -50,7 +50,7 @@ def analyze_compliance(user_text: str, question: str, controls: list[dict[str, A
                 Relevant Compliance Requirements:
                 {controls_text}
 
-                Provide a detailed analysis in the following JSON format:
+                Provide a detailed analysis in the following JSON format, also while using your extensive knowledge of compliance frameworks:
                 {{
                 "verdict": "COMPLIANT" | "NON_COMPLIANT" | "UNCLEAR" | "PARTIAL",
                 "summary": "Brief 2-3 sentence summary of compliance status",

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { verifyIdToken } from '@/utils/auth/cognitoAuth';
+import { AuthenticationError, verifyIdToken } from '@/utils/verifyIdToken';
 
 /**
  * GET /api/pdf
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       );
     }
-    // await verifyIdToken(bearer_token.split(' ')[1]);
+    await verifyIdToken(bearer_token.split(' ')[1]);
 
     // 2. Validate AWS credentials are configured
     const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
@@ -106,8 +106,19 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('❌ Error generating pre-signed URL:', error);
 
+    if (error instanceof AuthenticationError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: error.message,
+          details: error.details,
+        },
+        { status: error.statusCode || 401 }
+      );
+    }
+
     // Handle specific AWS errors
-    if (error instanceof Error) {
+    else if (error instanceof Error) {
       if (error.name === 'NoSuchKey') {
         return NextResponse.json(
           {

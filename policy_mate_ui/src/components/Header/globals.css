@@ -165,10 +165,6 @@
     animation: shake 0.5s ease-in-out;
   }
 
-  .animate-slide-in-right {
-    animation: slide-in-right 0.4s ease-out;
-  }
-
   .animate-blob {
     animation: blob 7s infinite;
   }
