@@ -195,6 +195,7 @@ Response payload for:
 
 ## TODO:
 
+- Sit with Saurabh to set up base instructions for running app.
 - Add existing work in README
 
 ## Analysis
