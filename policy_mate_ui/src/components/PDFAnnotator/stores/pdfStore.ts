@@ -382,25 +382,7 @@ export const usePDFStore = create<PDFState>()(
         // Load local annotations from localStorage
         const localAnnotations = getLocalAnnotations(documentId);
 
-        // Merge: API annotations first, then overlay with local annotations (which have comment_session_id)
-        const apiAnnotationsMap = new Map(
-          data.annotations.map((a) => [a.id, a])
-        );
-
-        // Update API annotations with local data if exists (specifically comment_session_id)
-        localAnnotations.forEach((localAnn) => {
-          if (apiAnnotationsMap.has(localAnn.id)) {
-            // Merge: keep API data but use comment_session_id from local if exists
-            const apiAnn = apiAnnotationsMap.get(localAnn.id)!;
-            apiAnnotationsMap.set(localAnn.id, {
-              ...apiAnn,
-              comment_session_id:
-                localAnn.comment_session_id || apiAnn.comment_session_id,
-            });
-          }
-        });
-
-        const mergedAnnotations = Array.from(apiAnnotationsMap.values());
+        const mergedAnnotations = [...data.annotations, ...localAnnotations];
 
         set({
           annotations: mergedAnnotations,

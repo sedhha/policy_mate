@@ -177,7 +177,7 @@ export const CommentPanel: React.FC<CommentPannelProps> = ({
                         {chatLoading && (
                             <div className="mb-2 flex items-center justify-center text-xs text-blue-600">
                                 <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
-                                <span>Waiting for Agent...</span>
+                                <span>Hang on! Getting best answers to your solid question!</span>
                             </div>
                         )}
                         <CommentComposer
