@@ -6,50 +6,60 @@ from typing import Any
 import boto3
 from aws_lambda_typing import context as context_
 from src.utils.decorators.cognito_auth import require_cognito_auth
-from mypy_boto3_bedrock_agent_runtime.client import AgentsforBedrockRuntimeClient
-from src.utils.secrets import AGENT_CORE_ALIAS_ID as AGENT_ALIAS, AGENT_CORE_ID as AGENT_ID
-
+from src.utils.secrets import AGENT_CORE_ARN_RUN_TIME
+import traceback
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # Initialize Bedrock Agent Runtime client
-client: "AgentsforBedrockRuntimeClient" = boto3.client("bedrock-agent-runtime", region_name="us-east-1") # pyright: ignore[reportUnknownMemberType]
-
+agent_core_client = boto3.client('bedrock-agentcore') # pyright: ignore[reportUnknownMemberType]
 
 @require_cognito_auth
 def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str, Any]:
-    """
-    Minimal handler to invoke an AgentCore runtime (Bedrock).
-    Requires authentication via @require_cognito_auth decorator.
-    """
+    """Invoke an AgentCore runtime endpoint from AWS Lambda."""
     try:
-        body_str = event.get("body", "{}")
-        body: dict[str, Any] = json.loads(body_str) if isinstance(body_str, str) else body_str
-        prompt: str = body.get("prompt", "Hello from Lambda!")
-        session_id: str = body.get("session_id", "default-session")
+        # Parse request body - handle both string and dict
+        body = event.get("body", {})
+        if isinstance(body, str):
+            body = json.loads(body)
+        
+        prompt = body.get("prompt", "Hello from Lambda!")
+        session_id = body.get("session_id", context.aws_request_id)
+        
+        # Prepare the payload
+        payload = json.dumps({"prompt": prompt}).encode()
+        
+        logger.info(f"Invoking AgentCore with session_id={session_id}")
 
-        # Get user info from validated claims
-        user_claims: dict[str, Any] = event.get("user_claims", {})
-        user_id: str = user_claims.get("sub", "unknown")
-
-        logger.info(f"User {user_id} invoking AgentCore ({AGENT_ID}) with prompt: {prompt[:100]}...")
-
-        response = client.invoke_agent(
-            agentId=AGENT_ID,
-            agentAliasId=AGENT_ALIAS,
-            sessionId=session_id,
-            inputText=prompt
+        # Invoke the agent
+        response = agent_core_client.invoke_agent_runtime(
+            agentRuntimeArn=AGENT_CORE_ARN_RUN_TIME,
+            runtimeSessionId=session_id,
+            payload=payload
         )
 
-        # The response stream is an iterator — collect final text
-        result_text = ""
-        completion = response.get("completion", [])
-        for event_chunk in completion:
-            if "chunk" in event_chunk:
-                chunk_bytes = event_chunk["chunk"].get("bytes", b"")
-                result_text += chunk_bytes.decode("utf-8")
+        # Gather output chunks from the streaming response
+        # Process and print the response
+        content: list[str] = []
+        if "text/event-stream" in response.get("contentType", ""):
+            # Handle streaming response
+            for line in response["response"].iter_lines(chunk_size=10):
+                if line:
+                    line = line.decode("utf-8")
+                    if line.startswith("data: "):
+                        line = line[6:]
+                        content.append(line)
 
-        logger.info(f"AgentCore responded with {len(result_text)} chars")
+        elif response.get("contentType") == "application/json":
+            # Handle standard JSON response
+            content: list[str] = []
+            for chunk in response.get("response", []):
+                content.append(chunk.decode('utf-8'))
+            print(json.loads(''.join(content)))
+        
+        else:
+            # Print raw response for other content types
+            print(f"Unexpected content response: {response}")
 
         return {
             "statusCode": 200,
@@ -58,13 +68,21 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
                 "Access-Control-Allow-Headers": "Content-Type,Authorization",
                 "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
             },
-            "body": json.dumps({"session_id": session_id, "response": result_text, "user_id": user_id}),
+            "body": json.dumps({
+                "session_id": session_id,
+                "agent_response": content
+            }),
         }
 
     except Exception as e:
-        logger.error(f"Invocation failed: {e}", exc_info=True)
+        trace = traceback.format_exc()
+        logger.exception("Error invoking AgentCore")
         return {
             "statusCode": 500,
-            "headers": {"Access-Control-Allow-Origin": "*"},
-            "body": json.dumps({"error": str(e)}),
+            "headers": {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Headers": "Content-Type,Authorization",
+                "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
+            },
+            "body": json.dumps({"error": str(e), "details": trace}),
         }
