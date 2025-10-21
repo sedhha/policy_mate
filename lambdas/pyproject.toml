@@ -5,7 +5,6 @@ requires-python = ">=3.12"
 dependencies = [
     "aws-lambda-typing>=2.20.0",
     "bedrock-agentcore>=1.0.3",
-    "bedrock-agentcore-starter-toolkit>=0.1.21",
     "boto3>=1.35.0",
     "boto3-stubs[bedrock-agent-runtime,dynamodb,s3]>=1.40.45",
     "mypy-boto3-bedrock>=1.40.53",
@@ -21,4 +20,9 @@ dependencies = [
     "strands-agents>=1.13.0",
     "typing-extensions>=4.15.0",
     "uuid6>=2025.0.1",
+]
+
+[tool.uv.workspace]
+members = [
+    "v3",
 ]

@@ -31,3 +31,4 @@ S3_BUCKET_NAME = os.environ['BUCKET_NAME']
 AGENT_CORE_REGION = os.environ.get('AGENT_CORE_REGION', 'us-east-1')
 AGENT_CORE_ID = os.environ['AGENT_CORE_ID']
 AGENT_RUNTIME_ARN = os.environ['AGENT_RUNTIME_ARN']
+AGENT_CORE_MODEL= os.environ['AGENT_CORE_MODEL']
