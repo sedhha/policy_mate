@@ -25,11 +25,11 @@ mkdir -p $BUILD_DIR
 # Install minimal dependencies
 echo "📦 Installing dependencies..."
 uv pip install --python 3.12 --target $BUILD_DIR \
-    boto3>=1.35.0 \
-    aws-lambda-typing>=2.20.0 \
-    python-jose[cryptography]>=3.3.0 \
-    requests>=2.32.0 \
-    mypy-boto3-bedrock-agent-runtime>=1.40.0
+    "boto3>=1.35.0" \
+    "aws-lambda-typing>=2.20.0" \
+    "python-jose[cryptography]>=3.3.0" \
+    "requests>=2.32.0" \
+    "mypy-boto3-bedrock-agent-runtime>=1.40.0"
 
 # Copy handler and utilities
 echo "📋 Copying handler and utilities..."

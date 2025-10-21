@@ -11,6 +11,14 @@ import traceback
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+def create_user_metadata_str(claims: dict[str, Any]) -> str:
+    """
+    Create a user metadata string from claims for the agent prompt.
+    """
+    user_email = claims["email"]
+    user_id = claims["sub"]
+    return f"[user_email={user_email}] [user_id={user_id}]"
+
 # Initialize Bedrock Agent Runtime client
 agent_core_client = boto3.client('bedrock-agentcore') # pyright: ignore[reportUnknownMemberType]
 
@@ -23,11 +31,14 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         if isinstance(body, str):
             body = json.loads(body)
         
-        prompt = body.get("prompt", "Hello from Lambda!")
+        prompt = body.get("prompt", "")
+        user_meta = create_user_metadata_str(event['user_claims'])
         session_id = body.get("session_id", context.aws_request_id)
+        # Append user metadata to prompt
+        prompt_with_meta = f'{prompt}\n\n{user_meta}'
         
         # Prepare the payload
-        payload = json.dumps({"prompt": prompt}).encode()
+        payload = json.dumps({"prompt": prompt_with_meta}).encode()
         
         logger.info(f"Invoking AgentCore with session_id={session_id}")
 
@@ -55,7 +66,6 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
             content: list[str] = []
             for chunk in response.get("response", []):
                 content.append(chunk.decode('utf-8'))
-            print(json.loads(''.join(content)))
         
         else:
             # Print raw response for other content types
@@ -70,7 +80,7 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
             },
             "body": json.dumps({
                 "session_id": session_id,
-                "agent_response": content
+                **json.loads(''.join(content))
             }),
         }
 
