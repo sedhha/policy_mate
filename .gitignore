@@ -17,4 +17,3 @@ backup/*
 lambdas/agent_response.txt
 lambdas/tests/analysis_result.json
 lambdas/zips/
-lambdas/.bedrock_agentcore.yaml
