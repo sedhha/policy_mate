@@ -3,11 +3,17 @@
 from typing import Any
 import json
 import traceback
+import logging
 from aws_lambda_typing import context as context_
 from src.utils.logger import log_with_context
 from src.utils.decorators.cognito_auth import require_cognito_auth
 from src.agents.compliance_agent import compliance_agent, parse_agent_json
 from uuid6 import uuid7
+
+logging.getLogger('boto3').setLevel(logging.WARNING)
+logging.getLogger('botocore').setLevel(logging.WARNING)
+logging.getLogger('urllib3').setLevel(logging.WARNING)
+logging.getLogger('strands').setLevel(logging.WARNING)
 
 
 def create_user_metadata_str(claims: dict[str, Any]) -> str:

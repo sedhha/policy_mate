@@ -1,12 +1,18 @@
 # filePath: lambdas/test_local.py
 import json
 import os
+import logging
 import boto3
 from typing import Any, Dict
 from dotenv import load_dotenv
 from src.utils.services.dynamoDB import get_table, DynamoDBTable
 
 load_dotenv(override=True)
+
+logging.getLogger('boto3').setLevel(logging.WARNING)
+logging.getLogger('botocore').setLevel(logging.WARNING)
+logging.getLogger('urllib3').setLevel(logging.WARNING)
+logging.getLogger('strands').setLevel(logging.WARNING)
 
 if os.environ.get('AWS_PROFILE'):
     boto3.setup_default_session(profile_name=os.environ.get('AWS_PROFILE'))
