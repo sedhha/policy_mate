@@ -3,8 +3,8 @@ from bedrock_agentcore import BedrockAgentCoreApp
 from uuid6 import uuid7
 from strands import tool  # type: ignore[attr-defined]
 import traceback
-from src.agents.compliance_agent import compliance_agent, parse_agent_json
-
+from src.agents.v2.agent_core_compliance_agent import compliance_agent
+import json
 app = BedrockAgentCoreApp()
 
 
@@ -18,11 +18,11 @@ def invoke(event: dict[str, Any]) -> dict[str, Any]:
         agent_response = str(res)
         # Clean the response: remove code blocks and control characters
         print("##############################################################")
-        # print(agent_response)
-        # with open("./agent_response.txt", "w") as f:
-        #     f.write(agent_response)
-        # print("##############################################################")
-        parsed = parse_agent_json(agent_response)
+        print(agent_response)
+        with open("./agent_response.json", "w") as f:
+            f.write(agent_response)
+        print("##############################################################")
+        parsed = json.loads(agent_response)
         parsed["session_id"] = session_id
         return parsed
     

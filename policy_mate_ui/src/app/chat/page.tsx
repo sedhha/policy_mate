@@ -17,6 +17,15 @@ import {
     Shield,
     ShieldCheck,
     ChevronDown,
+    AlertCircle,
+    CheckCircle2,
+    XCircle,
+    Info,
+    Database,
+    Code2,
+    FileJson,
+    ChevronUp,
+    Sparkles,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -37,6 +46,8 @@ interface Message {
     content: string;
     isLoading?: boolean;
     suggestedActions?: SuggestedAction[];
+    toolPayload?: any;
+    errorMessage?: string;
 }
 
 // Elegant Loading Animation Component with Compliance Scanning
@@ -57,7 +68,7 @@ const LoadingMessage = () => (
                     <Shield className='w-4 h-4 text-blue-600' />
                     <Loader2 className='w-4 h-4 text-blue-600 animate-spin' />
                 </div>
-                <span className='text-sm font-medium text-blue-600'>Scanning for compliance...</span>
+                <span className='text-sm font-medium text-blue-600'>Analyzing compliance requirements...</span>
             </div>
             <div className='space-y-2'>
                 <div className='h-2 bg-gradient-to-r from-blue-200 via-indigo-300 to-blue-200 rounded-full w-3/4 animate-pulse' />
@@ -68,7 +79,122 @@ const LoadingMessage = () => (
     </div>
 );
 
-// Action Suggestions Component
+// Tool Payload Inspector Component
+const ToolPayloadInspector = ({ payload }: { payload: any }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [copied, setCopied] = useState(false);
+
+    if (!payload || Object.keys(payload).length === 0) return null;
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    // Check if payload has meaningful data
+    const hasData = Object.keys(payload).length > 0;
+    const isComplexPayload = JSON.stringify(payload).length > 100;
+
+    return (
+        <div className='mt-4 animate-fade-in'>
+            <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className='w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-slate-50 to-gray-50 hover:from-slate-100 hover:to-gray-100 border border-gray-200 rounded-xl transition-all duration-200 group'
+            >
+                <div className='flex items-center gap-3'>
+                    <div className='w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-md'>
+                        <Database className='w-4 h-4 text-white' />
+                    </div>
+                    <div className='text-left'>
+                        <div className='text-sm font-semibold text-gray-900 flex items-center gap-2'>
+                            Tool Response Data
+                            {hasData && (
+                                <span className='px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full'>
+                                    {Object.keys(payload).length} fields
+                                </span>
+                            )}
+                        </div>
+                        <div className='text-xs text-gray-500'>
+                            {isExpanded ? 'Click to collapse' : 'Click to view raw data'}
+                        </div>
+                    </div>
+                </div>
+                <div className='flex items-center gap-2'>
+                    {isExpanded && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleCopy();
+                            }}
+                            className='p-2 hover:bg-white rounded-lg transition-colors'
+                        >
+                            {copied ? (
+                                <Check className='w-4 h-4 text-green-600' />
+                            ) : (
+                                <Copy className='w-4 h-4 text-gray-500' />
+                            )}
+                        </button>
+                    )}
+                    <ChevronDown
+                        className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''
+                            }`}
+                    />
+                </div>
+            </button>
+
+            {isExpanded && (
+                <div className='mt-2 border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm animate-fade-in'>
+                    <div className='bg-gradient-to-r from-slate-800 to-gray-900 px-4 py-2 flex items-center justify-between'>
+                        <div className='flex items-center gap-2'>
+                            <FileJson className='w-4 h-4 text-purple-400' />
+                            <span className='text-xs font-mono text-gray-300'>JSON Response</span>
+                        </div>
+                        <span className='text-xs text-gray-400 font-mono'>
+                            {(JSON.stringify(payload).length / 1024).toFixed(2)} KB
+                        </span>
+                    </div>
+                    <div className='p-4 bg-slate-900 overflow-x-auto max-h-96 overflow-y-auto'>
+                        <pre className='text-xs font-mono text-gray-300 leading-relaxed'>
+                            <code>{JSON.stringify(payload, null, 2)}</code>
+                        </pre>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// Error Message Component
+const ErrorBanner = ({ message }: { message: string }) => {
+    if (!message) return null;
+
+    return (
+        <div className='mb-4 p-4 bg-gradient-to-r from-red-50 to-rose-50 border-l-4 border-red-500 rounded-lg animate-fade-in'>
+            <div className='flex items-start gap-3'>
+                <div className='w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0'>
+                    <XCircle className='w-5 h-5 text-red-600' />
+                </div>
+                <div className='flex-1'>
+                    <h4 className='text-sm font-semibold text-red-900 mb-1'>Error Occurred</h4>
+                    <p className='text-sm text-red-700 leading-relaxed'>{message}</p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// Success Indicator Component
+const SuccessIndicator = () => (
+    <div className='mb-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 rounded-lg flex items-center gap-3 animate-fade-in'>
+        <div className='w-7 h-7 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0'>
+            <CheckCircle2 className='w-4 h-4 text-green-600' />
+        </div>
+        <span className='text-sm font-medium text-green-800'>Analysis completed successfully</span>
+    </div>
+);
+
+// Action Suggestions Component - Enhanced
 const ActionSuggestions = ({
     actions,
     onActionClick
@@ -80,38 +206,62 @@ const ActionSuggestions = ({
 
     return (
         <div className='mt-6 space-y-3 animate-fade-in'>
-            <div className='flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wide'>
-                <Zap className='w-3.5 h-3.5 text-amber-500' />
-                Suggested Next Actions
+            <div className='flex items-center gap-2 px-1'>
+                <div className='w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md'>
+                    <Sparkles className='w-4 h-4 text-white' />
+                </div>
+                <div>
+                    <div className='text-sm font-bold text-gray-900'>Suggested Next Actions</div>
+                    <div className='text-xs text-gray-500'>Click any action to execute</div>
+                </div>
             </div>
-            <div className='grid gap-2'>
+            <div className='grid gap-3'>
                 {actions.map((item, idx) => (
                     <button
                         key={idx}
-                        onClick={() => onActionClick(item.action)}
-                        className='group relative overflow-hidden text-left p-4 rounded-xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 hover:from-blue-50 hover:to-indigo-50 hover:border-blue-300 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]'
+                        onClick={() => onActionClick(item.description)}
+                        className='group relative overflow-hidden text-left rounded-2xl border-2 border-gray-200 bg-white hover:border-blue-400 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]'
                         style={{
                             animationDelay: `${idx * 100}ms`,
                             animation: 'fade-in 0.5s ease-out both'
                         }}
                     >
-                        {/* Shimmer effect on hover */}
-                        <div className='absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/40 to-transparent' />
+                        {/* Gradient hover effect */}
+                        <div className='absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
 
-                        <div className='relative flex items-start gap-3'>
-                            <div className='mt-0.5 flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-md'>
-                                <ArrowRight className='w-4 h-4 text-white group-hover:translate-x-0.5 transition-transform' />
-                            </div>
-                            <div className='flex-1 min-w-0'>
-                                <div className='font-semibold text-sm text-gray-900 mb-1 group-hover:text-blue-700 transition-colors'>
-                                    {item.action}
+                        {/* Shimmer effect */}
+                        <div className='absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/60 to-transparent' />
+
+                        <div className='relative p-5 flex items-start gap-4'>
+                            <div className='flex-shrink-0'>
+                                <div className='w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg'>
+                                    <ArrowRight className='w-6 h-6 text-white group-hover:translate-x-0.5 transition-transform' />
                                 </div>
-                                <div className='text-xs text-gray-600 leading-relaxed group-hover:text-gray-700 transition-colors'>
+                            </div>
+
+                            <div className='flex-1 min-w-0 pr-8'>
+                                <div className='flex items-center gap-2 mb-2'>
+                                    <h4 className='font-bold text-base text-gray-900 group-hover:text-blue-700 transition-colors'>
+                                        {item.action}
+                                    </h4>
+                                    <div className='px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full'>
+                                        Action {idx + 1}
+                                    </div>
+                                </div>
+                                <p className='text-sm text-gray-600 leading-relaxed group-hover:text-gray-800 transition-colors'>
                                     {item.description}
+                                </p>
+                            </div>
+
+                            <div className='absolute top-5 right-5'>
+                                <div className='w-10 h-10 rounded-full bg-blue-50 group-hover:bg-blue-100 flex items-center justify-center transition-colors'>
+                                    <ChevronRight className='w-5 h-5 text-blue-600 group-hover:translate-x-1 transition-transform' />
                                 </div>
                             </div>
-                            <ChevronRight className='w-5 h-5 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all flex-shrink-0 mt-1' />
                         </div>
+
+                        {/* Bottom accent line */}
+                        <div className='h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left' />
                     </button>
                 ))}
             </div>
@@ -122,13 +272,13 @@ const ActionSuggestions = ({
 // Custom markdown components
 const MarkdownComponents = {
     h1: ({ children, ...props }: React.HTMLProps<HTMLHeadingElement>) => (
-        <h1 className='text-2xl md:text-3xl font-bold text-gray-900 mb-4 mt-6 pb-2 border-b border-gray-200 first:mt-0' {...props}>
+        <h1 className='text-2xl md:text-3xl font-bold text-gray-900 mb-4 mt-6 pb-2 border-b-2 border-gradient-to-r from-blue-500 to-indigo-500 first:mt-0' {...props}>
             {children}
         </h1>
     ),
     h2: ({ children, ...props }: React.HTMLProps<HTMLHeadingElement>) => (
-        <h2 className='text-xl md:text-2xl font-semibold text-gray-800 mb-3 mt-5 flex items-center gap-2 first:mt-0' {...props}>
-            <Hash className='w-4 h-4 md:w-5 md:h-5 text-blue-500 opacity-50' />
+        <h2 className='text-xl md:text-2xl font-bold text-gray-800 mb-3 mt-5 flex items-center gap-2 first:mt-0' {...props}>
+            <div className='w-1 h-6 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full' />
             {children}
         </h2>
     ),
@@ -159,12 +309,12 @@ const MarkdownComponents = {
     ),
     li: ({ children, ...props }: React.HTMLProps<HTMLLIElement>) => (
         <li className='flex items-start gap-2 text-sm md:text-base text-gray-700' {...props}>
-            <ChevronRight className='w-3 h-3 md:w-4 md:h-4 text-blue-500 mt-0.5 flex-shrink-0' />
+            <div className='w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 flex-shrink-0' />
             <span className='flex-1'>{children}</span>
         </li>
     ),
     blockquote: ({ children, ...props }: React.HTMLProps<HTMLQuoteElement>) => (
-        <blockquote className='border-l-4 border-blue-500 bg-blue-50 pl-3 md:pl-4 py-2 md:py-3 pr-3 md:pr-4 mb-4 rounded-r-lg' {...props}>
+        <blockquote className='border-l-4 border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 pl-3 md:pl-4 py-2 md:py-3 pr-3 md:pr-4 mb-4 rounded-r-lg' {...props}>
             <div className='flex gap-2'>
                 <Quote className='w-4 h-4 md:w-5 md:h-5 text-blue-600 opacity-50 flex-shrink-0 mt-1' />
                 <div className='text-sm md:text-base text-gray-700 italic flex-1'>{children}</div>
@@ -187,41 +337,46 @@ const MarkdownComponents = {
 
         if (inline) {
             return (
-                <code className='px-1.5 py-0.5 bg-gray-100 text-purple-600 rounded text-xs md:text-sm font-mono' {...props}>
+                <code className='px-2 py-1 bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 rounded-md text-xs md:text-sm font-mono border border-purple-200' {...props}>
                     {children}
                 </code>
             );
         }
 
         return (
-            <>
-                <div className='relative group mb-4 not-prose'>
-                    <div className='absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10'>
-                        <button
-                            onClick={handleCopy}
-                            className='p-1.5 md:p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors'>
-                            {copied ? (
-                                <Check className='w-3 h-3 md:w-4 md:h-4 text-green-400' />
-                            ) : (
-                                <Copy className='w-3 h-3 md:w-4 md:h-4 text-gray-400' />
-                            )}
-                        </button>
-                    </div>
-                    <div className='bg-gray-900 rounded-lg overflow-hidden'>
-                        <div className='flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-gray-800 border-b border-gray-700'>
-                            <FileCode className='w-3 h-3 md:w-4 md:h-4 text-gray-400' />
-                            <span className='text-xs text-gray-400 font-mono'>
+            <div className='relative group mb-4 not-prose'>
+                <div className='absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10'>
+                    <button
+                        onClick={handleCopy}
+                        className='p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-all hover:scale-110 active:scale-95 shadow-lg'>
+                        {copied ? (
+                            <Check className='w-4 h-4 text-green-400' />
+                        ) : (
+                            <Copy className='w-4 h-4 text-gray-300' />
+                        )}
+                    </button>
+                </div>
+                <div className='bg-gradient-to-br from-slate-900 to-gray-900 rounded-xl overflow-hidden shadow-xl border border-gray-800'>
+                    <div className='flex items-center justify-between px-4 py-2.5 bg-gray-800/50 border-b border-gray-700'>
+                        <div className='flex items-center gap-2'>
+                            <Code2 className='w-4 h-4 text-blue-400' />
+                            <span className='text-xs text-gray-300 font-mono font-semibold'>
                                 {className?.replace('language-', '') || 'code'}
                             </span>
                         </div>
-                        <pre className='p-3 md:p-4 overflow-x-auto'>
-                            <code className='text-xs md:text-sm font-mono text-gray-300' {...props}>
-                                {children}
-                            </code>
-                        </pre>
+                        <div className='flex gap-1.5'>
+                            <div className='w-2 h-2 rounded-full bg-red-500' />
+                            <div className='w-2 h-2 rounded-full bg-yellow-500' />
+                            <div className='w-2 h-2 rounded-full bg-green-500' />
+                        </div>
                     </div>
+                    <pre className='p-4 overflow-x-auto'>
+                        <code className='text-sm font-mono text-gray-300' {...props}>
+                            {children}
+                        </code>
+                    </pre>
                 </div>
-            </>
+            </div>
         );
     },
     pre: ({ children }: React.HTMLProps<HTMLPreElement>) => <>{children}</>,
@@ -230,34 +385,34 @@ const MarkdownComponents = {
             href={href}
             target='_blank'
             rel='noopener noreferrer'
-            className='text-blue-600 hover:text-blue-800 underline decoration-blue-300 hover:decoration-blue-500 transition-colors break-words'
+            className='text-blue-600 hover:text-blue-800 underline decoration-blue-300 hover:decoration-blue-500 decoration-2 underline-offset-2 transition-all break-words font-medium'
             {...props}>
             {children}
         </a>
     ),
     table: ({ children, ...props }: React.HTMLProps<HTMLTableElement>) => (
-        <div className='overflow-x-auto mb-4 -mx-2 md:mx-0'>
-            <table className='min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg' {...props}>
+        <div className='overflow-x-auto mb-4 -mx-2 md:mx-0 rounded-xl border border-gray-200 shadow-sm'>
+            <table className='min-w-full divide-y divide-gray-200' {...props}>
                 {children}
             </table>
         </div>
     ),
     thead: ({ children, ...props }: React.HTMLProps<HTMLTableSectionElement>) => (
-        <thead className='bg-gray-50' {...props}>{children}</thead>
+        <thead className='bg-gradient-to-r from-gray-50 to-slate-50' {...props}>{children}</thead>
     ),
     th: ({ children, ...props }: React.HTMLProps<HTMLTableCellElement>) => (
-        <th className='px-3 md:px-4 py-2 md:py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider' {...props}>
+        <th className='px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-gray-300' {...props}>
             {children}
         </th>
     ),
     td: ({ children, ...props }: React.HTMLProps<HTMLTableCellElement>) => (
-        <td className='px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm text-gray-700 border-t border-gray-100' {...props}>
+        <td className='px-4 py-3 text-sm text-gray-700 border-t border-gray-100' {...props}>
             {children}
         </td>
     ),
-    hr: () => <hr className='my-4 md:my-6 border-gray-200' />,
+    hr: () => <hr className='my-6 border-t-2 border-gray-200' />,
     strong: ({ children, ...props }: React.HTMLProps<HTMLElement>) => (
-        <strong className='font-semibold text-gray-900' {...props}>{children}</strong>
+        <strong className='font-bold text-gray-900' {...props}>{children}</strong>
     ),
     em: ({ children, ...props }: React.HTMLProps<HTMLElement>) => (
         <em className='italic text-gray-700' {...props}>{children}</em>
@@ -313,6 +468,10 @@ export default function ChatPage() {
     const handleActionClick = (action: string) => {
         setMessage(action);
         textareaRef.current?.focus();
+        // Auto-scroll to input
+        setTimeout(() => {
+            textareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
     };
 
     const handleSendMessage = async (e?: React.FormEvent) => {
@@ -341,6 +500,8 @@ export default function ChatPage() {
                         role: 'assistant' as const,
                         content: assistantMessage,
                         suggestedActions: response.suggested_next_actions || [],
+                        toolPayload: response.tool_payload,
+                        errorMessage: response.error_message,
                     },
                 ];
             } else {
@@ -348,7 +509,8 @@ export default function ChatPage() {
                     ...messagesWithoutLoading,
                     {
                         role: 'assistant' as const,
-                        content: agentStates.chat.error || '❌ Failed to get response. Please try again.',
+                        content: '❌ Failed to get response. Please try again.',
+                        errorMessage: agentStates.chat.error || 'Unknown error occurred',
                     },
                 ];
             }
@@ -366,29 +528,42 @@ export default function ChatPage() {
         return null;
     }
 
+    const frameworkColors = {
+        GDPR: { bg: 'from-blue-600 to-indigo-600', hover: 'from-blue-700 to-indigo-700', text: 'text-blue-600' },
+        SOC2: { bg: 'from-purple-600 to-pink-600', hover: 'from-purple-700 to-pink-700', text: 'text-purple-600' },
+        HIPAA: { bg: 'from-emerald-600 to-teal-600', hover: 'from-emerald-700 to-teal-700', text: 'text-emerald-600' },
+    };
+
+    const currentFrameworkColor = frameworkColors[frameworkId];
+
     return (
         <div className="flex flex-col h-full overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
             {/* Messages */}
             <div className="flex flex-col flex-1 min-h-0">
                 {/* Document Info & Framework Selector Bar */}
-                <div className="flex-shrink-0 bg-white/90 backdrop-blur-xl border-b border-gray-200/50 shadow-sm">
-                    <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="flex-shrink-0 bg-white/95 backdrop-blur-xl border-b border-gray-200/50 shadow-lg">
+                    <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4 flex-1 min-w-0">
                             <div className="relative">
-                                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-                                    <FileText className="w-5 h-5 text-white" />
+                                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl">
+                                    <FileText className="w-6 h-6 text-white" />
                                 </div>
-                                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full animate-pulse" />
+                                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gradient-to-br from-green-400 to-emerald-500 border-2 border-white rounded-full">
+                                    <div className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-40" />
+                                </div>
                             </div>
                             <div className="truncate flex-1">
                                 <h2 className="text-base md:text-lg font-bold text-gray-900 truncate flex items-center gap-2">
                                     {selectedDocument.file_name}
                                     <div className="relative">
-                                        <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                                        <div className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-40" />
+                                        <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                                        <div className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-30" />
                                     </div>
                                 </h2>
-                                <p className="text-xs text-gray-500">Document under analysis</p>
+                                <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                    Active analysis session
+                                </p>
                             </div>
                         </div>
 
@@ -398,52 +573,64 @@ export default function ChatPage() {
                                 onClick={() => setIsFrameworkDropdownOpen(!isFrameworkDropdownOpen)}
                                 className="relative group"
                             >
-                                <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-indigo-500 rounded-xl opacity-75 blur group-hover:opacity-100 transition-opacity duration-300"></div>
-                                <div className="relative flex items-center gap-3 px-5 py-2.5 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-white/20">
-                                    <Shield className="w-4 h-4 text-purple-200 flex-shrink-0" />
+                                <div className={`absolute inset-0 bg-gradient-to-r ${currentFrameworkColor.bg} rounded-2xl opacity-75 blur-lg group-hover:opacity-100 transition-opacity duration-300`}></div>
+                                <div className={`relative flex items-center gap-3 px-5 py-3 bg-gradient-to-br ${currentFrameworkColor.bg} hover:${currentFrameworkColor.hover} rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-white/20`}>
+                                    <Shield className="w-5 h-5 text-white/90 flex-shrink-0" />
                                     <div className="flex items-center gap-2">
-                                        <span className="text-xs font-semibold text-white/90 whitespace-nowrap">Framework:</span>
-                                        <span className="text-sm font-bold text-white">{frameworkId}</span>
+                                        <span className="text-xs font-semibold text-white/80 whitespace-nowrap hidden sm:inline">Framework:</span>
+                                        <span className="text-sm font-bold text-white tracking-wide">{frameworkId}</span>
                                     </div>
                                     <ChevronDown className={`w-4 h-4 text-white/90 transition-transform duration-300 ${isFrameworkDropdownOpen ? 'rotate-180' : ''}`} />
-                                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse flex-shrink-0"></div>
+                                    <div className="w-2 h-2 bg-white/80 rounded-full animate-pulse flex-shrink-0"></div>
                                 </div>
                             </button>
 
                             {/* Custom Dropdown Menu */}
                             {isFrameworkDropdownOpen && (
-                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-50 animate-fade-in">
-                                    {(['GDPR', 'SOC2', 'HIPAA'] as const).map((framework) => (
-                                        <button
-                                            key={framework}
-                                            onClick={() => {
-                                                setFrameworkId(framework);
-                                                setIsFrameworkDropdownOpen(false);
-                                            }}
-                                            className={`w-full px-4 py-3 text-left transition-all duration-200 flex items-center gap-3 group ${frameworkId === framework
-                                                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white'
-                                                    : 'hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50 text-gray-700'
-                                                }`}
-                                        >
-                                            <Shield className={`w-4 h-4 flex-shrink-0 ${frameworkId === framework ? 'text-white' : 'text-purple-600'
-                                                }`} />
-                                            <div className="flex-1">
-                                                <div className={`font-semibold text-sm ${frameworkId === framework ? 'text-white' : 'text-gray-900'
-                                                    }`}>
-                                                    {framework}
-                                                </div>
-                                                <div className={`text-xs ${frameworkId === framework ? 'text-purple-100' : 'text-gray-500'
-                                                    }`}>
-                                                    {framework === 'GDPR' && 'General Data Protection'}
-                                                    {framework === 'SOC2' && 'Security & Compliance'}
-                                                    {framework === 'HIPAA' && 'Healthcare Privacy'}
-                                                </div>
-                                            </div>
-                                            {frameworkId === framework && (
-                                                <Check className="w-5 h-5 text-white flex-shrink-0" />
-                                            )}
-                                        </button>
-                                    ))}
+                                <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-fade-in">
+                                    <div className="p-2">
+                                        {(['GDPR', 'SOC2', 'HIPAA'] as const).map((framework) => {
+                                            const fwColor = frameworkColors[framework];
+                                            return (
+                                                <button
+                                                    key={framework}
+                                                    onClick={() => {
+                                                        setFrameworkId(framework);
+                                                        setIsFrameworkDropdownOpen(false);
+                                                    }}
+                                                    className={`w-full px-4 py-3.5 rounded-xl text-left transition-all duration-200 flex items-center gap-3 group mb-1 last:mb-0 ${frameworkId === framework
+                                                        ? `bg-gradient-to-r ${fwColor.bg} text-white shadow-lg scale-[1.02]`
+                                                        : 'hover:bg-gradient-to-r hover:from-gray-50 hover:to-slate-50 text-gray-700'
+                                                        }`}
+                                                >
+                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${frameworkId === framework
+                                                        ? 'bg-white/20'
+                                                        : `bg-gradient-to-br ${fwColor.bg}`
+                                                        }`}>
+                                                        <Shield className={`w-5 h-5 ${frameworkId === framework ? 'text-white' : 'text-white'
+                                                            }`} />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className={`font-bold text-sm mb-0.5 ${frameworkId === framework ? 'text-white' : 'text-gray-900'
+                                                            }`}>
+                                                            {framework}
+                                                        </div>
+                                                        <div className={`text-xs ${frameworkId === framework ? 'text-white/80' : 'text-gray-500'
+                                                            }`}>
+                                                            {framework === 'GDPR' && 'General Data Protection'}
+                                                            {framework === 'SOC2' && 'Security & Compliance'}
+                                                            {framework === 'HIPAA' && 'Healthcare Privacy'}
+                                                        </div>
+                                                    </div>
+                                                    {frameworkId === framework && (
+                                                        <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                                                            <Check className="w-5 h-5 text-white flex-shrink-0" />
+                                                        </div>
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -458,23 +645,34 @@ export default function ChatPage() {
                         scrollbarColor: '#cbd5e1 transparent',
                     }}
                 >
-                    <div className="max-w-4xl mx-auto space-y-6">
+                    <div className="max-w-5xl mx-auto space-y-6">
                         {messages.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-full text-center py-20 animate-fade-in">
-                                <div className="relative mb-6">
-                                    <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center shadow-2xl">
-                                        <ShieldCheck className="w-10 h-10 text-white" />
+                                <div className="relative mb-8">
+                                    <div className="w-24 h-24 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl transform hover:scale-105 transition-transform duration-300">
+                                        <ShieldCheck className="w-12 h-12 text-white" />
                                     </div>
-                                    {/* Scanning rings animation */}
-                                    <div className="absolute inset-0 rounded-3xl border-4 border-blue-400 animate-ping opacity-30" />
-                                    <div className="absolute inset-0 rounded-3xl border-4 border-indigo-400 animate-ping opacity-20" style={{ animationDelay: '0.5s' }} />
+                                    {/* Multiple scanning rings */}
+                                    <div className="absolute inset-0 rounded-3xl border-4 border-blue-400 animate-ping opacity-20" />
+                                    <div className="absolute inset-0 rounded-3xl border-4 border-indigo-400 animate-ping opacity-15" style={{ animationDelay: '0.3s' }} />
+                                    <div className="absolute inset-0 rounded-3xl border-4 border-purple-400 animate-ping opacity-10" style={{ animationDelay: '0.6s' }} />
                                 </div>
-                                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                                    Start Your Analysis
+                                <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3">
+                                    Start Your Compliance Analysis
                                 </h2>
-                                <p className="text-gray-600 max-w-md">
-                                    Ask questions about <span className="font-semibold text-blue-600">{selectedDocument.file_name}</span> to get AI-powered compliance insights
+                                <p className="text-gray-600 max-w-md mb-8 leading-relaxed">
+                                    Ask questions about <span className="font-bold text-blue-600">{selectedDocument.file_name}</span> to get AI-powered compliance insights and recommendations
                                 </p>
+                                <div className="flex flex-wrap gap-2 justify-center">
+                                    <div className="px-4 py-2 bg-white rounded-full shadow-sm border border-gray-200 text-sm text-gray-600 flex items-center gap-2">
+                                        <Shield className="w-4 h-4 text-blue-600" />
+                                        Framework: {frameworkId}
+                                    </div>
+                                    <div className="px-4 py-2 bg-white rounded-full shadow-sm border border-gray-200 text-sm text-gray-600 flex items-center gap-2">
+                                        <CheckCircle2 className="w-4 h-4 text-green-600" />
+                                        Ready to analyze
+                                    </div>
+                                </div>
                             </div>
                         ) : (
                             <>
@@ -482,10 +680,13 @@ export default function ChatPage() {
                                     <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
                                         {msg.role === 'user' ? (
                                             <div className="max-w-[80%] sm:max-w-[70%]">
-                                                <div className="inline-block px-5 py-3 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
+                                                <div className="inline-block px-6 py-4 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-500 to-indigo-600 text-white shadow-xl">
                                                     <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
                                                         {msg.content}
                                                     </p>
+                                                </div>
+                                                <div className="mt-2 text-xs text-gray-400 text-right">
+                                                    Just now
                                                 </div>
                                             </div>
                                         ) : (
@@ -493,22 +694,61 @@ export default function ChatPage() {
                                                 {msg.isLoading ? (
                                                     <LoadingMessage />
                                                 ) : (
-                                                    <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5">
-                                                        <div className="prose prose-slate max-w-none">
-                                                            <ReactMarkdown
-                                                                remarkPlugins={[remarkGfm, remarkMath]}
-                                                                rehypePlugins={[rehypeKatex, rehypeHighlight]}
-                                                                components={MarkdownComponents}
-                                                            >
-                                                                {msg.content}
-                                                            </ReactMarkdown>
+                                                    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                                                        <div className="p-6">
+                                                            {/* Error Message if present */}
+                                                            {msg.errorMessage && (
+                                                                <ErrorBanner message={msg.errorMessage} />
+                                                            )}
+
+                                                            {/* Success indicator if no errors */}
+                                                            {!msg.errorMessage && msg.content && (
+                                                                <SuccessIndicator />
+                                                            )}
+
+                                                            {/* Main Content */}
+                                                            <div className="prose prose-slate max-w-none">
+                                                                <ReactMarkdown
+                                                                    remarkPlugins={[remarkGfm, remarkMath]}
+                                                                    rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                                                                    components={MarkdownComponents}
+                                                                >
+                                                                    {msg.content}
+                                                                </ReactMarkdown>
+                                                            </div>
+
+                                                            {/* Tool Payload Inspector */}
+                                                            {msg.toolPayload && Object.keys(msg.toolPayload).length > 0 && (
+                                                                <ToolPayloadInspector payload={msg.toolPayload} />
+                                                            )}
+
+                                                            {/* Suggested Actions */}
+                                                            {msg.suggestedActions && msg.suggestedActions.length > 0 && (
+                                                                <ActionSuggestions
+                                                                    actions={msg.suggestedActions}
+                                                                    onActionClick={handleActionClick}
+                                                                />
+                                                            )}
                                                         </div>
-                                                        {msg.suggestedActions && msg.suggestedActions.length > 0 && (
-                                                            <ActionSuggestions
-                                                                actions={msg.suggestedActions}
-                                                                onActionClick={handleActionClick}
-                                                            />
-                                                        )}
+
+                                                        {/* Footer with metadata */}
+                                                        <div className="px-6 py-3 bg-gradient-to-r from-gray-50 to-slate-50 border-t border-gray-100">
+                                                            <div className="flex items-center justify-between text-xs text-gray-500">
+                                                                <div className="flex items-center gap-4">
+                                                                    <span className="flex items-center gap-1.5">
+                                                                        <ShieldCheck className="w-3.5 h-3.5 text-green-600" />
+                                                                        AI-powered response
+                                                                    </span>
+                                                                    {msg.suggestedActions && msg.suggestedActions.length > 0 && (
+                                                                        <span className="flex items-center gap-1.5">
+                                                                            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                                                                            {msg.suggestedActions.length} suggested actions
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <span>Just now</span>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>
@@ -522,56 +762,124 @@ export default function ChatPage() {
                 </div>
 
                 {/* Input Area */}
-                <div className="flex-shrink-0 border-t border-gray-200 bg-white/90 backdrop-blur-xl p-4 shadow-lg">
-                    <div className="max-w-4xl mx-auto">
-                        <div className="flex items-end gap-3">
+                <div className="flex-shrink-0 border-t border-gray-200 bg-white/95 backdrop-blur-xl shadow-2xl">
+                    <div className="max-w-5xl mx-auto p-4">
+                        <form onSubmit={handleSendMessage} className="flex items-end gap-3">
                             <div className="flex-1 relative">
+                                <div className="absolute left-4 top-3.5 pointer-events-none">
+                                    <div className={`w-2 h-2 rounded-full ${message.trim() ? 'bg-green-500' : 'bg-gray-300'} transition-colors`} />
+                                </div>
                                 <textarea
                                     ref={textareaRef}
                                     value={message}
                                     onChange={(e) => setMessage(e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    placeholder="Ask a question about compliance..."
+                                    placeholder="Ask about compliance requirements, gaps, or request analysis..."
                                     rows={1}
                                     disabled={agentStates.chat.loading}
-                                    className="w-full resize-none border-2 border-gray-200 rounded-2xl px-4 py-3 pr-12 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all disabled:bg-gray-50 disabled:cursor-not-allowed"
+                                    className="w-full resize-none border-2 border-gray-200 rounded-2xl pl-8 pr-16 py-4 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all disabled:bg-gray-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
                                     style={{ maxHeight: '150px' }}
                                 />
                                 {message.trim() && (
-                                    <div className="absolute bottom-3 right-3 text-xs text-gray-400">
-                                        {message.length}
+                                    <div className="absolute bottom-4 right-4 flex items-center gap-2">
+                                        <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded-md">
+                                            {message.length}
+                                        </span>
                                     </div>
                                 )}
                             </div>
                             <button
-                                onClick={() => handleSendMessage()}
+                                type="submit"
                                 disabled={!message.trim() || agentStates.chat.loading}
-                                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl font-semibold hover:shadow-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
+                                className={`px-6 py-4 bg-gradient-to-r ${currentFrameworkColor.bg} text-white rounded-2xl font-bold hover:shadow-2xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2 shadow-xl relative overflow-hidden group`}
                             >
-                                {agentStates.chat.loading ? (
-                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                ) : (
-                                    <Send className="w-5 h-5" />
-                                )}
-                                <span className="hidden sm:inline">Send</span>
+                                {/* Shimmer effect */}
+                                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+
+                                <div className="relative flex items-center gap-2">
+                                    {agentStates.chat.loading ? (
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                    ) : (
+                                        <Send className="w-5 h-5" />
+                                    )}
+                                    <span className="hidden sm:inline">
+                                        {agentStates.chat.loading ? 'Analyzing...' : 'Send'}
+                                    </span>
+                                </div>
                             </button>
-                        </div>
-                        <div className="mt-2 flex items-center justify-center gap-4 text-xs text-gray-500">
-                            <span className="flex items-center gap-1">
-                                <kbd className="px-2 py-0.5 bg-gray-100 border border-gray-200 rounded font-mono text-[10px]">Enter</kbd>
-                                to send
-                            </span>
+                        </form>
+
+                        {/* Keyboard shortcuts hint */}
+                        <div className="mt-3 flex items-center justify-center gap-6 text-xs text-gray-500">
+                            <div className="flex items-center gap-1.5">
+                                <kbd className="px-2 py-1 bg-gray-100 border border-gray-200 rounded-lg font-mono text-[10px] shadow-sm">
+                                    Enter
+                                </kbd>
+                                <span>Send message</span>
+                            </div>
                             <span className="text-gray-300">•</span>
-                            <span className="flex items-center gap-1">
-                                <kbd className="px-2 py-0.5 bg-gray-100 border border-gray-200 rounded font-mono text-[10px]">Shift</kbd>
-                                +
-                                <kbd className="px-2 py-0.5 bg-gray-100 border border-gray-200 rounded font-mono text-[10px]">Enter</kbd>
-                                for new line
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                                <kbd className="px-2 py-1 bg-gray-100 border border-gray-200 rounded-lg font-mono text-[10px] shadow-sm">
+                                    Shift
+                                </kbd>
+                                <span>+</span>
+                                <kbd className="px-2 py-1 bg-gray-100 border border-gray-200 rounded-lg font-mono text-[10px] shadow-sm">
+                                    Enter
+                                </kbd>
+                                <span>New line</span>
+                            </div>
+                            <span className="text-gray-300">•</span>
+                            <div className="flex items-center gap-1.5">
+                                <Shield className="w-3 h-3" />
+                                <span className="font-medium">{frameworkId}</span>
+                                <span>active</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {/* Add custom styles */}
+            <style jsx global>{`
+                @keyframes fade-in {
+                    from {
+                        opacity: 0;
+                        transform: translateY(10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+
+                .animate-fade-in {
+                    animation: fade-in 0.5s ease-out;
+                }
+
+                /* Custom scrollbar */
+                ::-webkit-scrollbar {
+                    width: 8px;
+                    height: 8px;
+                }
+
+                ::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+
+                ::-webkit-scrollbar-thumb {
+                    background: #cbd5e1;
+                    border-radius: 4px;
+                }
+
+                ::-webkit-scrollbar-thumb:hover {
+                    background: #94a3b8;
+                }
+
+                /* Smooth transitions for all interactive elements */
+                button, a, input, textarea {
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+            `}</style>
         </div>
     );
 }
