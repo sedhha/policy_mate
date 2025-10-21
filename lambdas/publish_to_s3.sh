@@ -3,7 +3,7 @@ export AWS_PROFILE=policy-mate
 S3_BUCKET="policy-mate"  # Replace with your S3 bucket name
 
 # Set the handler file (change this to deploy different handlers)
-HANDLER_FILE="annotations_agent_handler.py"
+HANDLER_FILE="agent_v2_handler.py"
 
 # Extract handler name from filename (removes _handler.py suffix)
 HANDLER_NAME=$(basename "$HANDLER_FILE" _handler.py)
@@ -42,8 +42,8 @@ cd $BUILD_DIR && zip -r ../lambda.zip . -q && cd ..
 echo "✅ Package created: lambda.zip"
 
 # Upload to S3
-aws s3 cp lambda.zip s3://$S3_BUCKET/policy-mate-${HANDLER_NAME}-handler.zip
-echo "✅ Uploaded to S3: s3://$S3_BUCKET/policy-mate-${HANDLER_NAME}-handler.zip"
+aws s3 cp lambda.zip s3://$S3_BUCKET/lambdas/policy-mate-${HANDLER_NAME}-handler.zip
+echo "✅ Uploaded to S3: s3://$S3_BUCKET/lambdas/policy-mate-${HANDLER_NAME}-handler.zip"
 
 # Cleanup
 rm -rf $BUILD_DIR lambda.zip

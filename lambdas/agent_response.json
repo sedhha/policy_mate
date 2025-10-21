@@ -1,0 +1,20 @@
+{
+"session_id": null,
+"error_message": "",
+"tool_payload": {},
+"summarised_markdown": "## 🤖 Compliance Assistant Capabilities\n\nI can help you with:\n\n### 📊 Document Analysis\n- **List documents** - View all uploaded compliance documents\n- **Check status** - See upload and analysis status\n- **Framework analysis** - Run comprehensive GDPR, SOC2, or HIPAA checks\n- **Text analysis** - Analyze specific text sections\n- **View controls** - Browse framework requirements\n\n### 🖊️ Document Drafting\n- **Privacy policies** - GDPR, CCPA-compliant policies\n- **Security policies** - Access control, incident response\n- **Data agreements** - DPAs, retention policies\n- **Custom documents** - Any compliance document\n\n### ✨ Features\n- ✅ Framework alignment\n- 📚 Proper citations\n- 🔧 Customizable templates\n- 📋 Professional formatting",
+"suggested_next_actions": [
+{
+"action": "List my documents",
+"description": "Show me all compliance documents I have uploaded to the system, including their document IDs, names, upload dates, and current analysis status so I can see what's available for compliance review"
+},
+{
+"action": "Draft GDPR privacy policy",
+"description": "Draft a comprehensive GDPR-compliant privacy policy for a small to medium business. Include all required sections: data collection practices, legal bases for processing, user rights (access, rectification, erasure, portability), retention periods, security measures, and contact information. Use formal tone and include customizable placeholders for company-specific details."
+},
+{
+"action": "Explain GDPR requirements",
+"description": "List and explain all GDPR (General Data Protection Regulation) framework controls and requirements, including the seven key principles (lawfulness, fairness, transparency, purpose limitation, data minimization, accuracy, storage limitation, integrity/confidentiality), data subject rights under Articles 12-22, and security obligations under Article 32"
+}
+]
+}
