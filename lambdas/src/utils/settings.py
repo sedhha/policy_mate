@@ -1,34 +1,76 @@
 # filePath: lambdas/src/utils/settings.py
-import os
-from dotenv import load_dotenv
+"""
+Settings module - imports hardcoded values from secrets.py
+This allows values to be baked into the Docker image at build time,
+avoiding environment variable issues with Bedrock AgentCore.
+"""
 
-load_dotenv(override=True)
+# Import all hardcoded values from secrets.py
+from src.utils.secrets import (
+    # AWS
+    AWS_REGION,
+    
+    # Cognito
+    COGNITO_REGION,
+    COGNITO_USER_POOL_ID,
+    
+    # DynamoDB
+    DYNAMO_DB_REGION,
+    
+    # OpenSearch
+    OPEN_SEARCH_ENV,
+    OPEN_SEARCH_HOST,
+    OPEN_SEARCH_REGION,
+    OPEN_SEARCH_LOCAL_HOST,
+    OPEN_SEARCH_LOCAL_PORT,
+    
+    # Agent Details
+    AGENT_NAME,
+    AGENT_ID,
+    AGENT_ALIAS_ID,
+    AGENT_REGION,
+    AGENT_CLAUDE_HAIKU,
+    AGENT_CLAUDE_SONNET,
+    AGENT_CLAUDE_SONNET_4_5,
+    
+    # S3
+    S3_REGION,
+    BUCKET_NAME as S3_BUCKET_NAME,
+    
+    # AgentCore
+    AGENT_CORE_REGION,
+    AGENT_CORE_ID,
+    AGENT_RUNTIME_ARN,
+    AGENT_CORE_MODEL,
+    AGENT_CORE_EXPOSED_AGENT_ID,
+    AGENT_CORE_ALIAS_ID
+)
 
-COGNITO_REGION = os.environ.get('COGNITO_REGION', 'us-east-1')
-COGNITO_USER_POOL_ID = os.environ['COGNITO_USER_POOL_ID']
-DYNAMO_DB_REGION = os.environ.get('DYNAMO_DB_REGION', 'us-east-1')
+# Re-export all for backwards compatibility
+__all__ = [
+    'AWS_REGION',
+    'COGNITO_REGION',
+    'COGNITO_USER_POOL_ID',
+    'DYNAMO_DB_REGION',
+    'OPEN_SEARCH_ENV',
+    'OPEN_SEARCH_HOST',
+    'OPEN_SEARCH_REGION',
+    'OPEN_SEARCH_LOCAL_HOST',
+    'OPEN_SEARCH_LOCAL_PORT',
+    'AGENT_NAME',
+    'AGENT_ID',
+    'AGENT_ALIAS_ID',
+    'AGENT_REGION',
+    'AGENT_CLAUDE_HAIKU',
+    'AGENT_CLAUDE_SONNET',
+    'AGENT_CLAUDE_SONNET_4_5',
+    'S3_REGION',
+    'S3_BUCKET_NAME',
+    'AGENT_CORE_REGION',
+    'AGENT_CORE_ID',
+    'AGENT_RUNTIME_ARN',
+    'AGENT_CORE_MODEL',
+    'AGENT_CORE_EXPOSED_AGENT_ID',
+    'AGENT_CORE_ALIAS_ID'
+]
 
-# OpenSearch
-OPEN_SEARCH_ENV = os.environ.get('OPEN_SEARCH_ENV', 'local')
-OPEN_SEARCH_HOST = os.environ['OPEN_SEARCH_HOST']
-OPEN_SEARCH_REGION = os.environ.get('OPEN_SEARCH_REGION', 'us-east-1')
-OPEN_SEARCH_LOCAL_HOST = os.environ.get('OPEN_SEARCH_LOCAL_HOST', 'localhost')
-OPEN_SEARCH_LOCAL_PORT = int(os.environ.get('OPEN_SEARCH_LOCAL_PORT', '9200'))
-
-# AGENT DETAILS
-AGENT_NAME = os.environ['AGENT_NAME']
-AGENT_ID = os.environ['AGENT_ID']
-AGENT_ALIAS_ID = os.environ['AGENT_ALIAS_ID']
-AGENT_REGION = os.environ.get('AGENT_REGION', 'us-east-1')
-AGENT_CLAUDE_HAIKU = os.environ.get('AGENT_CLAUDE_HAIKU', 'anthropic.claude-3-haiku-20240307-v1:0')
-AGENT_CLAUDE_SONNET = os.environ.get('AGENT_CLAUDE_SONNET', 'anthropic.claude-3-5-sonnet-20240620-v1:0')
-AGENT_CLAUDE_SONNET_4_5 = os.environ.get('AGENT_CLAUDE_SONNET_4_5', 'us.anthropic.claude-sonnet-4-5-20250929-v1:0')
-
-# S3
-S3_REGION = os.environ.get('S3_REGION', 'us-east-1')
-S3_BUCKET_NAME = os.environ['BUCKET_NAME']
-
-AGENT_CORE_REGION = os.environ.get('AGENT_CORE_REGION', 'us-east-1')
-AGENT_CORE_ID = os.environ['AGENT_CORE_ID']
-AGENT_RUNTIME_ARN = os.environ['AGENT_RUNTIME_ARN']
-AGENT_CORE_MODEL= os.environ['AGENT_CORE_MODEL']

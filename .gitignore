@@ -17,3 +17,5 @@ backup/*
 lambdas/agent_response.txt
 lambdas/tests/analysis_result.json
 lambdas/zips/
+**/secrets.py
+bedrock_lambda.zip

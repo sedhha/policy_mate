@@ -21,8 +21,3 @@ dependencies = [
     "typing-extensions>=4.15.0",
     "uuid6>=2025.0.1",
 ]
-
-[tool.uv.workspace]
-members = [
-    "v3",
-]
