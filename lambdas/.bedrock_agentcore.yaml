@@ -23,7 +23,7 @@ agents:
     bedrock_agentcore:
       agent_id: policyMate-WoQ1uB3z5m
       agent_arn: arn:aws:bedrock-agentcore:us-east-1:354468042457:runtime/policyMate-WoQ1uB3z5m
-      agent_session_id: e9b88919-b675-424e-8cee-c1f124f9a6b0
+      agent_session_id: null
     codebuild:
       project_name: bedrock-agentcore-policymate-builder
       execution_role: arn:aws:iam::354468042457:role/AmazonBedrockAgentCoreSDKCodeBuild-us-east-1-2796fe729f
