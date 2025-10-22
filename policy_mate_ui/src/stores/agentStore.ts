@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import type { IAgentState } from '@/types';
+import type { IAgentState, DocumentsData } from '@/types';
 import { fetchDocuments, sendMessage } from '@/utils/apis/documents';
+import { useAuthStore } from './authStore';
 
 export const useAgentStore = create<IAgentState>()((set, get) => ({
   selectedDocument: undefined,
@@ -119,6 +120,79 @@ export const useAgentStore = create<IAgentState>()((set, get) => ({
         },
       }));
       return null;
+    }
+  },
+
+  loadDocumentsV2: async () => {
+    try {
+      set((prev) => ({
+        agentStates: {
+          ...prev.agentStates,
+          listDocs: { loading: true, error: undefined },
+        },
+      }));
+
+      // Get auth token from auth store
+      const idToken = useAuthStore.getState().idToken;
+      if (!idToken) {
+        set((prev) => ({
+          documents: [],
+          agentStates: {
+            ...prev.agentStates,
+            listDocs: { loading: false, error: 'Not authenticated' },
+          },
+        }));
+        return;
+      }
+
+      // Call the new /api/docs endpoint
+      const response = await fetch('/api/my-documents', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${idToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage =
+          errorData.error ||
+          errorData.details ||
+          `Failed to load documents: ${response.statusText}`;
+        set((prev) => ({
+          documents: [],
+          agentStates: {
+            ...prev.agentStates,
+            listDocs: { loading: false, error: errorMessage },
+          },
+        }));
+        return;
+      }
+
+      const data: DocumentsData = await response.json();
+
+      set((prev) => ({
+        documents: data.documents || [],
+        agentStates: {
+          ...prev.agentStates,
+          listDocs: { loading: false, error: undefined },
+        },
+      }));
+    } catch (err) {
+      console.error('Failed to load documents:', err);
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load documents';
+      set((prev) => ({
+        documents: [],
+        agentStates: {
+          ...prev.agentStates,
+          listDocs: {
+            loading: false,
+            error: errorMessage,
+          },
+        },
+      }));
     }
   },
 }));
