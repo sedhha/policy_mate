@@ -17,11 +17,11 @@ def invoke(event: dict[str, Any]) -> dict[str, Any]:
         res = str(compliance_agent(user_message))
         agent_response = str(res)
         # Clean the response: remove code blocks and control characters
-        print("##############################################################")
-        print(agent_response)
-        with open("./agent_response.json", "w") as f:
-            f.write(agent_response)
-        print("##############################################################")
+        # print("##############################################################")
+        # print(agent_response)
+        # with open("./agent_response.json", "w") as f:
+        #     f.write(agent_response)
+        # print("##############################################################")
         parsed = json.loads(agent_response)
         parsed["session_id"] = session_id
         return parsed

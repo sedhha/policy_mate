@@ -44,7 +44,7 @@ interface BackendToolPayload {
 
 interface BackendResponse {
   error_message: string;
-  tool_payload: BackendToolPayload;
+  tool_payload: { data: BackendToolPayload };
   summarised_markdown: string;
   suggested_next_actions: Array<{
     action: string;
@@ -118,7 +118,17 @@ export async function GET(
       );
     }
     // Call the Lambda API
-    const lambdaUrl = process.env.NEXT_PUBLIC_API_BASE_URL + '/annotations';
+    const lambdaUrl = process.env.NEXT_PUBLIC_LONG_API_BASE_URL;
+
+    if (!lambdaUrl) {
+      return NextResponse.json(
+        {
+          status: 'error',
+          message: 'Lambda URL is not configured',
+        },
+        { status: 500 }
+      );
+    }
 
     const lambdaResponse = await fetch(lambdaUrl, {
       method: 'POST',
@@ -141,10 +151,10 @@ export async function GET(
     }
     console.log('Lambda response status:', lambdaResponse.status);
     const backendData: BackendResponse = await lambdaResponse.json();
-    const payload = backendData.tool_payload;
+    const payload = backendData.tool_payload.data;
 
     // Check for errors
-    if (backendData.error_message) {
+    if (backendData.error_message && payload !== undefined) {
       throw new Error(backendData.error_message);
     }
 

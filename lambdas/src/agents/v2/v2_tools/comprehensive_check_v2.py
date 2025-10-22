@@ -1,5 +1,6 @@
 # src/tools/comprehensive_check.py
 # Optimized for speed and accuracy with top 10-15 findings
+import traceback
 from typing import Any, List, Dict, Literal, Tuple
 from dataclasses import dataclass
 import json
@@ -9,14 +10,15 @@ import fitz
 from decimal import Decimal
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from src.utils.settings import AGENT_CLAUDE_HAIKU
+from src.utils.settings import AGENT_CLAUDE_HAIKU_4_5
 from src.utils.services.dynamoDB import DocumentStatus, DynamoDBTable, get_table
 from src.utils.services.annotations import save_annotations_to_dynamodb, serialize_for_dynamodb
 from src.utils.services.llm_models import get_bedrock_model
 from src.utils.settings import AGENT_REGION
 from datetime import datetime, timezone
-
-bedrock = get_bedrock_model(region_name=AGENT_REGION)
+import time
+from botocore.exceptions import ClientError
+bedrock = get_bedrock_model(region_name=AGENT_REGION) # type: ignore
 
 
 class SimpleAnnotation(BaseModel):
@@ -156,7 +158,7 @@ class OptimizedComplianceAnalyzer:
     MAX_TOTAL_FINDINGS = 15  # Hard limit on total findings
     MAX_FINDINGS_PER_BATCH = 5  # Reduced from unlimited
     MAX_TOKENS_PER_BATCH = 10000  # Slightly reduced
-    MAX_PARALLEL_BATCHES = 3  # Process batches in parallel
+    MAX_PARALLEL_BATCHES = 2  # Reduced from 3 to avoid throttling
     
     def __init__(self):
         self.controls_table = get_table(DynamoDBTable.COMPLIANCE_CONTROLS)
@@ -460,33 +462,40 @@ class OptimizedComplianceAnalyzer:
         
         return f"""You are an expert {framework} compliance auditor. Identify the TOP {self.MAX_FINDINGS_PER_BATCH} MOST CRITICAL compliance issues.
 
-**CONTROLS:**
-{controls_summary}
+            **CONTROLS:**
+            {controls_summary}
 
-**CONTENT:**
-{json.dumps(pages_content, indent=2)}
+            **CONTENT:**
+            {json.dumps(pages_content, indent=2)}
 
-**PRIORITY:** Focus ONLY on:
-1. HIGH severity issues (missing requirements, violations)
-2. MEDIUM severity gaps (incomplete policies, ambiguity)
-3. Skip LOW severity unless critical
+            **PRIORITY:** Focus ONLY on:
+            1. HIGH severity issues (missing requirements, violations)
+            2. MEDIUM severity gaps (incomplete policies, ambiguity)
+            3. Skip LOW severity unless critical
 
-**OUTPUT (JSON array, max {self.MAX_FINDINGS_PER_BATCH} findings):**
-```json
-[
-{{
-    "page_number": 1,
-    "block_index": 5,
-    "control_id": "GDPR-12.1",
-    "severity": "high|medium",
-    "issue_description": "Specific problem",
-    "bookmark_type": "action_required|verify",
-    "suggested_action": "Fix recommendation"
-}}
-]
-```
+            **CRITICAL INSTRUCTIONS:**
+            - Return ONLY valid JSON array
+            - NO markdown code blocks
+            - NO explanatory text before or after
+            - NO comments or conclusions
+            - Maximum {self.MAX_FINDINGS_PER_BATCH} findings
+            - Empty array [] if compliant
 
-Return ONLY the {self.MAX_FINDINGS_PER_BATCH} most important findings. Empty array if compliant."""
+            **REQUIRED JSON FORMAT:**
+            [
+            {{
+                "page_number": 1,
+                "block_index": 5,
+                "control_id": "GDPR-12.1",
+                "severity": "high|medium",
+                "issue_description": "Specific problem",
+                "bookmark_type": "action_required|verify",
+                "suggested_action": "Fix recommendation"
+            }}
+            ]
+
+            Return ONLY the raw JSON array. Begin your response with [ and end with ].
+        """
     
     def analyze_batch(
         self,
@@ -495,32 +504,61 @@ Return ONLY the {self.MAX_FINDINGS_PER_BATCH} most important findings. Empty arr
         framework: str,
         batch_num: int
     ) -> List[Dict[str, Any]]:
-        """Analyze single batch"""
+        """Analyze single batch with exponential backoff retry"""
         print(f"🤖 Analyzing batch {batch_num}...")
         
         prompt = self.create_analysis_prompt(batch, controls, framework)
         
-        try:
-            response = bedrock.invoke_model( # type: ignore
-                modelId=AGENT_CLAUDE_HAIKU,
-                body=json.dumps({
-                    "anthropic_version": "bedrock-2023-05-31",
-                    "max_tokens": 2000,  # Reduced from 4000
-                    "temperature": 0.2,  # Lower temperature for consistency
-                    "messages": [{"role": "user", "content": prompt}]
-                })
-            )
-            
-            response_body: dict[str, Any] = json.loads(response['body'].read()) # type: ignore
-            content = response_body['content'][0]['text']
-            findings = self._parse_claude_response(content)
-            
-            print(f"  ✓ Found {len(findings)} issues")
-            return findings
-            
-        except Exception as e:
-            print(f"  ✗ Batch error: {e}")
-            return []
+        # Exponential backoff parameters
+        max_retries = 5
+        base_delay = 2  # Start with 2 seconds
+        max_delay = 60  # Cap at 60 seconds
+        
+        for attempt in range(max_retries):
+            try:
+                response = bedrock.invoke_model( # type: ignore
+                    modelId=AGENT_CLAUDE_HAIKU_4_5,
+                    body=json.dumps({
+                        "anthropic_version": "bedrock-2023-05-31",
+                        "max_tokens": 2000,
+                        "temperature": 0.2,
+                        "messages": [{"role": "user", "content": prompt}]
+                    })
+                )
+                
+                response_body: dict[str, Any] = json.loads(response['body'].read()) # type: ignore
+                content = response_body['content'][0]['text']
+                findings = self._parse_claude_response(content)
+                
+                print(f"  ✓ Found {len(findings)} issues")
+                return findings
+                
+            except ClientError as e:
+                error_code = e.response.get('Error', {}).get('Code', '')
+                
+                if error_code == 'ThrottlingException':
+                    if attempt < max_retries - 1:
+                        # Calculate delay with exponential backoff + jitter
+                        delay = min(base_delay * (2 ** attempt), max_delay)
+                        jitter = time.time() % 1  # Random jitter 0-1 seconds
+                        wait_time = delay + jitter
+                        
+                        print(f"  ⏳ Throttled. Retry {attempt + 1}/{max_retries} after {wait_time:.1f}s...")
+                        time.sleep(wait_time)
+                        continue
+                    else:
+                        print(f"  ✗ Max retries reached. Batch error: {e}")
+                        return []
+                else:
+                    # Non-throttling error, don't retry
+                    print(f"  ✗ Batch error: {e}")
+                    return []
+                    
+            except Exception as e:
+                print(f"  ✗ Unexpected error: {e}")
+                return []
+        
+        return []
     
     def analyze_document(
         self,
@@ -638,18 +676,13 @@ Return ONLY the {self.MAX_FINDINGS_PER_BATCH} most important findings. Empty arr
     def _parse_claude_response(self, content: str) -> List[Dict[str, Any]]:
         """Parse Claude JSON response"""
         try:
-            content = content.strip()
-            if content.startswith('```json'):
-                content = content[7:]
-            if content.startswith('```'):
-                content = content[3:]
-            if content.endswith('```'):
-                content = content[:-3]
+            content = content.strip().replace("```json", "").replace("```", "")
             
             findings = json.loads(content.strip())
             return findings if isinstance(findings, list) else [] # type: ignore
         except Exception as e:
-            print(f"Parse error: {e}")
+            execution_log = traceback.format_exc()
+            print(f"Parse error: {e}\n{execution_log}")
             return []
     
     def _create_annotations(
@@ -743,6 +776,7 @@ def auto_analyse_pdf(
             file_id=document_id,
             analysis_id=analysis_id
         )
+        gen_annotations = [ann.model_dump() for ann in annotations]
         
         result: dict[str, Any] = {
             'success': True,
@@ -750,7 +784,7 @@ def auto_analyse_pdf(
             'analysis_id': analysis_id,
             'framework': compliance_framework,
             'annotations_count': len(annotations),
-            'annotations': [ann.model_dump() for ann in annotations],
+            'annotations': gen_annotations,
             'cached': False
         }
         

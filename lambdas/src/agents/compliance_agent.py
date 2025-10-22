@@ -53,6 +53,7 @@ def list_docs(user_id: str) -> dict[str, Any]:
     - File size (both bytes and formatted)
     - Compliance analysis status with visual indicators
     - Upload timestamp and formatted date
+    - S3 Bucket and S3 Key for retrieval
     
     This tool returns raw data only. The agent will intelligently format
     the results into a beautiful markdown summary.

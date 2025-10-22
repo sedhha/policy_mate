@@ -111,7 +111,7 @@ export const sendMessage = async <T = any>(
   metadata?: MessageMetadata
 ): Promise<AgentResponse<T>> => {
   try {
-    const url = `${env.NEXT_PUBLIC_API_BASE_URL}/chats-v2`;
+    const url = env.NEXT_PUBLIC_LONG_API_BASE_URL;
 
     // Tag the prompt with metadata if provided
     const metadataTag = buildMetadataTag(metadata);

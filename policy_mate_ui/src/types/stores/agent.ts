@@ -24,6 +24,7 @@ export interface IAgentState {
     state: IndividualState
   ) => void;
   loadDocuments: () => Promise<void>;
+  loadDocumentsV2: () => Promise<void>;
   sendChatMessage: <T = any>(
     message: string,
     metadata?: Record<string, string>
