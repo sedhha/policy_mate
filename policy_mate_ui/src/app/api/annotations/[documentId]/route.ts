@@ -118,7 +118,17 @@ export async function GET(
       );
     }
     // Call the Lambda API
-    const lambdaUrl = process.env.NEXT_PUBLIC_API_BASE_URL + '/annotations';
+    const lambdaUrl = process.env.NEXT_PUBLIC_LONG_API_BASE_URL;
+
+    if (!lambdaUrl) {
+      return NextResponse.json(
+        {
+          status: 'error',
+          message: 'Lambda URL is not configured',
+        },
+        { status: 500 }
+      );
+    }
 
     const lambdaResponse = await fetch(lambdaUrl, {
       method: 'POST',
