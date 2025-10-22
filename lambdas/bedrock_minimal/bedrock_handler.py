@@ -17,7 +17,7 @@ def create_user_metadata_str(claims: dict[str, Any]) -> str:
     """
     user_email = claims["email"]
     user_id = claims["sub"]
-    return f"[user_email={user_email}] [user_id={user_id}]"
+    return f"for the user - [email={user_email}] [user_id={user_id}]"
 
 # Initialize Bedrock Agent Runtime client
 agent_core_client = boto3.client('bedrock-agentcore') # pyright: ignore[reportUnknownMemberType]
@@ -36,6 +36,8 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         session_id = body.get("session_id", context.aws_request_id)
         # Append user metadata to prompt
         prompt_with_meta = f'{prompt}\n\n{user_meta}'
+        # Log the prompt for debugging
+        logger.info(f"Prepared prompt for AgentCore: {prompt_with_meta}")
         
         # Prepare the payload
         payload = json.dumps({"prompt": prompt_with_meta}).encode()

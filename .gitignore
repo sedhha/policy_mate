@@ -20,3 +20,4 @@ lambdas/zips/
 **/secrets.py
 bedrock_lambda.zip
 lambdas/bedrock_minimal/src/bedrock_handler_minimal.egg-info
+**/traceback.txt
