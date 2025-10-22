@@ -213,3 +213,16 @@ Response payload for:
 - review comments (required)
 - bookmark_type (optional)
 - conversation_id (optional)
+
+## How to Fix too long wait time -
+
+## Lambda Polling With Dynamo DB
+
+NEXT API initiates a request with unique request ID
+
+- lambda X: takes the request and creates a record in dynamo DB table. request_id, status, response (json)
+- returns immediately with "processing"
+- triggers another lambda with the payload
+- lambda Y: sends the payload to bedrock agent
+  - once response is received, updates the dynamo DB record with status = completed, response = <response json>
+- NEXT API polls the dynamo DB record with request_id

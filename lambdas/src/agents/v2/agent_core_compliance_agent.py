@@ -2,9 +2,9 @@ from typing import Any
 from pydantic import BaseModel, Field
 from strands import Agent, tool # pyright: ignore[reportUnknownVariableType]
 from strands.hooks import HookProvider, HookRegistry
-from strands.hooks.events import AfterInvocationEvent
+from strands.hooks.events import AfterInvocationEvent, AfterToolCallEvent
 
-from src.agents.v2.prompts import COMPLIANCE_AGENT_SYSTEM_PROMPT_OLD as COMPLIANCE_AGENT_SYSTEM_PROMPT, DRAFTING_AGENT_SYSTEM_PROMPT
+from src.agents.v2.prompts import COMPLIANCE_AGENT_SYSTEM_PROMPT_V2 as COMPLIANCE_AGENT_SYSTEM_PROMPT, DRAFTING_AGENT_SYSTEM_PROMPT
 from src.tools.compliance_check import compliance_check_tool, get_all_controls_tool
 from src.agents.v2.v2_tools.comprehensive_check_v2 import comprehensive_check_tool, deserialize_dynamodb_item as replace_decimal
 from src.tools.doc_status import doc_status_tool
@@ -13,11 +13,23 @@ from strands.models import BedrockModel
 from src.tools.show_doc import show_doc_tool
 import json
 
+def parse_agent_json(agent_response: str) -> dict[str, Any]:
+    """Parse the agent response JSON string into a dictionary."""
+    try:
+        parsed = json.loads(agent_response)
+        return parsed
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Failed to parse agent response JSON: {str(e)}")
+
 
 class CleanupHook(HookProvider):
     """Hook to clean up model responses after generation completes."""
     def register_hooks(self, registry: HookRegistry) -> None: # type: ignore
         registry.add_callback(AfterInvocationEvent, self.after_model_call)
+        registry.add_callback(AfterToolCallEvent, self.after_tool_call)
+    def after_tool_call(self, event: AfterToolCallEvent) -> None:
+        """No-op for tool calls."""
+        print("tool result received")
 
     def after_model_call(self, event: AfterInvocationEvent) -> None:
         """
