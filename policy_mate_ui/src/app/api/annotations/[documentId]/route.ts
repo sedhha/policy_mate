@@ -118,7 +118,7 @@ export async function GET(
       );
     }
     // Call the Lambda API
-    const lambdaUrl = process.env.NEXT_PUBLIC_LONG_API_BASE_URL;
+    const lambdaUrl = process.env.NEXT_PUBLIC_LONG_API_BASE_URL_V2;
 
     if (!lambdaUrl) {
       return NextResponse.json(
@@ -152,6 +152,7 @@ export async function GET(
     console.log('Lambda response status:', lambdaResponse.status);
     const backendData: BackendResponse = await lambdaResponse.json();
     const payload = backendData.tool_payload.data;
+    console.log('Backend payload:', payload);
 
     // Check for errors
     if (backendData.error_message && payload !== undefined) {
