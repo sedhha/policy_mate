@@ -231,4 +231,3 @@ TODO:
 
 - steps to run locally
 - flow diagrams
-- video
