@@ -1,0 +1,128 @@
+```mermaid
+%% Policy Mate - System Overview
+%% High-level architecture showing all major components
+
+graph TB
+    subgraph "Frontend Layer"
+        UI[Next.js 15 App Router<br/>TypeScript + Tailwind CSS]
+        Dashboard[Dashboard Page<br/>File List + Upload]
+        Chat[Chat Interface<br/>AI Conversation]
+        Interactive[Interactive Mode<br/>Live Annotations]
+    end
+
+    subgraph "API Layer"
+        NextAPI[Next.js API Routes<br/>CORS Proxy]
+        WebURL[AWS Web URL Config<br/>bedrock_handler Lambda]
+        APIGW[API Gateway<br/>Other Lambdas]
+    end
+
+    subgraph "Authentication"
+        Cognito[AWS Cognito<br/>JWT Tokens]
+        AuthStore[Zustand Auth Store<br/>sessionStorage]
+    end
+
+    subgraph "Backend Processing"
+        AgentV2[agent_v2_handler<br/>Supervisor Agent]
+        FileUpload[file_upload_handler]
+        DocStatus[doc_status_handler]
+        AnnotHandler[annotations_handler]
+        ConfirmHandler[file_confirmation_handler]
+        ConvHistory[conversation_history_handler]
+    end
+
+    subgraph "AI Agent System"
+        Supervisor[Supervisor Agent<br/>Smart Router]
+        CompAgent[Compliance Agent<br/>Document Analysis]
+        AnnotAgent[Annotations Agent<br/>Bookmark Management]
+        DraftAgent[Drafting Agent<br/>Policy Creation]
+    end
+
+    subgraph "AI Infrastructure"
+        Bedrock[AWS Bedrock<br/>Claude Haiku/Sonnet]
+        StrandsCore[Strands + AgentCore<br/>Framework]
+    end
+
+    subgraph "Data Storage"
+        S3[S3 Buckets<br/>Documents]
+        DynamoDB[DynamoDB Tables<br/>Metadata + Cache]
+        Cache[Inference Cache<br/>Analysis Results]
+    end
+
+    subgraph "Vector Search"
+        OpenSearch[OpenSearch<br/>Semantic Search]
+        DocsIndex[policy-mate-docs<br/>Standard Documents]
+        EmbedIndex[policy-mate-embeddings<br/>Vector Embeddings]
+    end
+
+    %% Frontend connections
+    UI --> Dashboard
+    UI --> Chat
+    UI --> Interactive
+    
+    %% Authentication flow
+    UI --> Cognito
+    Cognito --> AuthStore
+    AuthStore --> UI
+
+    %% API routing
+    Dashboard --> NextAPI
+    Chat --> WebURL
+    Interactive --> NextAPI
+    
+    NextAPI --> APIGW
+    WebURL --> AgentV2
+    APIGW --> FileUpload
+    APIGW --> DocStatus
+    APIGW --> ConfirmHandler
+    APIGW --> ConvHistory
+    NextAPI --> AnnotHandler
+
+    %% Backend processing
+    AgentV2 --> Supervisor
+    FileUpload --> S3
+    ConfirmHandler --> DynamoDB
+    DocStatus --> DynamoDB
+    AnnotHandler --> AnnotAgent
+
+    %% Agent orchestration
+    Supervisor --> CompAgent
+    Supervisor --> AnnotAgent
+    CompAgent -.-> DraftAgent
+    
+    %% AI infrastructure
+    Supervisor --> StrandsCore
+    CompAgent --> StrandsCore
+    AnnotAgent --> StrandsCore
+    DraftAgent --> StrandsCore
+    StrandsCore --> Bedrock
+
+    %% Data operations
+    CompAgent --> DynamoDB
+    CompAgent --> Cache
+    CompAgent --> OpenSearch
+    AnnotAgent --> DynamoDB
+    
+    OpenSearch --> DocsIndex
+    OpenSearch --> EmbedIndex
+    
+    S3 -.Future: SQS Trigger.-> AgentV2
+
+    %% Styling
+    classDef frontend fill:#3b82f6,stroke:#1e40af,color:#fff
+    classDef api fill:#8b5cf6,stroke:#6d28d9,color:#fff
+    classDef auth fill:#10b981,stroke:#059669,color:#fff
+    classDef backend fill:#f59e0b,stroke:#d97706,color:#fff
+    classDef agent fill:#ec4899,stroke:#db2777,color:#fff
+    classDef ai fill:#ef4444,stroke:#dc2626,color:#fff
+    classDef storage fill:#06b6d4,stroke:#0891b2,color:#fff
+    classDef search fill:#14b8a6,stroke:#0d9488,color:#fff
+
+    class UI,Dashboard,Chat,Interactive frontend
+    class NextAPI,WebURL,APIGW api
+    class Cognito,AuthStore auth
+    class AgentV2,FileUpload,DocStatus,AnnotHandler,ConfirmHandler,ConvHistory backend
+    class Supervisor,CompAgent,AnnotAgent,DraftAgent agent
+    class Bedrock,StrandsCore ai
+    class S3,DynamoDB,Cache storage
+    class OpenSearch,DocsIndex,EmbedIndex search
+```

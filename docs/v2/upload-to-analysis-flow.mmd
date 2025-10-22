@@ -1,0 +1,128 @@
+%% Policy Mate - Upload to Analysis Flow
+%% Complete document lifecycle from upload to insights
+
+sequenceDiagram
+    autonumber
+    actor User
+    participant UI as Next.js UI
+    participant Cognito as AWS Cognito
+    participant FileUpload as file_upload_handler
+    participant S3 as S3 Bucket
+    participant FileConfirm as file_confirmation_handler
+    participant DynamoDB as DynamoDB Tables
+    participant AgentV2 as agent_v2_handler
+    participant Supervisor as Supervisor Agent
+    participant CompAgent as Compliance Agent
+    participant CompTool as comprehensive_check_tool
+    participant Bedrock as AWS Bedrock<br/>(Claude)
+    participant Cache as Inference Cache
+
+    %% Authentication
+    User->>UI: Navigate to Dashboard
+    UI->>Cognito: Authenticate (JWT)
+    Cognito-->>UI: Return ID Token
+    UI->>UI: Store token in authStore
+
+    %% File Upload Request
+    User->>UI: Select file to upload
+    UI->>FileUpload: POST /file-upload<br/>{filename, size, hash}
+    Note over FileUpload: Auth: Validate JWT
+    FileUpload->>DynamoDB: Check hash in Files table
+    
+    alt Hash exists (Deduplication)
+        DynamoDB-->>FileUpload: Existing file_id
+        FileUpload-->>UI: File already exists<br/>{file_id, status}
+        UI-->>User: Show existing file
+    else New file
+        DynamoDB-->>FileUpload: No match
+        FileUpload->>S3: Generate pre-signed URL<br/>(15 min expiry)
+        FileUpload->>DynamoDB: Create pending entry<br/>status: "uploading"
+        FileUpload-->>UI: {presigned_url, file_id}
+        
+        %% Direct Upload
+        UI->>S3: PUT file to presigned URL<br/>(Direct upload)
+        S3-->>UI: 200 OK
+        
+        %% Confirmation
+        UI->>FileConfirm: POST /file-confirmation<br/>{file_id, user_id}
+        FileConfirm->>DynamoDB: Update Files table<br/>status: "uploaded"
+        FileConfirm->>DynamoDB: Create User_Files entry<br/>user_id → file_id
+        FileConfirm-->>UI: Upload confirmed
+        UI-->>User: File uploaded successfully
+    end
+
+    %% Analysis Request (Manual Trigger)
+    User->>UI: Request GDPR analysis
+    UI->>AgentV2: POST /agent<br/>{"query": "Analyze doc-123 for GDPR"}
+    Note over AgentV2: Auth: Validate JWT
+    AgentV2->>Supervisor: Route query
+    Supervisor->>Supervisor: Identify keywords:<br/>"analyze" + document_id
+    Supervisor->>CompAgent: Call compliance_agent(query)
+    
+    CompAgent->>CompAgent: Parse query<br/>Extract: document_id, framework_id
+    CompAgent->>CompTool: comprehensive_check(<br/>document_id, "GDPR", force=false)
+    
+    %% Cache Check
+    CompTool->>Cache: Query DynamoDB<br/>key: doc-123#GDPR
+    
+    alt Cache hit
+        Cache-->>CompTool: Return cached analysis
+        Note over CompTool: Skip processing
+    else Cache miss or force=true
+        Cache-->>CompTool: No cache found
+        CompTool->>S3: Fetch document content
+        S3-->>CompTool: PDF/text data
+        
+        %% Document Processing
+        CompTool->>CompTool: Parse document<br/>Extract text<br/>Create semantic chunks
+        
+        %% Framework Controls
+        CompTool->>DynamoDB: Load GDPR controls<br/>compliance_controls table
+        DynamoDB-->>CompTool: All GDPR requirements
+        
+        %% LLM Analysis
+        loop For each chunk
+            CompTool->>Bedrock: Analyze chunk vs controls<br/>Model: Claude Haiku
+            Bedrock-->>CompTool: Compliance verdict<br/>+ annotations
+        end
+        
+        %% Aggregate Results
+        CompTool->>CompTool: Aggregate annotations<br/>Severity scoring<br/>Gap identification
+        
+        %% Generate Annotations
+        CompTool->>DynamoDB: Store annotations<br/>Annotations table
+        CompTool->>Cache: Store full analysis<br/>doc-123#GDPR → result
+    end
+    
+    %% Response Flow
+    CompTool-->>CompAgent: {status, annotations, gaps}
+    CompAgent->>CompAgent: Format response:<br/>tool_payload (raw)<br/>summarised_markdown<br/>suggested_next_actions
+    CompAgent-->>Supervisor: JSON response string
+    Supervisor->>Supervisor: parse_child_agent_response<br/>Sanitize JSON
+    Supervisor-->>AgentV2: Parsed JSON object
+    AgentV2-->>UI: Analysis complete
+    
+    %% Display Results
+    UI->>UI: Render Markdown summary<br/>Show annotation counts<br/>Display next actions
+    UI-->>User: 🔴 3 critical issues<br/>⚠️ 5 warnings<br/>📋 2 reviews needed
+
+    %% Future: Auto-trigger
+    Note over S3,AgentV2: FUTURE: SQS trigger<br/>Auto-analysis on upload<br/>Not in current MVP
+
+    %% Styling
+    rect rgba(59, 130, 246, 0.1)
+        Note over User,UI: Frontend Layer
+    end
+    rect rgba(16, 185, 129, 0.1)
+        Note over Cognito: Authentication
+    end
+    rect rgba(245, 158, 11, 0.1)
+        Note over FileUpload,FileConfirm: File Management
+    end
+    rect rgba(236, 72, 153, 0.1)
+        Note over AgentV2,Bedrock: AI Processing
+    end
+    rect rgba(6, 182, 212, 0.1)
+        Note over DynamoDB,Cache: Data Storage
+    end
+

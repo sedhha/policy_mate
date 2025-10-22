@@ -1,0 +1,99 @@
+%% Policy Mate - Backend Lambda Architecture
+%% All Lambda handlers and their purposes
+
+graph TB
+    subgraph "Active Lambda Handlers (V2)"
+        AgentV2[agent_v2_handler.py<br/>Supervisor Agent Router<br/>Behind Web URL Config]
+        FileUpload[file_upload_handler.py<br/>Pre-signed S3 URLs<br/>Hash Deduplication]
+        FileConfirm[file_confirmation_handler.py<br/>Confirm Upload Complete<br/>Update DynamoDB]
+        DocStatus[doc_status_handler.py<br/>Get Document Analysis Status<br/>Query Cache]
+        ConvHistory[conversation_history_handler.py<br/>Chat History Retrieval<br/>Session Management]
+        AnnotHandler[annotations_agent_handler.py<br/>Annotation CRUD Operations<br/>Proxy to Annotations Agent]
+    end
+
+    subgraph "Legacy Handlers (V1 - Reference Only)"
+        AgentV1[agent_handler.py<br/>Old Bedrock Agent Manual]
+        CompCheck[compliance_check_handler.py<br/>Phrase-wise Analysis]
+        ComprehCheck[comprehensive_check_handler.py<br/>Full Document Analysis]
+        ShowDoc[show_doc_handler.py<br/>List User Documents]
+        PollingHandler[polling_handler.py<br/>Status Polling]
+    end
+
+    subgraph "Deployment Infrastructure"
+        DeployScript[deploy.sh<br/>Multi-handler Deploy<br/>MD5 Caching]
+        CreateZip[create_handler_zip.sh<br/>Large Handler Support<br/>>50MB zip to S3]
+        PublishS3[publish_to_s3.sh<br/>S3 Bucket Upload]
+    end
+
+    subgraph "Testing Scripts"
+        TestAgent[test_agent.py<br/>Test Supervisor Agent]
+        TestLocal[test_local.py<br/>Test Individual Tools]
+        TestShowDoc[test_show_doc.py<br/>Test Document Listing]
+    end
+
+    subgraph "Shared Libraries"
+        AgentsSrc[src/agents/<br/>supervisor_agent.py<br/>compliance_agent.py<br/>annotations_agent.py<br/>drafting_agent.py]
+        ToolsSrc[src/tools/<br/>compliance_check.py<br/>comprehensive_check.py<br/>annotation_tools.py<br/>doc_status.py<br/>show_doc.py]
+        UtilsSrc[src/utils/<br/>settings.py<br/>decorators/<br/>services/]
+    end
+
+    subgraph "Configuration Files"
+        PyProject[pyproject.toml<br/>uv Package Manager<br/>Dependencies]
+        EnvFile[.env<br/>OPEN_SEARCH_ENV<br/>BEDROCK_MODEL_ID<br/>Table Names]
+        DeployCache[.deploy_cache/<br/>MD5 Hash Storage<br/>Skip Unchanged]
+    end
+
+    %% Active handler connections
+    AgentV2 --> AgentsSrc
+    AgentV2 --> ToolsSrc
+    FileUpload --> UtilsSrc
+    FileConfirm --> UtilsSrc
+    DocStatus --> ToolsSrc
+    AnnotHandler --> AgentsSrc
+
+    %% Shared library dependencies
+    AgentsSrc --> ToolsSrc
+    ToolsSrc --> UtilsSrc
+    AgentsSrc --> UtilsSrc
+
+    %% Configuration
+    AgentsSrc --> EnvFile
+    ToolsSrc --> EnvFile
+    UtilsSrc --> EnvFile
+
+    %% Deployment flow
+    DeployScript --> CreateZip
+    DeployScript --> DeployCache
+    CreateZip --> PublishS3
+    DeployScript -.Deploys.-> AgentV2
+    DeployScript -.Deploys.-> FileUpload
+    DeployScript -.Deploys.-> FileConfirm
+    DeployScript -.Deploys.-> DocStatus
+    DeployScript -.Deploys.-> ConvHistory
+    DeployScript -.Deploys.-> AnnotHandler
+
+    %% Testing
+    TestAgent --> AgentV2
+    TestLocal --> ToolsSrc
+    TestShowDoc --> ShowDoc
+
+    %% Dependencies
+    PyProject -.Manages.-> AgentsSrc
+    PyProject -.Manages.-> ToolsSrc
+    PyProject -.Manages.-> UtilsSrc
+
+    %% Styling
+    classDef active fill:#10b981,stroke:#059669,color:#fff
+    classDef legacy fill:#6b7280,stroke:#4b5563,color:#fff
+    classDef deploy fill:#f59e0b,stroke:#d97706,color:#fff
+    classDef test fill:#8b5cf6,stroke:#6d28d9,color:#fff
+    classDef shared fill:#3b82f6,stroke:#1e40af,color:#fff
+    classDef config fill:#ec4899,stroke:#db2777,color:#fff
+
+    class AgentV2,FileUpload,FileConfirm,DocStatus,ConvHistory,AnnotHandler active
+    class AgentV1,CompCheck,ComprehCheck,ShowDoc,PollingHandler legacy
+    class DeployScript,CreateZip,PublishS3 deploy
+    class TestAgent,TestLocal,TestShowDoc test
+    class AgentsSrc,ToolsSrc,UtilsSrc shared
+    class PyProject,EnvFile,DeployCache config
+

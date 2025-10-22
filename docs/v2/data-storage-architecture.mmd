@@ -1,0 +1,119 @@
+%% Policy Mate - Data Storage Architecture
+%% DynamoDB tables, S3 structure, and OpenSearch indices
+
+graph TB
+    subgraph "S3 Buckets"
+        S3Main[policy-mate-bucket]
+        
+        subgraph "S3 Structure"
+            StandardDocs[standard-docs/<br/>Public + Org-specific]
+            PublicGDPR[public/gdpr/]
+            PublicSOC2[public/soc2/]
+            PublicHIPAA[public/hipaa/]
+            OrgCustom[<org_id>/custom_gdpr/]
+            ManualDocs[manual-docs/<org_id>/]
+        end
+    end
+
+    subgraph "DynamoDB Tables"
+        subgraph "Files Table"
+            FilesTable[Files<br/>PK: file_id]
+            FilesAttrs["Attributes:<br/>- file_id (UUID)<br/>- filename<br/>- s3_key<br/>- hash (dedup)<br/>- created_at<br/>- status<br/>- file_size"]
+        end
+
+        subgraph "User_Files Table"
+            UserFilesTable[User_Files<br/>PK: user_id<br/>SK: file_id]
+            UserFilesAttrs["Attributes:<br/>- user_id<br/>- file_id<br/>- uploaded_at<br/>- access_level"]
+        end
+
+        subgraph "Annotations Table"
+            AnnotTable[Annotations<br/>PK: annotation_id]
+            AnnotAttrs["Attributes:<br/>- annotation_id (UUID)<br/>- document_id<br/>- framework_id<br/>- page_number<br/>- bookmark_type<br/>  (action_required|verify|review|info)<br/>- text<br/>- review_comments<br/>- resolved (bool)<br/>- created_at<br/>- updated_at"]
+            AnnotGSI[GSI: document_id<br/>Query all annotations<br/>for a document]
+        end
+
+        subgraph "Inference_Cache Table"
+            CacheTable[Inference_Cache<br/>PK: cache_key]
+            CacheAttrs["Attributes:<br/>- cache_key (doc_id#framework_id)<br/>- analysis_result (JSON)<br/>- created_at<br/>- ttl (optional)"]
+        end
+
+        subgraph "Compliance_Controls Table"
+            ControlsTable[Compliance_Controls<br/>PK: framework_id<br/>SK: control_id]
+            ControlsAttrs["Attributes:<br/>- framework_id (GDPR|SOC2|HIPAA)<br/>- control_id<br/>- control_name<br/>- description<br/>- category<br/>- severity"]
+        end
+
+        subgraph "Conversation_History Table"
+            ConvTable[Conversation_History<br/>PK: session_id<br/>SK: timestamp]
+            ConvAttrs["Attributes:<br/>- session_id<br/>  (chat_{user_id} or<br/>   annotation_{annotation_id})<br/>- timestamp<br/>- role (user|assistant)<br/>- message<br/>- user_id (optional)"]
+        end
+    end
+
+    subgraph "OpenSearch Indices (Deprecated in MVP)"
+        subgraph "policy-mate-docs"
+            DocsIndex[Standard Documents<br/>Regulatory Text]
+            DocsSchema["Fields:<br/>- doc_id<br/>- framework<br/>- content<br/>- metadata"]
+        end
+
+        subgraph "policy-mate-embeddings"
+            EmbedIndex[Vector Embeddings<br/>Semantic Search]
+            EmbedSchema["Fields:<br/>- embedding_id<br/>- vector (768 dim)<br/>- text_chunk<br/>- document_id"]
+        end
+    end
+
+    subgraph "Data Flow Patterns"
+        HashDedup[Hash Deduplication<br/>Before upload]
+        CacheStrategy[Cache Strategy<br/>doc_id#framework_id]
+        AnnotFilter[Annotation Filters<br/>By framework/status]
+        SessionManage[Session Management<br/>Composite key]
+    end
+
+    %% S3 Structure
+    S3Main --> StandardDocs
+    S3Main --> ManualDocs
+    StandardDocs --> PublicGDPR
+    StandardDocs --> PublicSOC2
+    StandardDocs --> PublicHIPAA
+    StandardDocs --> OrgCustom
+
+    %% DynamoDB Relationships
+    FilesTable --> FilesAttrs
+    UserFilesTable --> UserFilesAttrs
+    AnnotTable --> AnnotAttrs
+    AnnotTable --> AnnotGSI
+    CacheTable --> CacheAttrs
+    ControlsTable --> ControlsAttrs
+    ConvTable --> ConvAttrs
+
+    %% OpenSearch (Deprecated)
+    DocsIndex --> DocsSchema
+    EmbedIndex --> EmbedSchema
+
+    %% Data patterns
+    FilesTable -.Checks.-> HashDedup
+    UserFilesTable -.Links.-> FilesTable
+    AnnotTable -.Filtered by.-> AnnotFilter
+    CacheTable -.Uses.-> CacheStrategy
+    ConvTable -.Managed by.-> SessionManage
+
+    %% Operations
+    HashDedup -.Prevents duplicates.-> S3Main
+    CacheStrategy -.Speeds up.-> AnnotTable
+    AnnotFilter -.Queries via.-> AnnotGSI
+
+    %% Notes
+    DocsIndex -.Not used in MVP.-> DocsIndex
+    EmbedIndex -.Planned for V3.-> EmbedIndex
+
+    %% Styling
+    classDef s3 fill:#10b981,stroke:#059669,color:#fff
+    classDef dynamodb fill:#3b82f6,stroke:#1e40af,color:#fff
+    classDef opensearch fill:#6b7280,stroke:#4b5563,color:#fff
+    classDef pattern fill:#f59e0b,stroke:#d97706,color:#fff
+    classDef attrs fill:#8b5cf6,stroke:#6d28d9,color:#fff
+
+    class S3Main,StandardDocs,PublicGDPR,PublicSOC2,PublicHIPAA,OrgCustom,ManualDocs s3
+    class FilesTable,UserFilesTable,AnnotTable,CacheTable,ControlsTable,ConvTable,AnnotGSI dynamodb
+    class DocsIndex,EmbedIndex opensearch
+    class HashDedup,CacheStrategy,AnnotFilter,SessionManage pattern
+    class FilesAttrs,UserFilesAttrs,AnnotAttrs,CacheAttrs,ControlsAttrs,ConvAttrs,DocsSchema,EmbedSchema attrs
+
