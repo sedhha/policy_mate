@@ -81,20 +81,14 @@ export const useAgentStore = create<IAgentState>()((set, get) => ({
       }));
 
       const sessionId = get().sessionId;
-      const response = await sendMessage<T>(
-        message,
-        sessionId,
-        metadata,
-        undefined,
-        process.env.NEXT_PUBLIC_LONG_API_BASE_URL
-      );
+      const response = await sendMessage<T>(message, sessionId, metadata);
 
       // Update session ID if it changed
       if (response.session_id) {
         set({ sessionId: response.session_id });
       }
 
-      if (response.error_message) {
+      if (response.error_message && !response.summarised_markdown) {
         set((prev) => ({
           agentStates: {
             ...prev.agentStates,

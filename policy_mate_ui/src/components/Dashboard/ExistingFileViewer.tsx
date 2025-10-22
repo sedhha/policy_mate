@@ -107,7 +107,7 @@ export const ExistingFiles = () => {
     const error = agentStates.listDocs.error;
 
     useEffect(() => {
-        if (idToken) { loadDocuments(); }
+        if (idToken && documents.length === 0) { loadDocuments(); }
     }, [loadDocuments, idToken]);
 
     const handleRefresh = async () => {
@@ -127,6 +127,20 @@ export const ExistingFiles = () => {
             router.push('/chat');
         }
     };
+
+    const onFileSelect = (documentId: string | null) => {
+        setSelectedFile(documentId);
+
+        const document = documents.find(doc => doc.document_id === documentId);
+        if (document) {
+            setS3Bucket(document.s3_bucket);
+            setS3Key(document.s3_key);
+
+        } else {
+            setS3Bucket('');
+            setS3Key('');
+        }
+    }
 
     const handleStartAnalysis = () => {
         if (selectedDocument) {
@@ -420,7 +434,7 @@ export const ExistingFiles = () => {
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                setSelectedFile(isExpanded ? null : doc.document_id);
+                                                onFileSelect(isExpanded ? null : doc.document_id);
                                             }}
                                             className="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition-all hover:scale-105"
                                             title={isExpanded ? "Hide Details" : "Show Details"}

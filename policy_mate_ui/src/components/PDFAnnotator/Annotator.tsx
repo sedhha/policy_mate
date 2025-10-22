@@ -192,7 +192,7 @@ export const SimplePDFAnnotator: React.FC = () => {
                     </div>
                 ) : isLoading || !selectedFile || !Document || !Page ? (
                     <div className="flex flex-col items-center justify-center py-24 relative min-h-[500px]">
-                        <VibrantLoader variant="pulse" size="xl" message="Loading PDF Document" />
+                        <VibrantLoader variant="pulse" size="xl" message="Loading PDF Document" showFacts={true} />
                     </div>
                 ) : (
                     <div className="flex justify-center">

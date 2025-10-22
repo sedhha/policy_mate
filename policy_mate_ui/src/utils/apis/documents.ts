@@ -108,12 +108,10 @@ export const extractMetadata = (text: string): MessageMetadata => {
 export const sendMessage = async <T = any>(
   prompt: string,
   sessionId?: string,
-  metadata?: MessageMetadata,
-  postfix: string = 'chats-v2',
-  fullUrl?: string
+  metadata?: MessageMetadata
 ): Promise<AgentResponse<T>> => {
   try {
-    const url = fullUrl || `${env.NEXT_PUBLIC_API_BASE_URL}/${postfix}`;
+    const url = env.NEXT_PUBLIC_LONG_API_BASE_URL;
 
     // Tag the prompt with metadata if provided
     const metadataTag = buildMetadataTag(metadata);
@@ -157,10 +155,5 @@ export const fetchDocuments = async (
   sessionId?: string,
   prompt: string = 'List all my documents.'
 ): Promise<AgentResponse<DocumentsData>> => {
-  return sendMessage<DocumentsData>(
-    prompt,
-    sessionId,
-    undefined,
-    'chat_session'
-  );
+  return sendMessage<DocumentsData>(prompt, sessionId);
 };

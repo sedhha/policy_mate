@@ -127,7 +127,7 @@ const LoadingMessage = () => {
     useEffect(() => {
         const messageInterval = setInterval(() => {
             setCurrentMessageIndex((prev) => (prev + 1) % loadingMessages.length);
-        }, 3000);
+        }, 5000);
 
         return () => clearInterval(messageInterval);
     }, []);
@@ -136,7 +136,7 @@ const LoadingMessage = () => {
     useEffect(() => {
         const tipInterval = setInterval(() => {
             setCurrentTipIndex((prev) => (prev + 1) % complianceTips.length);
-        }, 4000);
+        }, 6000);
 
         return () => clearInterval(tipInterval);
     }, []);
