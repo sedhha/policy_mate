@@ -11,7 +11,6 @@ from src.tools.doc_status import doc_status_tool
 from src.utils.settings import AGENT_CLAUDE_HAIKU_4_5 as AGENT_MODEL
 from strands.models import BedrockModel
 from src.tools.show_doc import show_doc_tool
-from src.agents.v2.agent_core_drafting_agent import browser_tool
 from src.agents.v2.agent_core_annotations_agent import (
     load_annotations,
     update_annotation_status,
@@ -382,7 +381,7 @@ def document_drafting_assistant(
         drafting_agent = Agent(
             model=BedrockModel(model_id=AGENT_MODEL, streaming=False),
             system_prompt=DRAFTING_AGENT_SYSTEM_PROMPT,
-            tools=[browser_tool.browser],  # Drafting agent doesn't need additional tools
+            tools=[],  # Drafting agent doesn't need additional tools
             callback_handler=None  # Suppress intermediate output
         )
         

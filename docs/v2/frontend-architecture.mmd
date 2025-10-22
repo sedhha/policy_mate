@@ -1,0 +1,123 @@
+%% Policy Mate - Frontend Architecture
+%% Next.js 15 App Router with detailed component structure
+
+graph TB
+    subgraph "Next.js 15 Application"
+        subgraph "Pages (App Router)"
+            Login[/login<br/>AWS Cognito Auth/]
+            Register[/register<br/>User Signup/]
+            Dashboard[/dashboard<br/>Document List + Upload/]
+            Chat[/chat<br/>AI Conversation/]
+            Analyse[/analyse<br/>Interactive Annotations/]
+            Architecture[/architecture<br/>System Docs/]
+        end
+
+        subgraph "API Routes (/api)"
+            MyDocs[/api/my-documents<br/>Proxy to Lambda/]
+            Annotations[/api/annotations/*<br/>CORS Workaround/]
+            PDF[/api/pdf<br/>PDF Operations/]
+            Polling[/api/polling<br/>Status Check/]
+            Proxy[/api/proxy<br/>Generic Proxy/]
+        end
+
+        subgraph "State Management (Zustand)"
+            AuthStore[authStore.ts<br/>JWT + User Claims<br/>Persisted: sessionStorage]
+            AgentStore[agentStore.ts<br/>Conversations + UI State<br/>Ephemeral]
+        end
+
+        subgraph "Components"
+            PDFRenderer[PDF Renderer<br/>PDF.js Worker]
+            MarkdownRender[Markdown Renderer<br/>react-markdown<br/>rehype-highlight + katex]
+            AnnotationUI[Annotation UI<br/>Live Highlighting]
+            ChatInterface[Chat Interface<br/>Message History]
+            FileUploader[File Uploader<br/>Pre-signed S3 URLs]
+            LayoutWrapper[Layout Wrapper<br/>Protected Routes]
+        end
+
+        subgraph "Utils"
+            CognitoClient[Cognito SDK Client<br/>signIn/signUp/signOut]
+            APIClient[API Clients<br/>Fetch Wrappers]
+            TypeDefs[TypeScript Types<br/>Interfaces]
+        end
+    end
+
+    subgraph "External Services"
+        CognitoService[AWS Cognito<br/>User Pool]
+        APIGateway[API Gateway<br/>Lambda Integration]
+        S3Direct[S3 Buckets<br/>Direct Upload]
+        WebURLConfig[Web URL Config<br/>bedrock_handler]
+    end
+
+    subgraph "Styling"
+        Tailwind[Tailwind CSS<br/>Utility-First]
+        BiomeConfig[Biome<br/>Linting + Formatting]
+    end
+
+    %% Page connections
+    Login --> CognitoClient
+    Register --> CognitoClient
+    Dashboard --> FileUploader
+    Dashboard --> MyDocs
+    Chat --> Proxy
+    Analyse --> Annotations
+    Analyse --> PDFRenderer
+    Analyse --> AnnotationUI
+
+    %% API routing
+    MyDocs --> APIGateway
+    Annotations --> APIGateway
+    PDF --> APIGateway
+    Polling --> APIGateway
+    Proxy --> WebURLConfig
+
+    %% State management
+    CognitoClient --> CognitoService
+    CognitoService --> AuthStore
+    AuthStore --> LayoutWrapper
+    LayoutWrapper --> Login
+    LayoutWrapper --> Dashboard
+    LayoutWrapper --> Chat
+    LayoutWrapper --> Analyse
+
+    ChatInterface --> AgentStore
+    AnnotationUI --> AgentStore
+
+    %% Component usage
+    Chat --> ChatInterface
+    Chat --> MarkdownRender
+    Analyse --> MarkdownRender
+
+    FileUploader --> S3Direct
+
+    %% Utils
+    APIClient --> MyDocs
+    APIClient --> Annotations
+    TypeDefs --> AuthStore
+    TypeDefs --> AgentStore
+
+    %% Styling
+    Tailwind --> Dashboard
+    Tailwind --> Chat
+    Tailwind --> Analyse
+    BiomeConfig -.Enforces.-> Tailwind
+
+    %% PDF.js special case
+    PDFRenderer -.Webpack Config.-> PDFRenderer
+
+
+    %% Styling (blank line before this fixes parse error)
+    classDef page fill:#3b82f6,stroke:#1e40af,color:#fff
+    classDef api fill:#8b5cf6,stroke:#6d28d9,color:#fff
+    classDef state fill:#10b981,stroke:#059669,color:#fff
+    classDef component fill:#f59e0b,stroke:#d97706,color:#fff
+    classDef util fill:#06b6d4,stroke:#0891b2,color:#fff
+    classDef external fill:#ef4444,stroke:#dc2626,color:#fff
+    classDef style fill:#ec4899,stroke:#db2777,color:#fff
+
+    class Login,Register,Dashboard,Chat,Analyse,Architecture page
+    class MyDocs,Annotations,PDF,Polling,Proxy api
+    class AuthStore,AgentStore state
+    class PDFRenderer,MarkdownRender,AnnotationUI,ChatInterface,FileUploader,LayoutWrapper component
+    class CognitoClient,APIClient,TypeDefs util
+    class CognitoService,APIGateway,S3Direct,WebURLConfig external
+    class Tailwind,BiomeConfig style

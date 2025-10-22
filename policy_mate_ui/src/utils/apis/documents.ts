@@ -126,10 +126,18 @@ export const sendMessage = async <T = any>(
       session_id: sessionId,
     };
 
-    const response = await fetch(url, {
+    // Use proxy to avoid CORS issues
+    const response = await fetch('/api/proxy', {
       method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(requestBody),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url,
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: requestBody,
+      }),
     });
 
     if (!response.ok) {
@@ -139,7 +147,10 @@ export const sendMessage = async <T = any>(
       );
     }
 
-    const agentResponse: AgentResponse<T> = await response.json();
+    const proxyResponse = await response.json();
+
+    // Extract the actual data from proxy response
+    const agentResponse: AgentResponse<T> = proxyResponse.data;
     return agentResponse;
   } catch (error) {
     console.error('❌ Error sending message:', error);

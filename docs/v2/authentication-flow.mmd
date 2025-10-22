@@ -1,0 +1,141 @@
+%% Policy Mate - Authentication Flow
+%% AWS Cognito JWT-based authentication
+
+sequenceDiagram
+    autonumber
+    actor User
+    participant UI as Next.js UI<br/>(Client)
+    participant AuthStore as Zustand authStore<br/>(sessionStorage)
+    participant CognitoSDK as AWS Cognito SDK<br/>(amplify)
+    participant Cognito as AWS Cognito<br/>User Pool
+    participant APIGW as API Gateway
+    participant Lambda as Lambda Handler
+    participant JWTValidator as @require_cognito_auth<br/>Decorator
+
+    %% Registration Flow
+    rect rgba(59, 130, 246, 0.1)
+        Note over User,Cognito: Registration Flow
+        User->>UI: Navigate to /register
+        UI->>User: Show registration form
+        User->>UI: Submit email + password
+        UI->>CognitoSDK: signUp(email, password)
+        CognitoSDK->>Cognito: Create user account
+        Cognito-->>CognitoSDK: User created (unconfirmed)
+        CognitoSDK-->>UI: Check email for confirmation
+        UI-->>User: Verification email sent
+        
+        Note over User,Cognito: Email Verification (Out of band)
+        User->>User: Click email link
+        Cognito->>Cognito: Confirm user account
+    end
+
+    %% Login Flow
+    rect rgba(16, 185, 129, 0.1)
+        Note over User,AuthStore: Login Flow
+        User->>UI: Navigate to /login
+        UI->>User: Show login form
+        User->>UI: Enter email + password
+        UI->>CognitoSDK: signIn(email, password)
+        CognitoSDK->>Cognito: Authenticate credentials
+        
+        alt Valid credentials
+            Cognito-->>CognitoSDK: Return tokens:<br/>- ID Token (JWT)<br/>- Access Token<br/>- Refresh Token
+            CognitoSDK-->>UI: Authentication success
+            
+            UI->>UI: Decode ID Token with jwtDecode
+            UI->>AuthStore: setIdToken(idToken)
+            Note over AuthStore: Store in sessionStorage:<br/>- idToken<br/>- user: {id, email, username}<br/>- raw JWT claims
+            
+            AuthStore-->>UI: Token stored
+            UI->>UI: Navigate to /dashboard
+        else Invalid credentials
+            Cognito-->>CognitoSDK: Authentication failed
+            CognitoSDK-->>UI: Error (wrong password)
+            UI-->>User: Show error message
+        end
+    end
+
+    %% Authenticated Request Flow
+    rect rgba(245, 158, 11, 0.1)
+        Note over User,Lambda: Authenticated API Request
+        User->>UI: Trigger API action<br/>(e.g., list documents)
+        UI->>AuthStore: getIdToken()
+        AuthStore-->>UI: Return idToken
+        
+        alt Token expired
+            UI->>UI: Check isTokenExpired(token)
+            Note over UI: Token expired (exp < now)
+            UI->>AuthStore: Clear session
+            AuthStore->>AuthStore: Remove from sessionStorage
+            UI->>UI: Redirect to /login
+            UI-->>User: Session expired, please login
+        else Token valid
+            UI->>APIGW: POST /my-documents<br/>Headers:<br/>Authorization: Bearer <idToken>
+            APIGW->>Lambda: Invoke with event:<br/>{headers: {Authorization: ...}}
+            
+            Lambda->>JWTValidator: @require_cognito_auth decorator
+            JWTValidator->>JWTValidator: Extract token from header
+            JWTValidator->>Cognito: Fetch JWKS (public keys)
+            Cognito-->>JWTValidator: Public key for token validation
+            JWTValidator->>JWTValidator: Verify JWT signature<br/>Check expiry<br/>Validate claims
+            
+            alt JWT valid
+                JWTValidator->>Lambda: Inject user_claims into event
+                Lambda->>Lambda: Process request<br/>user_id = claims['sub']
+                Lambda->>Lambda: Execute business logic
+                Lambda-->>APIGW: Return response
+                APIGW-->>UI: JSON response
+                UI-->>User: Display result
+            else JWT invalid/expired
+                JWTValidator-->>Lambda: Raise 401 Unauthorized
+                Lambda-->>APIGW: {"statusCode": 401,<br/>"body": "Invalid token"}
+                APIGW-->>UI: 401 Unauthorized
+                UI->>AuthStore: Clear session
+                UI->>UI: Redirect to /login
+                UI-->>User: Session invalid, please login
+            end
+        end
+    end
+
+    %% Token Refresh Flow (Not implemented yet)
+    rect rgba(236, 72, 153, 0.1)
+        Note over UI,Cognito: Token Refresh (Future Enhancement)
+        Note over UI: Before token expiry (5 min buffer):<br/>UI could call refreshSession()<br/>to get new ID token
+        Note over UI: Not implemented in current MVP
+    end
+
+    %% Logout Flow
+    rect rgba(239, 68, 68, 0.1)
+        Note over User,AuthStore: Logout Flow
+        User->>UI: Click logout button
+        UI->>CognitoSDK: signOut()
+        CognitoSDK->>Cognito: Invalidate session
+        Cognito-->>CognitoSDK: Session ended
+        CognitoSDK-->>UI: Logout success
+        UI->>AuthStore: Clear session
+        AuthStore->>AuthStore: sessionStorage.clear()
+        UI->>UI: Navigate to /login
+        UI-->>User: Logged out successfully
+    end
+
+    %% Protected Routes Check
+    rect rgba(6, 182, 212, 0.1)
+        Note over UI,AuthStore: Protected Route Check (LayoutWrapper)
+        User->>UI: Navigate to protected page<br/>(e.g., /dashboard)
+        UI->>UI: LayoutWrapper component loads
+        UI->>AuthStore: useAuthStore() - get idToken
+        
+        alt No token or expired
+            AuthStore-->>UI: undefined or expired token
+            UI->>UI: Redirect to /login
+            UI-->>User: Please login to continue
+        else Valid token
+            AuthStore-->>UI: Valid idToken
+            UI->>UI: Render protected page
+            UI-->>User: Show dashboard
+        end
+    end
+
+    %% JWT Token Structure
+    Note over Cognito,Lambda: JWT Token Structure (ID Token)<br/>Header: {alg: "RS256", kid: "..."}<br/>Payload: {<br/>  sub: "user_id",<br/>  email: "user@example.com",<br/>  cognito:username: "username",<br/>  exp: 1234567890,<br/>  iat: 1234567800<br/>}<br/>Signature: RS256 signed by Cognito
+

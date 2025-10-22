@@ -1,0 +1,113 @@
+%% Policy Mate - Multi-Agent Orchestration
+%% Tool-Agent Pattern with Supervisor
+
+graph TB
+    subgraph "User Request Entry"
+        UserQuery[User Query<br/>Chat or Interactive Mode]
+    end
+
+    subgraph "Supervisor Agent (agent_v2_handler)"
+        Supervisor[Supervisor Agent<br/>Claude Haiku<br/>Smart Router]
+        ParseResponse[parse_child_agent_response<br/>JSON Sanitization]
+        SanitizeJSON[sanitize_child_agent_json<br/>Fix Quotes/Types]
+    end
+
+    subgraph "Routing Logic"
+        RouteDecision{Query Analysis}
+        ComplianceRoute[Contains:<br/>document/analyze/check/framework<br/>controls/status/compliant]
+        AnnotRoute[Contains:<br/>annotation/bookmark/resolved<br/>conversation/discussion/message]
+    end
+
+    subgraph "Compliance Agent (Child)"
+        CompAgent[Compliance Agent<br/>Claude Haiku<br/>Document Analysis]
+        CompTools[Tools:<br/>- list_docs<br/>- doc_status<br/>- comprehensive_check<br/>- phrase_wise_check<br/>- list_controls]
+        CompPrompt[SYSTEM_PROMPT:<br/>Return JSON Only<br/>No Explanations]
+    end
+
+    subgraph "Annotations Agent (Child)"
+        AnnotAgent[Annotations Agent<br/>Claude Haiku<br/>Bookmark Management]
+        AnnotTools[Tools:<br/>- load_annotations<br/>- update_status<br/>- update_details<br/>- remove_annotation<br/>- start_conversation<br/>- add_message<br/>- get_conversation]
+        AnnotPrompt[SYSTEM_PROMPT:<br/>Return JSON String<br/>data + error fields]
+    end
+
+    subgraph "Drafting Agent (Sub-Agent)"
+        DraftAgent[Drafting Agent<br/>Claude Sonnet<br/>Policy Creation]
+        DraftTools[Capabilities:<br/>- Draft policies<br/>- Framework templates<br/>- Customizable content]
+        DraftPrompt[SYSTEM_PROMPT:<br/>Expert compliance writer<br/>Markdown output]
+    end
+
+    subgraph "Tool Execution Layer"
+        CompToolExec[Execute Compliance Tools<br/>DynamoDB + OpenSearch<br/>Bedrock LLM]
+        AnnotToolExec[Execute Annotation Tools<br/>DynamoDB Operations<br/>Session Management]
+        DraftToolExec[Execute Drafting<br/>LLM Generation<br/>Framework Alignment]
+    end
+
+    subgraph "Response Flow"
+        ToolPayload[tool_payload:<br/>Exact raw tool data<br/>NO MODIFICATIONS]
+        SummarisedMD[summarised_markdown:<br/>User-friendly formatting<br/>Emojis + Tables]
+        NextActions[suggested_next_actions:<br/>2-3 actionable items<br/>Real IDs included]
+        ErrorMsg[error_message:<br/>Empty on success<br/>Details on failure]
+    end
+
+    subgraph "Standard Response Structure"
+        ResponseJSON{{"{"<br/> session_id: str | null<br/> error_message: str<br/> tool_payload: dict<br/> summarised_markdown: str<br/> suggested_next_actions: list<br/>"}"}}
+    end
+
+    %% Flow
+    UserQuery --> Supervisor
+    Supervisor --> RouteDecision
+    
+    RouteDecision --> ComplianceRoute
+    RouteDecision --> AnnotRoute
+    
+    ComplianceRoute --> CompAgent
+    AnnotRoute --> AnnotAgent
+    
+    CompAgent --> CompPrompt
+    CompAgent --> CompTools
+    CompTools --> CompToolExec
+    
+    AnnotAgent --> AnnotPrompt
+    AnnotAgent --> AnnotTools
+    AnnotTools --> AnnotToolExec
+    
+    CompAgent -.May Route To.-> DraftAgent
+    DraftAgent --> DraftPrompt
+    DraftAgent --> DraftTools
+    DraftTools --> DraftToolExec
+    
+    CompToolExec --> ToolPayload
+    AnnotToolExec --> ToolPayload
+    DraftToolExec --> ToolPayload
+    
+    ToolPayload --> ResponseJSON
+    SummarisedMD --> ResponseJSON
+    NextActions --> ResponseJSON
+    ErrorMsg --> ResponseJSON
+    
+    ResponseJSON --> ParseResponse
+    ParseResponse --> SanitizeJSON
+    SanitizeJSON --> Supervisor
+    Supervisor --> UserQuery
+
+    %% Critical Rules
+    CompToolExec -.CRITICAL: No Modifications.-> ToolPayload
+    AnnotToolExec -.CRITICAL: Parse Stringified JSON.-> ToolPayload
+    DraftToolExec -.CRITICAL: Complete Response.-> ToolPayload
+
+    %% Styling
+    classDef user fill:#3b82f6,stroke:#1e40af,color:#fff
+    classDef supervisor fill:#8b5cf6,stroke:#6d28d9,color:#fff
+    classDef routing fill:#f59e0b,stroke:#d97706,color:#fff
+    classDef agent fill:#10b981,stroke:#059669,color:#fff
+    classDef tools fill:#06b6d4,stroke:#0891b2,color:#fff
+    classDef response fill:#ec4899,stroke:#db2777,color:#fff
+    classDef structure fill:#ef4444,stroke:#dc2626,color:#fff
+
+    class UserQuery user
+    class Supervisor,ParseResponse,SanitizeJSON supervisor
+    class RouteDecision,ComplianceRoute,AnnotRoute routing
+    class CompAgent,AnnotAgent,DraftAgent agent
+    class CompTools,AnnotTools,DraftTools,CompPrompt,AnnotPrompt,DraftPrompt,CompToolExec,AnnotToolExec,DraftToolExec tools
+    class ToolPayload,SummarisedMD,NextActions,ErrorMsg response
+    class ResponseJSON structure
