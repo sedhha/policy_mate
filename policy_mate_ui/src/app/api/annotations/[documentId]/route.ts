@@ -44,7 +44,7 @@ interface BackendToolPayload {
 
 interface BackendResponse {
   error_message: string;
-  tool_payload: BackendToolPayload;
+  tool_payload: { data: BackendToolPayload };
   summarised_markdown: string;
   suggested_next_actions: Array<{
     action: string;
@@ -151,10 +151,10 @@ export async function GET(
     }
     console.log('Lambda response status:', lambdaResponse.status);
     const backendData: BackendResponse = await lambdaResponse.json();
-    const payload = backendData.tool_payload;
+    const payload = backendData.tool_payload.data;
 
     // Check for errors
-    if (backendData.error_message) {
+    if (backendData.error_message && payload !== undefined) {
       throw new Error(backendData.error_message);
     }
 
