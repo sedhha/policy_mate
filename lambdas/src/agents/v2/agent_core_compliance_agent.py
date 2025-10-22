@@ -4,7 +4,7 @@ from strands import Agent, tool # pyright: ignore[reportUnknownVariableType]
 from strands.hooks import HookProvider, HookRegistry
 from strands.hooks.events import AfterInvocationEvent, AfterToolCallEvent
 
-from src.agents.v2.prompts import COMPLIANCE_AGENT_SYSTEM_PROMPT_V2 as COMPLIANCE_AGENT_SYSTEM_PROMPT, DRAFTING_AGENT_SYSTEM_PROMPT
+from src.agents.v2.prompts import COMPLIANCE_AGENT_SYSTEM_PROMPT, DRAFTING_AGENT_SYSTEM_PROMPT
 from src.tools.compliance_check import compliance_check_tool, get_all_controls_tool
 from src.agents.v2.v2_tools.comprehensive_check_v2 import comprehensive_check_tool, deserialize_dynamodb_item as replace_decimal
 from src.tools.doc_status import doc_status_tool
