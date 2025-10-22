@@ -131,7 +131,7 @@ Policy Mate follows a **serverless, multi-agent architecture** built on AWS serv
 
 ### Prerequisites
 
-- **Node.js** 18+ and **pnpm** 10.18+
+- **Node.js** 20+ and **pnpm** 10.18+
 - **Python** 3.12 and **uv** package manager
 - **AWS CLI** configured with credentials
 - **AWS Account** with Bedrock access (Claude models enabled)

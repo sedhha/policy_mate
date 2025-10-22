@@ -76,7 +76,7 @@ We migrated to AWS and built **PolicyMate Agent** using:
 
 We are extensively using it for POC and testing purposes, however due to challenges with custom output formatting bugs, synchronisation issues with prompt updates, and verbosity in agent configuration, we decided to move to a more programmatic way of using agents.
 
-### V2 Architecture (Current MVP - Strands Framework)
+### V2 Architecture (Second Stage MVP - Strands Framework)
 
 Complete rebuild with modern agentic architecture:
 
@@ -84,6 +84,89 @@ Complete rebuild with modern agentic architecture:
 - **Specialized Agents**: Dual-agent system (Compliance + Annotation)
 - **Tool Refactoring**: V1 Lambda tools refactored for Strands compatibility
 - **Result**: Clean, scalable, and maintainable architecture
+
+## Final Agent Architecture Design (AWS AgentCore Runtime with Strands)
+
+```
+User Query → Supervisor Agent → [Compliance Agent | Annotations Agent]
+                    ↓
+              Synthesizes Response
+```
+
+### The Supervisor Agent
+
+**Role**: Query router and response synthesizer
+
+- Analyzes user intent from natural language queries
+- Routes requests to the appropriate specialist agent
+- Combines multiple agent responses into coherent answers
+- Maintains conversation context across interactions
+
+**Example**: User asks _"Does our privacy policy comply with GDPR Article 13?"_
+→ Supervisor routes to Compliance Agent for gap analysis
+
+### Specialized Child Agents
+
+#### 1. Compliance Agent
+
+**Expertise**: Regulatory framework analysis
+
+- Compares documents against GDPR, SOC2, HIPAA controls
+- Identifies compliance gaps and violations
+- Provides evidence-based recommendations
+- Caches results to avoid duplicate analysis
+
+#### 2. Annotations Agent
+
+**Expertise**: Document markup and collaboration
+
+- Manages inline comments and feedback
+- Tracks compliance issues at specific document locations
+- Enables team collaboration on policy improvements
+- Links annotations to compliance controls
+
+### Response Format
+
+All agents return **structured JSON** with four components:
+
+```json
+{
+  "tool_payload": {
+    /* Raw data */
+  },
+  "summarised_markdown": "Human-readable analysis",
+  "error_message": "",
+  "suggested_next_actions": ["Action 1", "Action 2"]
+}
+```
+
+This ensures consistent UI rendering and enables progressive disclosure (summary → details).
+
+## Key Benefits
+
+**🎯 Specialization**: Each agent masters one domain vs. single generalist agent
+**⚡ Performance**: Parallel agent execution where possible
+**💾 Intelligent Caching**: DynamoDB stores analysis results (keyed by `document#framework`)
+**🔄 Extensibility**: Add new agents without modifying existing ones
+**📊 Context Awareness**: Supervisor maintains conversation state across multi-turn interactions
+
+## Example Workflow
+
+```
+User: "Analyze our employee handbook for GDPR compliance"
+  ↓
+Supervisor: Identifies compliance analysis task
+  ↓
+Compliance Agent:
+  - Retrieves handbook from S3
+  - Queries 47 relevant GDPR controls via vector search
+  - Analyzes each section against requirements
+  - Returns gap report with specific Article violations
+  ↓
+Supervisor: Formats findings with action items
+  ↓
+UI: Displays color-coded compliance dashboard
+```
 
 ---
 
@@ -127,6 +210,17 @@ To save development time on CORS configuration:
 
 Balancing AI autonomy with compliance accuracy demanded careful prompt engineering and validation workflows. We developed **confidence scoring** and **human-in-the-loop** mechanisms for critical decisions.
 
+**5. API Gateway timeout Issues**
+
+Due to API gateway timeout issues, we were still not able to deploy a sustainable version as we were not using streaming. We tried multiple approach like setting up SQS and polling mechanism but none seem to have worked and so we decided to run and test locally. By the time this goes live, we would be working on the same and hopefully be able to make the APIs fully streamable along with FE changes.
+
+**6. AgentCore unexpected bugs**
+
+During integration and testing we did face a lot of unexpected agent core bugs -
+
+- Sometimes we got a strange message - tool_count is more than agent count something.
+- We tried to use browser tool in our sub agent (which was invoked by supervisor agent) - but it failed with some cryptic error. Also playwright dependency is heavy enough and since we were following a mono repo design we ended up bloating our python libraries - great learning for project organisation.
+
 ### Tool Refactoring Journey
 
 Many tools started as Lambda functions for V1 Bedrock agents with YML schema definitions. We refactored them to work seamlessly with Strands:
@@ -144,7 +238,7 @@ Many tools started as Lambda functions for V1 Bedrock agents with YML schema def
 
 We use Anthropic's Claude models via AWS Bedrock:
 
-**Claude Haiku 3**: Fast, cost-effective for:
+**Claude Haiku 4.5**: Fast, cost-effective for:
 
 - Quick phrase analysis
 - Status checks
@@ -156,7 +250,7 @@ We use Anthropic's Claude models via AWS Bedrock:
 - Complex framework mapping
 - Multi-control compliance checks
 
-_Current Status_: Toggling between models manually based on query complexity.
+_Current Status_: Claude Haiku 4.5 for cost effectiveness and speed
 
 ### Intelligent Document Processing
 
