@@ -4,13 +4,24 @@ from strands import Agent, tool # pyright: ignore[reportUnknownVariableType]
 from strands.hooks import HookProvider, HookRegistry
 from strands.hooks.events import AfterInvocationEvent, AfterToolCallEvent
 
-from src.agents.v2.prompts import COMPLIANCE_AGENT_SYSTEM_PROMPT, DRAFTING_AGENT_SYSTEM_PROMPT
+from src.agents.v2.prompts import COMPLIANCE_AGENT_SYSTEM_PROMPT, DRAFTING_AGENT_SYSTEM_PROMPT, ANNOTATIONS_AGENT_SYSTEM_PROMPT
 from src.tools.compliance_check import compliance_check_tool, get_all_controls_tool
 from src.agents.v2.v2_tools.comprehensive_check_v2 import comprehensive_check_tool, deserialize_dynamodb_item as replace_decimal
 from src.tools.doc_status import doc_status_tool
 from src.utils.settings import AGENT_CLAUDE_HAIKU_4_5 as AGENT_MODEL
 from strands.models import BedrockModel
 from src.tools.show_doc import show_doc_tool
+from src.agents.v2.agent_core_drafting_agent import browser_tool
+from src.agents.v2.agent_core_annotations_agent import (
+    load_annotations,
+    update_annotation_status,
+    update_annotation_details,
+    remove_annotation,
+    start_annotation_conversation,
+    add_conversation_message,
+    get_annotation_conversation,
+    get_conversation_history
+)
 import json
 
 def parse_agent_json(agent_response: str) -> dict[str, Any]:
@@ -30,6 +41,7 @@ class CleanupHook(HookProvider):
     def after_tool_call(self, event: AfterToolCallEvent) -> None:
         """No-op for tool calls."""
         print("tool result received")
+        print("------------------------------------------------------------")
 
     def after_model_call(self, event: AfterInvocationEvent) -> None:
         """
@@ -201,10 +213,80 @@ def parse_json(json_string: str) -> str:
         return json.dumps({"success": False, "error": str(e)})
 
 
+# ==================== ANNOTATION MANAGEMENT SUB-AGENT ====================
+
+@tool(
+    inputSchema={
+        "json": {
+            "type": "object", 
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Natural language query about annotation management, bookmarks, or conversation threads"
+                }
+            },
+            "required": ["query"]
+        }
+    }
+)
+def annotations_manager(query: str) -> str:
+    """
+    Route annotation-related queries to the specialized annotations agent.
+    
+    This tool handles all annotation operations:
+    - Loading/viewing annotations for documents
+    - Managing annotation status (resolved/unresolved) 
+    - Updating annotation details (type, comments)
+    - Deleting annotations
+    - Starting and managing conversation threads
+    
+    Use this when users ask about:
+    - "Show annotations for document X"
+    - "Mark annotation Y as resolved"
+    - "Update annotation details"
+    - "Delete annotation Z"
+    - "Start discussion on annotation"
+    - "Get conversation history"
+    
+    Args:
+        query: Natural language query about annotations
+        
+    Returns:
+        JSON string with agent response from annotations specialist
+    """
+    try:
+        # Create specialized annotations agent with Sonnet for better output
+        annotations_agent = Agent(
+            model=BedrockModel(model_id=AGENT_MODEL, streaming=False),
+            system_prompt=ANNOTATIONS_AGENT_SYSTEM_PROMPT,
+            tools=[load_annotations,
+                   update_annotation_status,
+                   update_annotation_details,
+                   remove_annotation,
+                   start_annotation_conversation,
+                   add_conversation_message,
+                   get_annotation_conversation,
+                   get_conversation_history
+                   ],
+            callback_handler=None  # Suppress intermediate output
+        )
+        
+        result = annotations_agent(query)
+        return str(result)
+        
+    except Exception as e:
+        error_response: dict[str, Any] = {
+            "error_message": f"Annotations agent error: {str(e)}",
+            "tool_payload": {},
+            "summarised_markdown": f"## ❌ Annotation Error\\n\\nFailed to process annotation request: {str(e)}",
+            "suggested_next_actions": [
+                {"action": "retry_request", "description": "Please try your annotation request again"}
+            ]
+        }
+        return json.dumps(error_response)
+
+
 # ==================== DOCUMENT DRAFTING SUB-AGENT ====================
-
-
-
 
 @tool(
     inputSchema={
@@ -300,7 +382,7 @@ def document_drafting_assistant(
         drafting_agent = Agent(
             model=BedrockModel(model_id=AGENT_MODEL, streaming=False),
             system_prompt=DRAFTING_AGENT_SYSTEM_PROMPT,
-            tools=[],  # Drafting agent doesn't need additional tools
+            tools=[browser_tool.browser],  # Drafting agent doesn't need additional tools
             callback_handler=None  # Suppress intermediate output
         )
         
@@ -391,6 +473,8 @@ compliance_agent = Agent(
         phrase_wise_compliance_check,
         list_controls,
         parse_json,
+        # Annotation management sub-agent
+        annotations_manager,
         # Document drafting sub-agent
         document_drafting_assistant
     ],

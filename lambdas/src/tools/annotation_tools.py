@@ -7,7 +7,7 @@ from uuid6 import uuid7
 
 
 from src.tools.comprehensive_check import auto_analyse_pdf
-from src.utils.services.dynamoDB import DynamoDBTable, get_table
+from src.utils.services.dynamoDB import DynamoDBTable, get_table, replace_decimals
 from src.utils.services.annotations import (
     get_annotations_for_document,
     mark_annotation_resolved,
@@ -37,7 +37,7 @@ def get_annotations_tool(
             framework_id=framework_id,
             include_resolved=include_resolved
         )
-        
+                
         if len(annotations) == 0:
             analysis_result = auto_analyse_pdf(
                 document_id=document_id,
@@ -45,6 +45,7 @@ def get_annotations_tool(
                 force_reanalysis=False
                 )
             annotations = analysis_result.get('annotations', [])
+        annotations = replace_decimals(annotations)
         
         return {
             'status': 200,

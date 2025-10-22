@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, Suspense } from "react";
 import { VibrantLoader } from "@/components/PDFAnnotator/hoc/LazyLoader/VibrantLoader";
+import { DynamicLoader } from "@/components/PDFAnnotator/hoc/LazyLoader/DynamicLoader";
 import { usePDFStore } from "@/components/PDFAnnotator/stores/pdfStore";
 
 // ✅ Dynamically import Annotator so it never loads on the server
@@ -61,7 +62,7 @@ function PDFAnnotatorContent() {
                         <SimplePDFAnnotator />
                     </div>
                 ) : (
-                    <VibrantLoader variant="pulse" size="lg" message={description} className="py-16" />
+                    <DynamicLoader size="lg" message={description} className="py-16" showTips={true} />
                 )}
             </main>
         </div>
@@ -70,7 +71,7 @@ function PDFAnnotatorContent() {
 
 export default function PDFAnnotatorScreen() {
     return (
-        <Suspense fallback={<VibrantLoader variant="pulse" size="lg" message={description} className="py-16" />}>
+        <Suspense fallback={<DynamicLoader size="lg" message={description} className="py-16" showTips={true} />}>
             <PDFAnnotatorContent />
         </Suspense>
     );

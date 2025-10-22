@@ -226,3 +226,6 @@ NEXT API initiates a request with unique request ID
 - lambda Y: sends the payload to bedrock agent
   - once response is received, updates the dynamo DB record with status = completed, response = <response json>
 - NEXT API polls the dynamo DB record with request_id
+
+TODO:
+Halucination control on annotations agent - if no annotations - return empty array instead of making up stuff.
