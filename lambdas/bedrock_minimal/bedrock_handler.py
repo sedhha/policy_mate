@@ -75,11 +75,7 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
 
         return {
             "statusCode": 200,
-            "headers": {
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Headers": "Content-Type,Authorization",
-                "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
-            },
+            
             "body": json.dumps({
                 "session_id": session_id,
                 **json.loads(''.join(content))
@@ -91,10 +87,6 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         logger.exception("Error invoking AgentCore")
         return {
             "statusCode": 500,
-            "headers": {
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Headers": "Content-Type,Authorization",
-                "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
-            },
+            
             "body": json.dumps({"error": str(e), "details": trace}),
         }
