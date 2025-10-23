@@ -1,6 +1,8 @@
 # How to Run Locally
 
-After unzipping the file:
+After unzipping the file (please make sure to take terraform files from main branch. I am making these changes after the hack, so you may not have terraform files in the zip you downloaded).
+
+This is just one inconvenience. Sorry about that :)
 
 Make sure you setup your admin CLI profile with the required permissions to create resources in your AWS account.
 
