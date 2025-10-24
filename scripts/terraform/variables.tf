@@ -21,3 +21,25 @@ variable "project_name" {
   type        = string
   default     = "PolicyMate"
 }
+
+variable "lambda_handlers" {
+  description = "List of Python Lambda handler files (without .py extension) to build and deploy"
+  type        = list(string)
+  default     = [
+    "agent_handler",
+    "annotations_agent_handler",
+    "file_upload_handler"
+  ]
+}
+
+variable "api_prefix" {
+  description = "Prefix for API Gateway endpoints (e.g. api, v1, etc.)"
+  type        = string
+  default     = "api"
+}
+
+variable "lambda_timeout" {
+  description = "Timeout for Lambda functions in seconds"
+  type        = number
+  default     = 60
+}

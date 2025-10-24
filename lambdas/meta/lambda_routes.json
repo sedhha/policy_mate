@@ -1,0 +1,6 @@
+{
+  "auth_claims_handler": {
+    "path": "verify",
+    "methods": ["GET", "OPTIONS"]
+  }
+}
