@@ -6,51 +6,33 @@ avoiding environment variable issues with Bedrock AgentCore.
 """
 
 # Import all hardcoded values from secrets.py
+import os
 from dotenv import load_dotenv
-load_dotenv()
-from src.utils.secrets import (
-    # AWS
-    AWS_REGION,
-    
-    # Cognito
-    COGNITO_REGION,
-    COGNITO_USER_POOL_ID,    
-    
-    # Agent Details
-    AGENT_CLAUDE_HAIKU,
-    AGENT_CLAUDE_SONNET,
-    AGENT_CLAUDE_HAIKU_4_5,
-    AGENT_CLAUDE_SONNET_4_5,
-    AGENT_CLAUDE_HAIKU_ARN,
-    
-    # S3
-    S3_REGION,
-    BUCKET_NAME as S3_BUCKET_NAME,
-    
-    # AgentCore
-    AGENT_CORE_ID,
-    AGENT_RUNTIME_ARN,
-    AGENT_CORE_MODEL,
-    AGENT_CORE_EXPOSED_AGENT_ID,
-    AGENT_CORE_ALIAS_ID
-)
+load_dotenv("../.env")
+
+AWS_REGION = os.environ['ENV_AWS_REGION']
+
+# Cognito
+COGNITO_USER_POOL_ID=os.environ['COGNITO_USER_POOL_ID']
+
+AGENT_CLAUDE_HAIKU = "anthropic.claude-3-haiku-20240307-v1:0"
+AGENT_CLAUDE_SONNET = "anthropic.claude-3-5-sonnet-20240620-v1:0"
+AGENT_CLAUDE_HAIKU_4_5="us.anthropic.claude-haiku-4-5-20251001-v1:0"
+AGENT_CLAUDE_SONNET_4_5 = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+
+# S3
+S3_BUCKET_NAME = os.environ['S3_BUCKET_NAME']
+
+
 
 # Re-export all for backwards compatibility
 __all__ = [
     'AWS_REGION',
-    'COGNITO_REGION',
     'COGNITO_USER_POOL_ID',
     'AGENT_CLAUDE_HAIKU',
     'AGENT_CLAUDE_SONNET',
     'AGENT_CLAUDE_HAIKU_4_5',
-    'AGENT_CLAUDE_HAIKU_ARN',
     'AGENT_CLAUDE_SONNET_4_5',
-    'S3_REGION',
     'S3_BUCKET_NAME',
-    'AGENT_CORE_ID',
-    'AGENT_RUNTIME_ARN',
-    'AGENT_CORE_MODEL',
-    'AGENT_CORE_EXPOSED_AGENT_ID',
-    'AGENT_CORE_ALIAS_ID'
 ]
 

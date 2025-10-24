@@ -27,3 +27,25 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "project_bucket_en
     }
   }
 }
+
+resource "aws_s3_bucket_cors_configuration" "project_bucket_cors" {
+  bucket = aws_s3_bucket.project_bucket.id
+
+  cors_rule {
+    id = "frontend-access"
+
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "PUT", "POST", "DELETE", "HEAD"]
+
+    # Allow local dev + Vercel previews / prod
+    allowed_origins = [
+      "http://localhost:*",
+      "https://localhost:*",
+      "https://*.vercel.app"
+    ]
+
+    expose_headers = ["ETag"]
+    max_age_seconds = 3000
+  }
+}
+

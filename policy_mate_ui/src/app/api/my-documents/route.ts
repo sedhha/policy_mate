@@ -2,13 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { DynamoDBClient, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 import { verifyIdToken, AuthenticationError } from '@/utils/verifyIdToken';
+import { server_env as env } from '@/utils/server_variables';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 // Initialize AWS DynamoDB client
 const dynamoClient = new DynamoDBClient({
-  region: process.env.NEXT_AWS_REGION || 'us-east-1',
+  region: env.NEXT_PUBLIC_AWS_REGION || 'us-east-1',
   credentials: {
-    accessKeyId: process.env.NEXT_AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.NEXT_AWS_SECRET_ACCESS_KEY!,
+    accessKeyId: env.NEXT_AWS_ACCESS_KEY_ID!,
+    secretAccessKey: env.NEXT_AWS_SECRET_ACCESS_KEY!,
   },
 });
 
@@ -175,7 +179,7 @@ export async function GET(request: NextRequest) {
           formatted_date: formatTimestamp(timestamp),
           pages: Number(item.page_count || 0),
           s3_key: s3Key,
-          s3_bucket: process.env.S3_BUCKET_NAME || '',
+          s3_bucket: env.S3_BUCKET_NAME || '',
         };
       });
 

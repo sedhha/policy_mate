@@ -7,28 +7,27 @@ import {
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import { verifyIdToken, AuthenticationError } from '@/utils/verifyIdToken';
+import { server_env as env } from '@/utils/server_variables';
 
 // Initialize AWS clients
 const dynamoClient = new DynamoDBClient({
-  region: process.env.NEXT_AWS_REGION || 'us-east-1',
+  region: env.NEXT_PUBLIC_AWS_REGION || 'us-east-1',
   credentials: {
-    accessKeyId: process.env.NEXT_AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.NEXT_AWS_SECRET_ACCESS_KEY!,
+    accessKeyId: env.NEXT_AWS_ACCESS_KEY_ID!,
+    secretAccessKey: env.NEXT_AWS_SECRET_ACCESS_KEY!,
   },
 });
 
 const lambdaClient = new LambdaClient({
-  region: process.env.NEXT_AWS_REGION || 'us-east-1',
+  region: env.NEXT_PUBLIC_AWS_REGION || 'us-east-1',
   credentials: {
-    accessKeyId: process.env.NEXT_AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.NEXT_AWS_SECRET_ACCESS_KEY!,
+    accessKeyId: env.NEXT_AWS_ACCESS_KEY_ID!,
+    secretAccessKey: env.NEXT_AWS_SECRET_ACCESS_KEY!,
   },
 });
 
-const POLLING_TABLE_NAME =
-  process.env.POLLING_TABLE_NAME || 'PolicyMatePollingStatus';
-const BEDROCK_HANDLER_LAMBDA =
-  process.env.BEDROCK_HANDLER_LAMBDA || 'policy-mate-bedrock-handler';
+const POLLING_TABLE_NAME = 'PolicyMatePollingStatus';
+const BEDROCK_HANDLER_LAMBDA = 'policy-mate-bedrock-handler';
 
 interface PollingResponse {
   status: 'processing' | 'completed' | 'error';

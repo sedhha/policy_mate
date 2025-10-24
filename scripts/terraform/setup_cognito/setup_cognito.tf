@@ -1,10 +1,10 @@
 resource "aws_cognito_user_pool" "user_pool" {
   name = local.cognito_pool_name
   
-  auto_verified_attributes = []
+  auto_verified_attributes = ["email"]
 
   verification_message_template {
-    default_email_option = "CONFIRM_WITH_LINK"
+    default_email_option = "CONFIRM_WITH_CODE"
     email_subject        = "Verify your email for access"
     email_message_by_link = "Hello! Please verify your email by clicking the link below:\n{##Verify Email##} to join ${var.project_name}."
   }

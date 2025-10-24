@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { AuthenticationError, verifyIdToken } from '@/utils/verifyIdToken';
+import { server_env as env } from '@/utils/server_variables';
 
 /**
  * GET /api/pdf
@@ -36,9 +37,9 @@ export async function GET(request: NextRequest) {
     await verifyIdToken(bearer_token.split(' ')[1]);
 
     // 2. Validate AWS credentials are configured
-    const accessKeyId = process.env.NEXT_AWS_ACCESS_KEY_ID;
-    const secretAccessKey = process.env.NEXT_AWS_SECRET_ACCESS_KEY;
-    const region = process.env.NEXT_AWS_REGION || 'us-east-1';
+    const accessKeyId = env.NEXT_AWS_ACCESS_KEY_ID;
+    const secretAccessKey = env.NEXT_AWS_SECRET_ACCESS_KEY;
+    const region = env.NEXT_PUBLIC_AWS_REGION || 'us-east-1';
 
     if (!accessKeyId || !secretAccessKey) {
       console.error('❌ AWS credentials not configured in environment');
@@ -77,7 +78,7 @@ export async function GET(request: NextRequest) {
     });
 
     // 5. Generate pre-signed URL
-    const expiresIn = Number(process.env.PDF_URL_EXPIRY_SECONDS) || 300; // Default: 5 minutes
+    const expiresIn = Number(env.PDF_URL_EXPIRY_SECONDS) || 300; // Default: 5 minutes
 
     const command = new GetObjectCommand({
       Bucket: bucket,

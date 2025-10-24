@@ -4,7 +4,7 @@ from strands import Agent, tool # pyright: ignore[reportUnknownVariableType]
 from strands_tools.browser import AgentCoreBrowser # pyright: ignore[reportMissingTypeStubs]
 from strands.models import BedrockModel
 
-from src.utils.secrets import AGENT_CORE_DOCUMENT_DRAFTING_MODEL
+from src.utils.settings import AGENT_CLAUDE_HAIKU
 
 
 # ============================================================================
@@ -16,7 +16,7 @@ browser_tool = AgentCoreBrowser(region="us-east-1")  # Update with your AWS regi
 
 # Initialize non-streaming model
 non_streaming_model = BedrockModel(
-    model_id=AGENT_CORE_DOCUMENT_DRAFTING_MODEL,  # Update with your model
+    model_id=AGENT_CLAUDE_HAIKU,  # Update with your model
     streaming=False
 )
 

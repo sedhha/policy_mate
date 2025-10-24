@@ -1,3 +1,4 @@
+import { server_env as env } from '@/utils/server_variables';
 import { NextRequest, NextResponse } from 'next/server';
 
 type BookmarkType = 'review-later' | 'verify' | 'important' | 'question';
@@ -118,17 +119,7 @@ export async function GET(
       );
     }
     // Call the Lambda API
-    const lambdaUrl = process.env.NEXT_PUBLIC_LONG_API_BASE_URL_V2;
-
-    if (!lambdaUrl) {
-      return NextResponse.json(
-        {
-          status: 'error',
-          message: 'Lambda URL is not configured',
-        },
-        { status: 500 }
-      );
-    }
+    const lambdaUrl = env.NEXT_PUBLIC_API_BASE_URL;
 
     const lambdaResponse = await fetch(lambdaUrl, {
       method: 'POST',

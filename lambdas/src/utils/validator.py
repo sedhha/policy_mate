@@ -1,12 +1,12 @@
 # filePath: lambdas/src/utils/validator.py
 from typing import Any
 from jose import jwt, JWTError
-from src.utils.settings import COGNITO_REGION, COGNITO_USER_POOL_ID
+from src.utils.settings import AWS_REGION, COGNITO_USER_POOL_ID
 from src.utils.logger import log_with_context
 import requests
 
 
-JWKS_URL = f'https://cognito-idp.{COGNITO_REGION}.amazonaws.com/{COGNITO_USER_POOL_ID}/.well-known/jwks.json'
+JWKS_URL = f'https://cognito-idp.{AWS_REGION}.amazonaws.com/{COGNITO_USER_POOL_ID}/.well-known/jwks.json'
 
 
 jwks_cache = None
