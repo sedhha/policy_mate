@@ -3,13 +3,14 @@ from pydantic import BaseModel, Field
 from strands import Agent, tool # pyright: ignore[reportUnknownVariableType]
 from strands.hooks import HookProvider, HookRegistry
 from strands.hooks.events import AfterInvocationEvent, AfterToolCallEvent
+from strands.models import BedrockModel
+import json
 
 from src.agents.v2.prompts import COMPLIANCE_AGENT_SYSTEM_PROMPT, DRAFTING_AGENT_SYSTEM_PROMPT, ANNOTATIONS_AGENT_SYSTEM_PROMPT
 from src.tools.compliance_check import compliance_check_tool, get_all_controls_tool
 from src.agents.v2.v2_tools.comprehensive_check_v2 import comprehensive_check_tool, deserialize_dynamodb_item as replace_decimal
 from src.tools.doc_status import doc_status_tool
 from src.utils.settings import AGENT_CLAUDE_HAIKU_4_5 as AGENT_MODEL
-from strands.models import BedrockModel
 from src.tools.show_doc import show_doc_tool
 from src.agents.v2.agent_core_annotations_agent import (
     load_annotations,
@@ -21,7 +22,6 @@ from src.agents.v2.agent_core_annotations_agent import (
     get_annotation_conversation,
     get_conversation_history
 )
-import json
 
 def parse_agent_json(agent_response: str) -> dict[str, Any]:
     """Parse the agent response JSON string into a dictionary."""

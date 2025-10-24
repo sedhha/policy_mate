@@ -14,11 +14,11 @@ from src.utils.settings import AGENT_CLAUDE_HAIKU_4_5
 from src.utils.services.dynamoDB import DocumentStatus, DynamoDBTable, get_table
 from src.utils.services.annotations import save_annotations_to_dynamodb, serialize_for_dynamodb
 from src.utils.services.llm_models import get_bedrock_model
-from src.utils.settings import AGENT_REGION
+from src.utils.settings import AWS_REGION
 from datetime import datetime, timezone
 import time
 from botocore.exceptions import ClientError
-bedrock = get_bedrock_model(region_name=AGENT_REGION) # type: ignore
+bedrock = get_bedrock_model(region_name=AWS_REGION) # type: ignore
 
 
 class SimpleAnnotation(BaseModel):

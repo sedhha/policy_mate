@@ -5,9 +5,9 @@ from typing import Any
 from decimal import Decimal
 from boto3.dynamodb.types import TypeDeserializer
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
-from src.utils.settings import DYNAMO_DB_REGION
+from src.utils.settings import AWS_REGION
 
-dynamodb: DynamoDBServiceResource = boto3.resource('dynamodb', region_name=DYNAMO_DB_REGION)  # type: ignore[assignment]
+dynamodb: DynamoDBServiceResource = boto3.resource('dynamodb', region_name=AWS_REGION)  # type: ignore[assignment]
 deserializer = TypeDeserializer()
 
 

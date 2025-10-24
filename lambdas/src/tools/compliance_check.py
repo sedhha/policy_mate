@@ -5,9 +5,9 @@ import json
 from typing import Any
 import boto3
 from src.utils.services.dynamoDB import get_table, DynamoDBTable
-from src.utils.settings import OPEN_SEARCH_REGION
+from src.utils.settings import AWS_REGION
 
-bedrock = boto3.client('bedrock-runtime', region_name=OPEN_SEARCH_REGION)  # type: ignore
+bedrock = boto3.client('bedrock-runtime', region_name=AWS_REGION)  # type: ignore
 
 
 def get_relevant_controls(query: str, framework_id: str, control_id: str | None = None) -> list[dict[str, Any]]:

@@ -3,10 +3,11 @@
 
 from typing import Any
 from datetime import datetime
+from boto3.dynamodb.conditions import Attr
+
 from src.utils.settings import S3_BUCKET_NAME
 from src.utils.services.dynamoDB import DocumentStatus, get_table, DynamoDBTable
 from src.utils.services.document_extractor import format_file_size, format_timestamp, get_status_details
-from boto3.dynamodb.conditions import Attr
 
 
 def show_doc_tool(user_id: str) -> dict[str, Any]:

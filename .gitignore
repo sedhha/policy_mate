@@ -21,3 +21,44 @@ lambdas/zips/
 bedrock_lambda.zip
 lambdas/bedrock_minimal/src/bedrock_handler_minimal.egg-info
 **/traceback.txt
+# === Terraform core files ===
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+*.backup
+.terraform.lock.hcl
+
+# === Terraform working directories ===
+.terraform/
+.terraformrc
+terraform.rc
+
+# === Local plan and logs ===
+*.tfplan
+*.log
+terraform.tfplan
+
+# === OS/Editor junk ===
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# === Shell or script artifacts ===
+scripts/*.log
+scripts/terraform/*.log
+*.bak
+*.tmp
+
+# === Python virtualenv (if used for AWS helpers) ===
+venv/
+__pycache__/
+*.pyc
+
+# === Optional: ignore local test data ===
+.env
+.env.*
+*.local.json

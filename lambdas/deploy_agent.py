@@ -1,7 +1,6 @@
 from typing import Any
 from bedrock_agentcore import BedrockAgentCoreApp
 from uuid6 import uuid7
-from strands import tool  # type: ignore[attr-defined]
 import traceback
 from src.agents.v2.agent_core_compliance_agent import compliance_agent
 import json

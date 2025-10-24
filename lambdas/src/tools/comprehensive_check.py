@@ -13,10 +13,10 @@ from src.utils.services.dynamoDB import DocumentStatus, DynamoDBTable, get_table
 from src.utils.services.annotations import save_annotations_to_dynamodb, serialize_for_dynamodb
 
 from src.utils.services.llm_models import get_bedrock_model
-from src.utils.settings import AGENT_REGION
+from src.utils.settings import AWS_REGION
 from datetime import datetime, timezone
 
-bedrock = get_bedrock_model(region_name=AGENT_REGION)
+bedrock = get_bedrock_model(region_name=AWS_REGION)
 
 class SimpleAnnotation(BaseModel):
     """Same as before, omitted for brevity"""
