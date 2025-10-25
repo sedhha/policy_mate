@@ -45,7 +45,6 @@ module "setup_api_gateway" {
   env                     = var.env
   project_name            = var.project_name
   lambda_function_arns    = module.setup_lambda.lambda_function_arns
-  allowed_origins         = ["http://localhost:3000", "https://your-vercel-app.vercel.app"]
   
 }
 

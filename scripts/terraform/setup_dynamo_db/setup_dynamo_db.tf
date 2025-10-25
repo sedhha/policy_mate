@@ -1,11 +1,11 @@
 locals {
   # Read all JSON table definition files
-  table_files = fileset("${path.root}/../../backend/dynamo-db/tables", "*.json")
+  table_files = fileset("${path.root}/../../lambdas/meta/dynamo_db_tables", "*.json")
 
   tables = {
     for f in local.table_files :
     trimsuffix(basename(f), ".json") => jsondecode(
-      file("${path.root}/../../backend/dynamo-db/tables/${f}")
+      file("${path.root}/../../lambdas/meta/dynamo_db_tables/${f}")
     )
   }
 }
@@ -33,6 +33,7 @@ resource "aws_dynamodb_table" "tables" {
     content {
       name            = global_secondary_index.value.name
       hash_key        = global_secondary_index.value.hash_key
+      range_key       = try(global_secondary_index.value.range_key, null)
       projection_type = global_secondary_index.value.projection_type
     }
   }

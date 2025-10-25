@@ -12,6 +12,7 @@ from src.utils.response import response
 from botocore.exceptions import ClientError
 import fitz  # PyMuPDF
 
+
 def get_pdf_page_count(s3_key: str) -> int:
     """Get page count from PDF in S3 using PyMuPDF (fitz) for faster processing"""
     log_with_context("INFO", f"Generating pdf pages for {s3_key}")
@@ -58,10 +59,10 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
                      request_id=context.aws_request_id)
     
     # Validate org_id and user_id
-    if not org_id or not user_id:
-        log_with_context("ERROR", "Missing org_id or user_id in user claims", 
+    if not user_id:
+        log_with_context("ERROR", "Missing user_id in user claims", 
                         request_id=context.aws_request_id)
-        return response(400, {'error': 'Missing organization ID or user ID'})
+        return response(400, {'error': 'Missing user ID'})
     
     try:
         # Parse request body

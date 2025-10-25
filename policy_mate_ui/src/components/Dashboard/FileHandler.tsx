@@ -27,7 +27,7 @@ export const FileHandler = () => {
         fileName: '',
         isDuplicate: false
     });
-    const { loadDocuments } = useAgentStore();
+    const { loadDocumentsV2 } = useAgentStore();
 
     const showError = (title: string, message: string) => {
         setErrorModal({ isOpen: true, title, message });
@@ -138,7 +138,7 @@ export const FileHandler = () => {
 
             if (result.success) {
                 showSuccess(result.fileName, result.isDuplicate);
-                loadDocuments();
+                loadDocumentsV2();
             } else {
                 showError('Upload Failed', result.error || 'An unknown error occurred during upload');
             }

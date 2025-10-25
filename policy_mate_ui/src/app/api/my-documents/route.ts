@@ -4,9 +4,6 @@ import { unmarshall } from '@aws-sdk/util-dynamodb';
 import { verifyIdToken, AuthenticationError } from '@/utils/verifyIdToken';
 import { server_env as env } from '@/utils/server_variables';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 // Initialize AWS DynamoDB client
 const dynamoClient = new DynamoDBClient({
   region: env.NEXT_PUBLIC_AWS_REGION || 'us-east-1',

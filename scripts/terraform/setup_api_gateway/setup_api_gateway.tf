@@ -22,35 +22,17 @@ resource "aws_api_gateway_resource" "api_prefix" {
 
 # --- Create Resources (paths for each Lambda) ---
 resource "aws_api_gateway_resource" "lambda_paths" {
-  for_each    = local.lambda_meta
+  for_each = toset([
+    for handler, cfg in local.lambda_meta :
+    cfg.path
+  ])
+
   rest_api_id = aws_api_gateway_rest_api.main.id
   parent_id   = aws_api_gateway_resource.api_prefix.id
-  path_part   = each.value.path
+  path_part   = each.value
 }
 
-# --- Create Request Validators ---
-resource "aws_api_gateway_request_validator" "request_validator" {
-  name                        = "${var.project_name}-request-validator"
-  rest_api_id                 = aws_api_gateway_rest_api.main.id
-  validate_request_body       = true
-  validate_request_parameters = true
-}
-
-# --- Create Request Models/Schemas ---
-resource "aws_api_gateway_model" "request_models" {
-  for_each = {
-    for handler, cfg in local.lambda_meta :
-    handler => cfg
-    if contains(keys(cfg), "request_schema")
-  }
-
-  rest_api_id  = aws_api_gateway_rest_api.main.id
-  name         = "${replace(each.key, "_", "")}RequestModel"
-  content_type = "application/json"
-  schema       = jsonencode(each.value.request_schema)
-}
-
-# --- Create Methods for each HTTP method ---
+# --- Create Methods for each HTTP method (no validation, no authorization) ---
 resource "aws_api_gateway_method" "lambda_methods" {
   for_each = {
     for handler, cfg in local.lambda_meta :
@@ -58,22 +40,13 @@ resource "aws_api_gateway_method" "lambda_methods" {
     if length([for method in cfg.methods : method if method != "OPTIONS"]) > 0
   }
 
-  rest_api_id      = aws_api_gateway_rest_api.main.id
-  resource_id      = aws_api_gateway_resource.lambda_paths[each.key].id
-  http_method      = each.value
-  authorization    = "NONE"
-  request_validator_id = aws_api_gateway_request_validator.request_validator.id
-
-  # Add request models if schema is defined
-  request_models = try(
-    {
-      "application/json" = aws_api_gateway_model.request_models[each.key].name
-    },
-    {}
-  )
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.lambda_paths[local.lambda_meta[each.key].path].id
+  http_method   = each.value
+  authorization = "NONE"
 }
 
-# --- Lambda Integrations ---
+# --- Lambda Integrations (AWS_PROXY - pass everything as-is to Lambda) ---
 resource "aws_api_gateway_integration" "lambda_integrations" {
   for_each = {
     for handler, cfg in local.lambda_meta :
@@ -81,96 +54,43 @@ resource "aws_api_gateway_integration" "lambda_integrations" {
   }
 
   rest_api_id             = aws_api_gateway_rest_api.main.id
-  resource_id             = aws_api_gateway_resource.lambda_paths[each.key].id
-  http_method             = element(each.value.methods, 0)
+  resource_id             = aws_api_gateway_resource.lambda_paths[each.value.path].id
+  http_method             = [for method in each.value.methods : method if method != "OPTIONS"][0]
+  type                    = "AWS_PROXY"
   integration_http_method = "POST"
-
-  # Determine integration type: AWS (non-proxy) if payload_mapping exists, else AWS_PROXY
-  type = contains(keys(each.value), "payload_mapping") ? "AWS" : "AWS_PROXY"
-
-  uri              = "arn:aws:apigateway:${data.aws_region.current.name}:lambda:path/2015-03-31/functions/${var.lambda_function_arns[each.key]}/invocations"
-  request_templates = lookup(each.value, "payload_mapping", {})
+  uri                     = "arn:aws:apigateway:${data.aws_region.current.name}:lambda:path/2015-03-31/functions/${var.lambda_function_arns[each.key]}/invocations"
 
   depends_on = [aws_api_gateway_method.lambda_methods]
 }
 
-# --- Integration Responses for non-proxy ---
-resource "aws_api_gateway_integration_response" "lambda_integration_responses" {
-  for_each = {
+# --- OPTIONS Method (for CORS preflight) ---
+resource "aws_api_gateway_method" "options" {
+  for_each = toset([
     for handler, cfg in local.lambda_meta :
-    handler => cfg
-    if contains(keys(cfg), "payload_mapping")
-  }
-
-  rest_api_id       = aws_api_gateway_rest_api.main.id
-  resource_id       = aws_api_gateway_resource.lambda_paths[each.key].id
-  http_method       = aws_api_gateway_integration.lambda_integrations[each.key].http_method
-  status_code       = "200"
-  response_templates = {
-    "application/json" = ""
-  }
-
-  depends_on = [aws_api_gateway_integration.lambda_integrations]
-}
-
-# --- CORS OPTIONS Method ---
-resource "aws_api_gateway_method" "cors" {
-  for_each = local.lambda_meta
+    cfg.path
+  ])
 
   rest_api_id   = aws_api_gateway_rest_api.main.id
-  resource_id   = aws_api_gateway_resource.lambda_paths[each.key].id
+  resource_id   = aws_api_gateway_resource.lambda_paths[each.value].id
   http_method   = "OPTIONS"
   authorization = "NONE"
 }
 
-# --- CORS Integration (Mock) ---
-resource "aws_api_gateway_integration" "cors_integration" {
-  for_each = local.lambda_meta
+# --- OPTIONS Integration (AWS_PROXY to Lambda) ---
+resource "aws_api_gateway_integration" "options_integration" {
+  for_each = toset([
+    for handler, cfg in local.lambda_meta :
+    cfg.path
+  ])
 
-  rest_api_id       = aws_api_gateway_rest_api.main.id
-  resource_id       = aws_api_gateway_resource.lambda_paths[each.key].id
-  http_method       = aws_api_gateway_method.cors[each.key].http_method
-  type              = "MOCK"
-  request_templates = { "application/json" = "{\"statusCode\": 200}" }
-}
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.lambda_paths[each.value].id
+  http_method             = aws_api_gateway_method.options[each.value].http_method
+  type                    = "AWS_PROXY"
+  integration_http_method = "POST"
+  uri                     = "arn:aws:apigateway:${data.aws_region.current.name}:lambda:path/2015-03-31/functions/${var.lambda_function_arns[[for handler, cfg in local.lambda_meta : handler if cfg.path == each.value][0]]}/invocations"
 
-# --- CORS Method Response ---
-resource "aws_api_gateway_method_response" "cors_response" {
-  for_each = local.lambda_meta
-
-  rest_api_id = aws_api_gateway_rest_api.main.id
-  resource_id = aws_api_gateway_resource.lambda_paths[each.key].id
-  http_method = aws_api_gateway_method.cors[each.key].http_method
-  status_code = "200"
-
-  response_models = { "application/json" = "Empty" }
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true
-    "method.response.header.Access-Control-Allow-Methods" = true
-    "method.response.header.Access-Control-Allow-Origin"  = true
-  }
-}
-
-# --- CORS Integration Response ---
-resource "aws_api_gateway_integration_response" "cors_integration_response" {
-  for_each = local.lambda_meta
-
-  rest_api_id = aws_api_gateway_rest_api.main.id
-  resource_id = aws_api_gateway_resource.lambda_paths[each.key].id
-  http_method = aws_api_gateway_method.cors[each.key].http_method
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,PUT,DELETE,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'${join(",", var.allowed_origins)}'"
-  }
-
-  response_templates = {
-    "application/json" = ""
-  }
-
-  depends_on = [aws_api_gateway_integration.cors_integration]
+  depends_on = [aws_api_gateway_method.options]
 }
 
 # --- Lambda Permissions for API Gateway ---
@@ -188,19 +108,17 @@ resource "aws_lambda_permission" "apigw_permissions" {
 resource "aws_api_gateway_deployment" "deployment" {
   depends_on = [
     aws_api_gateway_integration.lambda_integrations,
-    aws_api_gateway_integration.cors_integration,
-    aws_api_gateway_integration_response.cors_integration_response
+    aws_api_gateway_integration.options_integration
   ]
 
   rest_api_id = aws_api_gateway_rest_api.main.id
   description = "Deployment for ${var.project_name}-${var.env}"
 
-  # Force redeploy on schema changes
   triggers = {
-    redeployment = sha1(jsonencode([
-      aws_api_gateway_integration.lambda_integrations,
-      aws_api_gateway_method.lambda_methods,
-    ]))
+    redeployment = sha1(jsonencode({
+      lambda_integrations = aws_api_gateway_integration.lambda_integrations
+      options_integration = aws_api_gateway_integration.options_integration
+    }))
   }
 
   lifecycle {
@@ -217,6 +135,8 @@ resource "aws_api_gateway_stage" "stage" {
   variables = {
     environment = var.env
   }
+
+  cache_cluster_enabled = false
 
   depends_on = [aws_api_gateway_deployment.deployment]
 }

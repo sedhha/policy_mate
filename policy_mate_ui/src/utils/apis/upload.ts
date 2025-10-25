@@ -15,7 +15,7 @@ export const prepareUpload = async (
   request: PrepareUploadRequest
 ): Promise<PrepareUploadResponse> => {
   try {
-    const url = `${env.NEXT_PUBLIC_API_BASE_URL}/uploads`;
+    const url = `${env.NEXT_PUBLIC_AWS_GATEWAY_URL}/uploads`;
 
     const response = await fetch(url, {
       method: 'POST',
@@ -79,7 +79,7 @@ export const confirmUpload = async (
 ): Promise<ConfirmUploadResponse> => {
   try {
     const response = await fetch(
-      `${env.NEXT_PUBLIC_API_BASE_URL}/uploads?fileId=${fileId}`,
+      `${env.NEXT_PUBLIC_AWS_GATEWAY_URL}/uploads?fileId=${fileId}`,
       {
         method: 'GET',
         headers: getAuthHeaders(),

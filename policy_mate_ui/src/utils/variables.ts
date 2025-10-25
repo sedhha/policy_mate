@@ -14,6 +14,9 @@ export const ClientEnvSchema = z.object({
   NEXT_PUBLIC_API_BASE_URL: z.url(
     'NEXT_PUBLIC_API_BASE_URL must be a valid URL'
   ),
+  NEXT_PUBLIC_AWS_GATEWAY_URL: z.url(
+    'NEXT_PUBLIC_AWS_GATEWAY_URL must be a valid URL'
+  ),
   NEXT_PUBLIC_LONG_API_BASE_URL: z.url(
     'NEXT_PUBLIC_API_BASE_URL must be a valid URL'
   ),
@@ -30,6 +33,7 @@ const env: ClientEnvVariables = {
     process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID!,
   NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL!,
   NEXT_PUBLIC_LONG_API_BASE_URL: process.env.NEXT_PUBLIC_LONG_API_BASE_URL!,
+  NEXT_PUBLIC_AWS_GATEWAY_URL: process.env.NEXT_PUBLIC_AWS_GATEWAY_URL!,
 };
 
 ClientEnvSchema.parse(env); // This will throw if the environment variables are not valid

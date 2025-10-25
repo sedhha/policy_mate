@@ -1,0 +1,31 @@
+{
+  "name": "PolicyMateAnnotations",
+  "billing_mode": "PAY_PER_REQUEST",
+  "hash_key": "annotation_id",
+  "attributes": [
+    {
+      "name": "annotation_id",
+      "type": "S"
+    },
+    {
+      "name": "file_id",
+      "type": "S"
+    },
+    {
+      "name": "analysis_id",
+      "type": "S"
+    }
+  ],
+  "global_secondary_indexes": [
+    {
+      "name": "FileAnnotationsIndex",
+      "hash_key": "file_id",
+      "range_key": "analysis_id",
+      "projection_type": "ALL"
+    }
+  ],
+  "tags": {
+    "Service": "PolicyMate",
+    "Purpose": "Document Annotations and Findings"
+  }
+}

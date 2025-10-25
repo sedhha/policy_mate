@@ -4,10 +4,9 @@ from enum import Enum
 from typing import Any
 from decimal import Decimal
 from boto3.dynamodb.types import TypeDeserializer
-from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 from src.utils.settings import AWS_REGION
 
-dynamodb: DynamoDBServiceResource = boto3.resource('dynamodb', region_name=AWS_REGION)  # type: ignore[assignment]
+dynamodb = boto3.resource('dynamodb', region_name=AWS_REGION)  # type: ignore[assignment]
 deserializer = TypeDeserializer()
 
 
@@ -39,7 +38,7 @@ class DocumentStatus(Enum):
     NON_COMPLIANT = 52
     PARTIALLY_COMPLIANT = 53
 
-def get_table(table_name: DynamoDBTable | str) -> Table:
+def get_table(table_name: DynamoDBTable | str):
     """Get DynamoDB table by enum or string name"""
     if isinstance(table_name, str):
         return dynamodb.Table(table_name)

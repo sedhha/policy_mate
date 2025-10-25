@@ -24,7 +24,7 @@ def require_fe_auth(handler: F) -> F:
                         'Access-Control-Allow-Methods': 'POST,OPTIONS',
                         'Access-Control-Max-Age': '86400'
                     },
-                    'body': ''
+                    'body': '{}'
                 }
             
             # Extract token from Authorization header
@@ -76,13 +76,10 @@ def require_fe_auth(handler: F) -> F:
             return handler(event, context)
             
         except ValueError as e:
-            log_with_context("ERROR", f"Auth validation failed: {str(e)}", request_id=context.aws_request_id)
             return {
                 'statusCode': 401,
-                'headers': {'Content-Type': 'application/json'},
-                'body': json.dumps({
-                    'error': f'Authentication failed: {str(e)}'
-                })
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': 'Invalid token - ' + str(e)})
             }
         except Exception as e:
             log_with_context("ERROR", f"Unexpected auth error: {str(e)}", request_id=context.aws_request_id)
@@ -90,7 +87,11 @@ def require_fe_auth(handler: F) -> F:
             log_with_context("ERROR", f"Traceback: {traceback.format_exc()}", request_id=context.aws_request_id)
             return {
                 'statusCode': 500,
-                'headers': {'Content-Type': 'application/json'},
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*',  # Add this
+                    'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token',
+                },
                 'body': json.dumps({
                     'error': 'Internal authentication error',
                     'details': str(e)

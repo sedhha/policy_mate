@@ -11,7 +11,7 @@ from src.utils.services.s3 import s3_client
 from src.utils.settings import S3_BUCKET_NAME as BUCKET_NAME
 from src.utils.response import response
 
-
+STATIC_ORG_ID = "019a1b8a-f838-76fc-9e28-df3cacc710aa"
 @require_fe_auth
 def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str, Any]:
     """
@@ -39,17 +39,17 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
     # Access claims injected by decorator
     claims: dict[str, Any] = event['claims']
     user_id: str | None = claims.get('sub')
-    org_id: str | None = claims.get('custom:org_id')
+    org_id: str | None = claims.get('custom:org_id') or STATIC_ORG_ID
     user_role: str | None = claims.get('custom:user_role', 'user')
     
     log_with_context("INFO", f"Processing for user: {user_id}, org: {org_id}, role: {user_role}", 
                      request_id=context.aws_request_id)
     
     # Validate org_id and user_id
-    if not org_id or not user_id:
-        log_with_context("ERROR", "Missing org_id or user_id in user claims", 
+    if not user_id:
+        log_with_context("ERROR", "Missing user_id in user claims", 
                         request_id=context.aws_request_id)
-        return response(400, {'error': 'Missing organization ID or user ID'})
+        return response(400, {'error': 'Missing user ID'})
     
     try:
         # Parse request body
@@ -177,6 +177,8 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         log_with_context("INFO", 
                         f"Generated pre-signed URL for file_id: {file_id}, upload_type: {upload_type}", 
                         request_id=context.aws_request_id)
+        log_with_context("INFO", f"Presigned POST: {json.dumps(presigned_post, indent=2)}", 
+                request_id=context.aws_request_id)
         
         # Reserve the file_id in DynamoDB with PROCESSING status
         timestamp_ms = int(datetime.now(timezone.utc).timestamp() * 1000)

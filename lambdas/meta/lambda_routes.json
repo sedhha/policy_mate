@@ -16,9 +16,20 @@
         "uploadType": { "type": "string", "enum": ["standard", "custom"] }
       },
       "required": ["fileHash", "fileName", "fileSize"]
-    },
-    "payload_mapping": {
-      "application/json": "{...}"
+    }
+  },
+  "file_confirmation_handler": {
+    "path": "uploads",
+    "methods": ["GET"],
+    "request_schema": {
+      "type": "object",
+      "properties": {
+        "fileId": {
+          "type": "string",
+          "description": "Unique identifier for the uploaded file"
+        }
+      },
+      "required": ["fileId"]
     }
   }
 }
