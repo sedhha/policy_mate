@@ -9,6 +9,8 @@ cd policy_mate
 
 Make sure you setup your admin CLI profile with the required permissions to create resources in your AWS account.
 
+You also may need to give your `profile` access to `Amazon Bedrock` models. That isn't included as part of terraform yet. Give access to titan and claude models - majorly Haiku 4.5, Haiku 3 and Sonnet 3.5.
+
 Create a `.env` file in lambdas folder and `.env` file in policy_mate_ui folder.
 
 Structure should look like this (some ignored folders might be missing):
