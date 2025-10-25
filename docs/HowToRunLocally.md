@@ -1,32 +1,120 @@
 # How to Run Locally
 
-After unzipping the file (please make sure to take terraform files from main branch. I am making these changes after the hack, so you may not have terraform files in the zip you downloaded).
+## Commands
 
-This is just one inconvenience. Sorry about that :)
+```bash
+git clone https://github.com/sedhha/policy_mate
+cd policy_mate
+```
 
 Make sure you setup your admin CLI profile with the required permissions to create resources in your AWS account.
 
-Dummy `.env` files should be added in root directory and `policy_mate_ui` directory.
-These need to be updated after running the setup script.
+Create a `.env` file in lambdas folder and `.env` file in policy_mate_ui folder.
+
+Structure should look like this (some ignored folders might be missing):
+
+```bash
+.
+├── PROJECT_STORY.md
+├── README.md
+├── README_OLD.md
+├── WhiteBoard.md
+├── backup
+│   ├── compliance_controls_data.json
+│   ├── data.json
+│   └── mapping.json
+├── docker-compose.yml
+├── docs
+│   ├── 01-user-experience-layer.mmd
+│   ├── 02-security-api-layer.mmd
+│   ├── 03-ai-processing-layer.mmd
+│   ├── 04-data-storage-layer.mmd
+│   ├── 05-document-lifecycle-sequence.mmd
+│   ├── HowToRunLocally.md
+│   ├── OpenSearchMigration.md
+│   ├── architecture-diagram.mmd
+│   ├── devpost-pitch.md
+│   └── v2
+├── lambdas
+│   ├── README.md
+│   ├── agent.py
+│   ├── agent_handler.py
+│   ├── agent_v2_handler.py
+│   ├── annotations_agent_handler.py
+│   ├── auth_claims_handler.py
+│   ├── auth_claims_handler.zip
+│   ├── bedrock_minimal
+│   ├── build
+│   ├── compliance_check_handler.py
+│   ├── comprehensive_check_handler.py
+│   ├── conversation_history_handler.py
+│   ├── deploy_agent.py
+│   ├── dist
+│   ├── doc_status_handler.py
+│   ├── file_confirmation_handler.py
+│   ├── file_confirmation_handler.zip
+│   ├── file_upload_handler.py
+│   ├── file_upload_handler.zip
+│   ├── meta
+│   ├── polling_handler.py
+│   ├── pre
+│   ├── publish_to_s3.sh
+│   ├── pyproject.toml
+│   ├── schemas
+│   ├── secrets.json
+│   ├── show_doc_handler.py
+│   ├── src
+│   ├── test_agent.py
+│   ├── test_get_agent_prompt.py
+│   ├── test_local.py
+│   ├── test_show_doc.py
+│   ├── tests
+│   └── uv.lock
+├── policy_mate_ui
+│   ├── README.md
+│   ├── biome.json
+│   ├── docs
+│   ├── next-env.d.ts
+│   ├── next.config.ts
+│   ├── node_modules
+│   ├── package.json
+│   ├── pnpm-lock.yaml
+│   ├── postcss.config.mjs
+│   ├── public
+│   ├── src
+│   ├── tsconfig.json
+│   └── tsconfig.tsbuildinfo
+└── scripts
+    ├── backup-opensearch.sh
+    ├── opensearch-local.sh
+    ├── restore-opensearch.sh
+    ├── setup_aws.sh
+    ├── terraform
+    ├── terraform.tfstate
+    └── upgrade-opensearch.sh
+```
+
+Content of `.env` file in lambdas directory:
 
 ```bash
 # Root directory
 ENV_AWS_REGION=us-east-1
-COGNITO_USER_POOL_ID='us-east-1_bAHGAZpFO'
-COGNITO_CLIENT_ID='723cpt2otr4u5k2lml0j30gvjp'
+COGNITO_USER_POOL_ID='DUMMY_VALUE_BEFORE_IAC'
+COGNITO_CLIENT_ID='DUMMY_VALUE_BEFORE_IAC'
 S3_BUCKET_NAME='policymate-dev-3e53'
 ```
 
 ```bash
 # policy_mate_ui directory
 NEXT_PUBLIC_AWS_REGION=us-east-1
-NEXT_PUBLIC_COGNITO_CLIENT_ID='723cpt2otr4u5k2lml0j30gvjp'
-NEXT_PUBLIC_COGNITO_USER_POOL_ID='us-east-1_bAHGAZpFO'
+NEXT_PUBLIC_COGNITO_CLIENT_ID='DUMMY_VALUE_BEFORE_IAC'
+NEXT_PUBLIC_COGNITO_USER_POOL_ID='DUMMY_VALUE_BEFORE_IAC'
 NEXT_PUBLIC_API_BASE_URL='http://localhost:8080/invocations'
 NEXT_PUBLIC_LONG_API_BASE_URL='http://localhost:8080/invocations'
-NEXT_AWS_ACCESS_KEY_ID=your_access_key_id # Your access key credentials thats stored under profile
-NEXT_AWS_SECRET_ACCESS_KEY=your_secret_access_key # Your AWS secret access key stored under profile
-S3_BUCKET_NAME='policymate-dev-3e53'
+NEXT_PUBLIC_AWS_GATEWAY_URL='<DUMMY_VALUE_BEFORE_IAC>'
+NEXT_AWS_ACCESS_KEY_ID='ACTUAL_AWS_PROFILE_ACCESS_KEY_ID'
+NEXT_AWS_SECRET_ACCESS_KEY='ACTUAL_AWS_PROFILE_SECRET_ACCESS_KEY'
+S3_BUCKET_NAME='DUMMY_BUCKET_NAME_BEFORE_IAC'
 PDF_URL_EXPIRY_SECONDS=300
 ```
 
@@ -40,6 +128,14 @@ terraform init # Terraform is needed for this project to work and setup up infra
 
 Setup IAC: (Make sure you have terraform installed. We're using terraform to setup the required AWS resources)
 
+````bash
+cd scripts
+```bash
+export AWS_PROFILE=policy-mate # Or whichever profile you want to use which should have the required permissions
+export AWS_REGION=us-east-1
+terraform init # Terraform is needed for this project to work and setup up infrastructure
+````
+
 ```bash
 cd scripts
 chmod +x ./setup_aws.sh
@@ -51,13 +147,25 @@ Once confirmed this will output variables like this:
 ```bash
 Outputs:
 
-cognito_client_id = "723cpt2otr4u5k2lml0j30gvjp"
-cognito_pool_id = "us-east-1_bAHGAZpFO"
-s3_bucket_arn = "arn:aws:s3:::policymate-dev-3e53"
-s3_bucket_domain_name = "policymate-dev-3e53.s3.amazonaws.com"
-s3_bucket_name = "policymate-dev-3e53"
+Apply complete! Resources: 4 added, 4 changed, 4 destroyed.
+
+Outputs:
+api_gateway_urls = {
+  "auth_claims_handler" = "https://66eub6nitl.execute-api.us-east-1.amazonaws.com/dev/api/verify"
+  "file_confirmation_handler" = "https://66eub6nitl.execute-api.us-east-1.amazonaws.com/dev/api/uploads"
+  "file_upload_handler" = "https://66eub6nitl.execute-api.us-east-1.amazonaws.com/dev/api/uploads"
+}
+cognito_client_id = "723cpt2otr4u5k2lml0j40gvjp"
+cognito_pool_id = "us-east-1_bAHGXZpFO"
+s3_bucket_arn = "arn:aws:s3:::policymate-dev-3f53"
+s3_bucket_domain_name = "policymate-dev-3f53.s3.amazonaws.com"
+s3_bucket_name = "policymate-dev-3f53"
 ✅ Deployment complete!
+(policy-mate-lambda) ➜  scripts git:(main) ✗
+(policy-mate-lambda) ➜  scripts git:(main) ✗
 ```
+
+Change FE and BE `.env` files with the actual values from above output.
 
 From above, we need to populate our `.env` file in the root directory:
 
@@ -66,9 +174,9 @@ From above, we need to populate our `.env` file in the root directory:
 ```bash
 # Agent Core Runtime Requirments
 ENV_AWS_REGION=us-east-1
-COGNITO_USER_POOL_ID='us-east-1_bAHGAZpFO'
-COGNITO_CLIENT_ID='723cpt2otr4u5k2lml0j30gvjp'
-S3_BUCKET_NAME='policymate-dev-3e53'
+COGNITO_USER_POOL_ID='us-east-1_bAHGXZpFO'
+COGNITO_CLIENT_ID='723cpt2otr4u5k2lml0j40gvjp'
+S3_BUCKET_NAME='policymate-dev-3f53'
 ```
 
 ```bash
@@ -157,12 +265,14 @@ Done in 2s using pnpm v10.11.1
 (policy-mate-lambda) ➜  policy_mate_ui git:(main) ✗
 ```
 
-Setup `.env.local` file in `policy_mate_ui` directory:
+Setup `.env.local` file in `policy_mate_ui` directory as per iac output again.
+
+`NEXT_PUBLIC_AWS_GATEWAY_URL` will be `https://66eub6nitl.execute-api.us-east-1.amazonaws.com/dev/api` in this case.
 
 ```bash
-NEXT_PUBLIC_AWS_REGION=us-east-1
-NEXT_PUBLIC_COGNITO_CLIENT_ID='723cpt2otr4u5k2lml0j30gvjp'
-NEXT_PUBLIC_COGNITO_USER_POOL_ID='us-east-1_bAHGAZpFO'
+NEXT_PUBLIC_AWS_REGION=us-east-1 # or the one you used with aws profile
+NEXT_PUBLIC_COGNITO_CLIENT_ID='COMES_FROM_IAC_OUTPUT'
+NEXT_PUBLIC_COGNITO_USER_POOL_ID='COMES_FROM_IAC_OUTPUT'
 NEXT_PUBLIC_API_BASE_URL='http://localhost:8080/invocations'
 NEXT_PUBLIC_LONG_API_BASE_URL='http://localhost:8080/invocations'
 NEXT_AWS_ACCESS_KEY_ID=your_access_key_id # Your access key credentials thats stored under profile
@@ -192,3 +302,13 @@ After adding `.env.local` file, your tree should look something like this from r
 │   ├── tsconfig.json
 │   └── tsconfig.tsbuildinfo
 ```
+
+Now run the UI:
+
+```bash
+pnpm dev
+```
+
+UI should appear in `http://localhost:3000` and backend terminal should be running on `http://localhost:8080/invocations`.
+
+Now we can interact with UI :)
