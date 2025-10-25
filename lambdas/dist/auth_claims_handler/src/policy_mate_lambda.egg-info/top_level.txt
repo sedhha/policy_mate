@@ -1,5 +1,0 @@
-agents
-apis
-instructions
-tools
-utils
