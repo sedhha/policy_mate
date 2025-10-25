@@ -6,6 +6,30 @@ This is just one inconvenience. Sorry about that :)
 
 Make sure you setup your admin CLI profile with the required permissions to create resources in your AWS account.
 
+Dummy `.env` files should be added in root directory and `policy_mate_ui` directory.
+These need to be updated after running the setup script.
+
+```bash
+# Root directory
+ENV_AWS_REGION=us-east-1
+COGNITO_USER_POOL_ID='us-east-1_bAHGAZpFO'
+COGNITO_CLIENT_ID='723cpt2otr4u5k2lml0j30gvjp'
+S3_BUCKET_NAME='policymate-dev-3e53'
+```
+
+```bash
+# policy_mate_ui directory
+NEXT_PUBLIC_AWS_REGION=us-east-1
+NEXT_PUBLIC_COGNITO_CLIENT_ID='723cpt2otr4u5k2lml0j30gvjp'
+NEXT_PUBLIC_COGNITO_USER_POOL_ID='us-east-1_bAHGAZpFO'
+NEXT_PUBLIC_API_BASE_URL='http://localhost:8080/invocations'
+NEXT_PUBLIC_LONG_API_BASE_URL='http://localhost:8080/invocations'
+NEXT_AWS_ACCESS_KEY_ID=your_access_key_id # Your access key credentials thats stored under profile
+NEXT_AWS_SECRET_ACCESS_KEY=your_secret_access_key # Your AWS secret access key stored under profile
+S3_BUCKET_NAME='policymate-dev-3e53'
+PDF_URL_EXPIRY_SECONDS=300
+```
+
 These two variables must be exported:
 
 ```bash

@@ -1,11 +1,11 @@
 # filePath: lambdas/test_local.py
 import json
-import os
 import logging
 import boto3
 from typing import Any, Dict
 from dotenv import load_dotenv
 from src.utils.services.dynamoDB import get_table, DynamoDBTable
+from src.utils.settings import COGNITO_CLIENT_ID, AWS_REGION, AWS_PROFILE
 
 load_dotenv(override=True)
 
@@ -14,17 +14,16 @@ logging.getLogger('botocore').setLevel(logging.WARNING)
 logging.getLogger('urllib3').setLevel(logging.WARNING)
 logging.getLogger('strands').setLevel(logging.WARNING)
 
-if os.environ.get('AWS_PROFILE'):
-    boto3.setup_default_session(profile_name=os.environ.get('AWS_PROFILE'))
+boto3.setup_default_session(profile_name=AWS_PROFILE)
 
 def regenerate_secrets():
     with open('secrets.json', 'r') as f:
         secrets: Dict[str, Any] = json.load(f)
-    
-    client = boto3.client('cognito-idp', region_name=os.environ.get('COGNITO_REGION', 'us-east-1')) # pyright: ignore[reportUnknownMemberType]
-    
+
+    client = boto3.client('cognito-idp', region_name=AWS_REGION) # pyright: ignore[reportUnknownMemberType]
+
     response = client.initiate_auth(
-        ClientId=os.environ.get('COGNITO_CLIENT_ID', ''),
+        ClientId=COGNITO_CLIENT_ID,
         AuthFlow='USER_PASSWORD_AUTH',
         AuthParameters={
             'USERNAME': str(secrets['username']),
