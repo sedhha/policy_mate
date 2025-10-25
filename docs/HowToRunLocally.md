@@ -312,3 +312,23 @@ pnpm dev
 UI should appear in `http://localhost:3000` and backend terminal should be running on `http://localhost:8080/invocations`.
 
 Now we can interact with UI :)
+
+Just to re-iterate the commands to be running:
+
+- In FE terminal:
+
+```bash
+cd policy_mate_ui
+pnpm install # only first time
+pnpm dev
+```
+
+- In BE terminal:
+
+```bash
+cd lambdas
+uv sync # only first time
+export AWS_PROFILE='policy-mate' # OR the profile which you used to perform the setup
+export AWS_REGION='us-east-1' # OR the region which you used to perform the setup
+uv run deploy_agent.py
+```

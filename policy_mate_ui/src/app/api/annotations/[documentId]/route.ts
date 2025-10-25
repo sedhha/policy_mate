@@ -143,7 +143,7 @@ export async function GET(
     console.log('Lambda response status:', lambdaResponse.status);
     const backendData: BackendResponse = await lambdaResponse.json();
     const payload = backendData.tool_payload.data;
-    console.log('Backend payload:', payload);
+    console.log('Backend payload:', backendData);
 
     // Check for errors
     if (backendData.error_message && payload !== undefined) {
