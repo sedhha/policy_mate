@@ -62,3 +62,4 @@ __pycache__/
 .env
 .env.*
 *.local.json
+**/dist/*
