@@ -1,6 +1,24 @@
 {
   "auth_claims_handler": {
     "path": "verify",
-    "methods": ["GET", "OPTIONS"]
+    "methods": ["GET"]
+  },
+  "file_upload_handler": {
+    "path": "uploads",
+    "methods": ["POST"],
+    "request_schema": {
+      "type": "object",
+      "properties": {
+        "fileHash": { "type": "string" },
+        "fileName": { "type": "string" },
+        "fileSize": { "type": "integer" },
+        "fileType": { "type": "string" },
+        "uploadType": { "type": "string", "enum": ["standard", "custom"] }
+      },
+      "required": ["fileHash", "fileName", "fileSize"]
+    },
+    "payload_mapping": {
+      "application/json": "{...}"
+    }
   }
 }
