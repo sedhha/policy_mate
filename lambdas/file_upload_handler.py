@@ -204,7 +204,7 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         # Ensure all presigned post fields are JSON serializable
         upload_fields = {k: str(v) for k, v in presigned_post['fields'].items()}
         
-        return response(200, {
+        final_res: dict[str, Any] = {
             'status': 'new',
             'file_id': file_id,
             's3_key': s3_key,
@@ -212,7 +212,11 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
             'upload_url': presigned_post['url'],
             'upload_fields': upload_fields,
             'message': 'Pre-signed URL generated. Please upload file to S3.'
-        })
+        }
+        log_with_context("INFO", f"Prepare upload response: {json.dumps(final_res, indent=2)}",
+                        request_id=context.aws_request_id)
+        
+        return response(200, final_res)
         
     except json.JSONDecodeError as e:
         log_with_context("ERROR", f"Invalid JSON in request body: {str(e)}", 
