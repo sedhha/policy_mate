@@ -201,13 +201,16 @@ def lambda_handler(event: dict[str, Any], context: context_.Context) -> dict[str
         log_with_context("INFO", f"Reserved file metadata in DynamoDB: {file_id}", 
                         request_id=context.aws_request_id)
         
+        # Ensure all presigned post fields are JSON serializable
+        upload_fields = {k: str(v) for k, v in presigned_post['fields'].items()}
+        
         return response(200, {
             'status': 'new',
             'file_id': file_id,
             's3_key': s3_key,
             'upload_type': upload_type,
             'upload_url': presigned_post['url'],
-            'upload_fields': presigned_post['fields'],
+            'upload_fields': upload_fields,
             'message': 'Pre-signed URL generated. Please upload file to S3.'
         })
         
