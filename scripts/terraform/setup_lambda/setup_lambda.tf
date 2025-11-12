@@ -172,6 +172,22 @@ resource "aws_lambda_function" "lambda" {
   ]
 }
 
+# --- Lambda Function URLs (public HTTPS endpoints, no API Gateway) ---
+resource "aws_lambda_function_url" "lambda_url" {
+  for_each = toset(local.routed_handlers)
+
+  function_name      = aws_lambda_function.lambda[each.key].function_name
+  authorization_type = "NONE"
+
+  cors {
+    allow_credentials = false
+    allow_origins     = ["*"]
+    allow_methods     = ["*"]
+    allow_headers     = ["*"]
+    max_age           = 86400
+  }
+}
+
 # --- Cleanup Build Artifacts After Deployment ---
 resource "null_resource" "cleanup_build" {
   for_each = toset(local.routed_handlers)

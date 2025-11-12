@@ -9,10 +9,10 @@ output "lambda_function_names" {
 }
 
 output "lambda_function_urls" {
-  description = "Direct Lambda function URLs (non-API Gateway)"
+  description = "Direct Lambda function URLs (publicly accessible HTTPS endpoints)"
   value = { 
-    for k, v in aws_lambda_function.lambda : 
-    k => "https://lambda.${data.aws_region.current.name}.amazonaws.com/2015-03-31/functions/${v.function_name}/invocations"
+    for k, v in aws_lambda_function_url.lambda_url : 
+    k => v.function_url
   }
 }
 
