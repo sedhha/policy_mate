@@ -93,6 +93,29 @@ resource "aws_api_gateway_integration" "options_integration" {
   depends_on = [aws_api_gateway_method.options]
 }
 
+# --- CORS Gateway Responses (handle errors with CORS headers) ---
+resource "aws_api_gateway_gateway_response" "cors_4xx" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  response_type = "DEFAULT_4XX"
+
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Headers" = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Methods" = "'*'"
+  }
+}
+
+resource "aws_api_gateway_gateway_response" "cors_5xx" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  response_type = "DEFAULT_5XX"
+
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Headers" = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Methods" = "'*'"
+  }
+}
+
 # --- Lambda Permissions for API Gateway ---
 resource "aws_lambda_permission" "apigw_permissions" {
   for_each = var.lambda_function_arns
