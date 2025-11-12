@@ -23,3 +23,7 @@ output "s3_bucket_domain_name" {
   value       = module.setup_s3.bucket_domain_name
 }
 
+output "lambda_function_urls" {
+  description = "Direct Lambda function URLs (publicly accessible HTTPS endpoints)"
+  value       = module.setup_lambda.lambda_function_urls
+}
