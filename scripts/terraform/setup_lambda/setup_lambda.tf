@@ -18,6 +18,9 @@ locals {
   )
 }
 
+# --- Get Current AWS Region ---
+data "aws_region" "current" {}
+
 # --- Build & Package Each Lambda ---
 resource "null_resource" "build_lambdas" {
   for_each = toset(local.routed_handlers)
