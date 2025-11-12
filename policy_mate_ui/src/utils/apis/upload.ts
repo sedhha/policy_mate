@@ -78,6 +78,7 @@ export const confirmUpload = async (
   fileId: string
 ): Promise<ConfirmUploadResponse> => {
   try {
+    console.log(`${env.NEXT_PUBLIC_FILE_CONFIRM_URL}?fileId=${fileId}`);
     const response = await fetch(
       `${env.NEXT_PUBLIC_FILE_CONFIRM_URL}?fileId=${fileId}`,
       {
