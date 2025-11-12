@@ -173,6 +173,7 @@ From above, we need to populate our `.env` file in the root directory:
 
 ```bash
 # Agent Core Runtime Requirments
+ENV_AWS_PROFILE=policy-mate # Or whatever your profile you need
 ENV_AWS_REGION=us-east-1
 COGNITO_USER_POOL_ID='us-east-1_bAHGXZpFO'
 COGNITO_CLIENT_ID='723cpt2otr4u5k2lml0j40gvjp'

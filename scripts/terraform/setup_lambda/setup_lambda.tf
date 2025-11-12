@@ -37,22 +37,20 @@ resource "null_resource" "build_lambdas" {
       fi
       
       # Install dependencies into dist using the appropriate pyproject.toml
-      TARGET_DIR="dist/${each.key}" PYPROJECT_PATH=$PYPROJECT_PATH python3 << 'PYSCRIPT'
+      python3 << PYSCRIPT
 import tomllib
 import subprocess
 import sys
-import os
 
-pyproject_path = os.environ.get("PYPROJECT_PATH", "pyproject.toml")
+pyproject_path = "$PYPROJECT_PATH"
 try:
     with open(pyproject_path, "rb") as f:
         data = tomllib.load(f)
         deps = data.get("project", {}).get("dependencies", [])
         if deps:
-            print(f"Installing {len(deps)} dependencies from {pyproject_path}...")
-            target_dir = os.environ.get("TARGET_DIR", "dist")
+            print(f"Installing {len(deps)} dependencies...")
             subprocess.run(
-                ["uv", "pip", "install", "--python", "3.12", "--target", target_dir] + deps,
+                ["uv", "pip", "install", "--python", "3.12", "--target", "dist/${each.key}"] + deps,
                 check=True
             )
         else:
