@@ -20,6 +20,12 @@ export const ClientEnvSchema = z.object({
   NEXT_PUBLIC_LONG_API_BASE_URL: z.url(
     'NEXT_PUBLIC_API_BASE_URL must be a valid URL'
   ),
+  NEXT_PUBLIC_FILE_UPLOAD_URL: z.url(
+    'NEXT_PUBLIC_FILE_UPLOAD_URL must be a valid URL'
+  ),
+  NEXT_PUBLIC_FILE_CONFIRM_URL: z.url(
+    'NEXT_PUBLIC_FILE_CONFIRM_URL must be a valid URL'
+  ),
 });
 
 export type ClientEnvVariables = z.infer<typeof ClientEnvSchema>;
@@ -34,6 +40,8 @@ const env: ClientEnvVariables = {
   NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL!,
   NEXT_PUBLIC_LONG_API_BASE_URL: process.env.NEXT_PUBLIC_LONG_API_BASE_URL!,
   NEXT_PUBLIC_AWS_GATEWAY_URL: process.env.NEXT_PUBLIC_AWS_GATEWAY_URL!,
+  NEXT_PUBLIC_FILE_UPLOAD_URL: process.env.NEXT_PUBLIC_FILE_UPLOAD_URL!,
+  NEXT_PUBLIC_FILE_CONFIRM_URL: process.env.NEXT_PUBLIC_FILE_CONFIRM_URL!,
 };
 
 ClientEnvSchema.parse(env); // This will throw if the environment variables are not valid
