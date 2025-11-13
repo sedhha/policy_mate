@@ -4,7 +4,7 @@ from enum import Enum
 from typing import Any
 from decimal import Decimal
 from boto3.dynamodb.types import TypeDeserializer
-from src.utils.settings import AWS_REGION
+from utils.settings import AWS_REGION
 
 dynamodb = boto3.resource('dynamodb', region_name=AWS_REGION)  # type: ignore[assignment]
 deserializer = TypeDeserializer()
