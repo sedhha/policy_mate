@@ -136,26 +136,25 @@ export const BookmarkPopover: React.FC<BookmarkPopoverProps> = ({
     onNoteCommit,
 }) => {
     // ---- local state + baselines ----
-    const [draft, setDraft] = React.useState(ann.bookmarkNote ?? '');
+    const [draft, setDraft] = React.useState(ann?.bookmarkNote ?? '');
     const [selectedType, setSelectedType] = React.useState<BookmarkType | undefined>(
         ann.bookmarkType
     );
     const [isMinimized, setIsMinimized] = React.useState(false);
 
     // baselines that define "saved" values (so Save can disable afterwards)
-    const [lastSavedNote, setLastSavedNote] = React.useState(ann.bookmarkNote ?? '');
+    const [lastSavedNote, setLastSavedNote] = React.useState(ann?.bookmarkNote ?? '');
     const [lastSavedType, setLastSavedType] = React.useState<BookmarkType | undefined>(
-        ann.bookmarkType
+        ann?.bookmarkType
     );
 
     // if user opens a different annotation, sync local state
     React.useEffect(() => {
-        setDraft(ann.bookmarkNote ?? '');
-        setSelectedType(ann.bookmarkType);
-        setLastSavedNote(ann.bookmarkNote ?? '');
-        setLastSavedType(ann.bookmarkType);
-    }, [ann.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
+        setDraft(ann?.bookmarkNote ?? '');
+        setSelectedType(ann?.bookmarkType);
+        setLastSavedNote(ann?.bookmarkNote ?? '');
+        setLastSavedType(ann?.bookmarkType);
+    }, [ann?.id]); // eslint-disable-line react-hooks/exhaustive-deps
     const trimmed = draft.trim();
     const isDirty = trimmed !== (lastSavedNote ?? '') || selectedType !== lastSavedType;
 
